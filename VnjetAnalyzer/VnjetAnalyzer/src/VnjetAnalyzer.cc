@@ -13,7 +13,7 @@
 //
 // Original Author:  Thiago Fernandez Perez
 //         Created:  Wed Oct 10 09:35:38 CEST 2007
-// $Id$
+// $Id: VnjetAnalyzer.cc,v 1.1 2008/03/12 15:56:09 tomei Exp $
 //
 //
 
