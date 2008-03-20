@@ -1,0 +1,17 @@
+<use name=FWCore/Framework>
+<use name=FWCore/PluginManager>
+<use name=FWCore/ParameterSet>
+<use name=FWCore/ServiceRegistry>
+<use name=DataFormats/Candidate>
+<use name=DataFormats/HepMCCandidate>
+<use name=DataFormats/METReco>
+<use name=PhysicsTools/UtilAlgos>
+<use name=PhysicsTools/CandUtils>
+<use name=root>
+<flags EDM_PLUGIN=1>
+<export>
+   <lib name=RSGravitonRSAnalyzer>
+   <use name=FWCore/Framework>
+   <use name=FWCore/PluginManager>
+   <use name=FWCore/ParameterSet>
+</export>

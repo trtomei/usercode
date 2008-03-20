@@ -1,0 +1,9 @@
+// Put here the modules you want the cfg file to use,
+// then include this file in your cfg file.
+// i.e. in RSAnalyzer.cfg replace 'module demo = RSAnalyzer {} '
+// with 'include "anlyzerDir/RSAnalyzer/data/RSAnalyzer.cfi" '.
+// (Remember that filenames are case sensitive.)
+
+module demo = RSAnalyzer {
+
+}
