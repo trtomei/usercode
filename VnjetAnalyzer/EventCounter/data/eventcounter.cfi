@@ -1,0 +1,9 @@
+// Put here the modules you want the cfg file to use,
+// then include this file in your cfg file.
+// i.e. in EventCounter.cfg replace 'module demo = EventCounter {} '
+// with 'include "anlyzerDir/EventCounter/data/EventCounter.cfi" '.
+// (Remember that filenames are case sensitive.)
+
+module demo = EventCounter {
+
+}

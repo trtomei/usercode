@@ -1,0 +1,9 @@
+// Put here the modules you want the cfg file to use,
+// then include this file in your cfg file.
+// i.e. in RecoTest.cfg replace 'module demo = RecoTest {} '
+// with 'include "anlyzerDir/RecoTest/data/RecoTest.cfi" '.
+// (Remember that filenames are case sensitive.)
+
+module demo = RecoTest {
+
+}

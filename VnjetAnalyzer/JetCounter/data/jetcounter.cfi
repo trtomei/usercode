@@ -1,0 +1,9 @@
+// Put here the modules you want the cfg file to use,
+// then include this file in your cfg file.
+// i.e. in JetCounter.cfg replace 'module demo = JetCounter {} '
+// with 'include "anlyzerDir/JetCounter/data/JetCounter.cfi" '.
+// (Remember that filenames are case sensitive.)
+
+module demo = JetCounter {
+
+}
