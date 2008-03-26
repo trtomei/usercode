@@ -37,6 +37,8 @@ TH1D*       H_ptV_jets_2j;
 TH1D*       H_ptV_jets_3j;
 TH1D*       H_ptV_jets_4j;
 
+TH1D*       H_tnumMuons;
+
 TH1D*       H_pt1stmu_1j;
 TH1D*       H_eta1stmu_1j;
 TH1D*       H_pt2ndmu_1j;

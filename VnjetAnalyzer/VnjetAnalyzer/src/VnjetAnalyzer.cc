@@ -13,7 +13,7 @@ Implementation:
 //s
 // Original Author:  Thiago Fernandez Perez
 //         Created:  Wed Oct 10 09:35:38 CEST 2007
-// $Id$
+// $Id: VnjetAnalyzer.cc,v 1.2 2008/03/20 10:17:31 tomei Exp $
 //
 //
 
@@ -472,6 +472,8 @@ VnjetAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     addP4.set(Zcand);
   }
   LogDebug("Info") << "Reconstructed Z";
+
+  H_tnumMuons->Fill(nmuons, weight);
   
   double leadingmupt =0.;
   double leadingmueta = 0.;
