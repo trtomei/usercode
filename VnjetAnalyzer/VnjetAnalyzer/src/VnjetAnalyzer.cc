@@ -13,7 +13,7 @@ Implementation:
 //s
 // Original Author:  Thiago Fernandez Perez
 //         Created:  Wed Oct 10 09:35:38 CEST 2007
-// $Id: VnjetAnalyzer.cc,v 1.2 2008/03/20 10:17:31 tomei Exp $
+// $Id: VnjetAnalyzer.cc,v 1.3 2008/03/26 18:07:42 tomei Exp $
 //
 //
 
@@ -39,7 +39,6 @@ Implementation:
 #include "DataFormats/Candidate/interface/Candidate.h"
 #include "DataFormats/Candidate/interface/CompositeCandidate.h"
 #include "DataFormats/Candidate/interface/CandidateFwd.h"
-#include "DataFormats/METReco/interface/CaloMETCollection.h"
 #include "DataFormats/Common/interface/Ref.h"
 #include "FWCore/MessageLogger/interface/MessageLogger.h"
 #include "FWCore/Utilities/interface/Exception.h"
@@ -155,40 +154,39 @@ VnjetAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   bool ttbarevent = false;
   bool wevent = false;
   bool zevent = false;
-  //  int destination = 0;
+  int destination = 0;
 
   // Code to decide if I am dealing with:
   // 1- ttbar event.
   // 2- w+jets event.
   // 3- z+jets event.
-  //   Handle<int> ALPGENHandle;
-  //    iEvent.getByLabel ("weight","AlpgenProcessID", ALPGENHandle);
-  //    int alpgen = * ALPGENHandle;
-  //    if( (alpgen >= 1000) && (alpgen < 2000) ){
-  //      wevent = true;
-  //      destination = 1;
-  //    }
-  //    else if( (alpgen >= 2000) && (alpgen < 3000) ){
-  //      zevent = true;
-  //      destination = 2;
-  //    }
-  //    else if( (alpgen >= 3000) && (alpgen < 4000) ){ 
-  //      ttbarevent = true;
-  //      destination = 3;
-  //    }
-   
-  //    if(destination == 0)
-  //      throw cms::Exception("AlpgenProcessID") << "Invalid AlpgenProcessID = " << alpgen;
-
-  //    LogDebug("Trace") << "Got AlpgenProcessID";
-  //    LogDebug("Values") << "destination = " << destination;
-
-  //    Handle<double> weightHandle;
-  //    iEvent.getByLabel ("weight","weight", weightHandle);
-  //    double weight = * weightHandle;
-
-  // TEMP
-  double weight = 1.0;
+  Handle<int> ALPGENHandle;
+  iEvent.getByLabel ("weight","AlpgenProcessID", ALPGENHandle);
+  int alpgen = * ALPGENHandle;
+  if( (alpgen >= 1000) && (alpgen < 2000) ){
+    //      wevent = true;
+    destination = 1;
+  }
+  else if( (alpgen >= 2000) && (alpgen < 3000) ){
+    //      zevent = true;
+    destination = 2;
+  }
+  else if( (alpgen >= 3000) && (alpgen < 4000) ){ 
+    //      ttbarevent = true;
+    destination = 3;
+  }
+  
+  if(destination != 3)
+    throw cms::Exception("AlpgenProcessID") << "Invalid AlpgenProcessID = " << alpgen;
+  
+  LogDebug("Trace") << "Got AlpgenProcessID";
+  LogDebug("Values") << "destination = " << destination;
+  
+  Handle<double> weightHandle;
+  iEvent.getByLabel ("weight","weight", weightHandle);
+  double weight = * weightHandle;
+  
+  //  double weight = 1.0;
    
   LogDebug("Values") << "weight is " << weight;
 
@@ -196,7 +194,7 @@ VnjetAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   Handle<CandidateCollection> highestjets;
   Handle<CandidateCollection> muons;
   Handle<CandidateCollection> particles;
-  Handle<CaloMETCollection> met_handle;
+  Handle<CandidateCollection> met_handle;
    
   iEvent.getByLabel(jets_, jets);
   iEvent.getByLabel(highestjets_, highestjets);
@@ -338,10 +336,9 @@ VnjetAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
   // Simply get the MET status.
 
-  const CaloMETCollection *metcol = met_handle.product();
-  const CaloMET met = metcol->front();
-      
-  double met_pt = met.pt();
+  CandidateRef met = CandidateRef(met_handle,0);
+  
+  double met_pt = met->pt();
 
   LogDebug("Values") << "MET pt = " << met_pt;
 
@@ -455,11 +452,11 @@ VnjetAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   CompositeCandidate Wcand;
   double Wmt = 0.;
   if(nmuons > 0) {
-    Wcand.addDaughter(met);
+    Wcand.addDaughter(*met);
     Wcand.addDaughter(*firstmu);
     AddFourMomenta addP4;
     addP4.set(Wcand);
-    Wmt = transvmass(*firstmu, met);
+    Wmt = transvmass(*firstmu, *met);
   }
   LogDebug("Info") << "Reconstructed W";
   
