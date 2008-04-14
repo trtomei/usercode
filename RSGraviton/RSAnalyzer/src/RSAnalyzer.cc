@@ -14,7 +14,7 @@ Implementation:
 //
 // Original Author:  Thiago Fernandez Perez
 //         Created:  Wed Feb 13 15:08:56 CET 2008
-// $Id$
+// $Id: RSAnalyzer.cc,v 1.1 2008/03/20 11:45:59 tomei Exp $
 //
 //
 
@@ -32,10 +32,10 @@ Implementation:
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 
 #include "DataFormats/Candidate/interface/Candidate.h"
+#include "DataFormats/Candidate/interface/CandidateFwd.h"
 #include "DataFormats/Candidate/interface/CompositeCandidate.h"
 #include "PhysicsTools/CandUtils/interface/AddFourMomenta.h"
 #include "DataFormats/HepMCCandidate/interface/GenParticle.h"
-#include "DataFormats/METReco/interface/GenMETCollection.h"
 #include "DataFormats/Math/interface/deltaR.h"
 #include "FWCore/ServiceRegistry/interface/Service.h"
 #include "PhysicsTools/UtilAlgos/interface/TFileService.h"
@@ -57,7 +57,6 @@ private:
   virtual void beginJob(const edm::EventSetup&) ;
   virtual void analyze(const edm::Event&, const edm::EventSetup&);
   virtual void endJob() ;
-  int countconstituents(const Candidate*, const CandidateCollection&, double); 
   
   // ----------member data ---------------------------
   TH1F* h_1stZ_pt;
@@ -205,7 +204,7 @@ RSAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   iEvent.getByLabel("highestJets", highestJets_handle);
   const CandidateCollection* highestJets = highestJets_handle.product();
 
-  Handle<GenMETCollection> met_handle;
+  Handle<CandidateCollection> met_handle;
   iEvent.getByLabel("genMet", met_handle);
 
   // PART 1: GenParticles
@@ -256,12 +255,13 @@ RSAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   const Candidate* secondjet = 0;
   const Candidate* thirdjet = 0;
   const Candidate* fourthjet = 0;
-  
+
+  int num = 0; 
   if(numhighjets > 0) {
     firstjet = &(*highestJets)[0];
     
     // Get number of constituents
-    int num = countconstituents(firstjet, stables, conesize);
+//     int num = countconstituents(firstjet, stables, conesize);
     h_num_const_1stjet->Fill(num);
     
     h_1stjet_Et->Fill(firstjet->et());
@@ -274,7 +274,7 @@ RSAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     // cout << "secondjet" << endl;
     secondjet = &(*highestJets)[1];
 
-    int num = countconstituents(secondjet, stables, conesize);
+//     int num =  countconstituents(secondjet, stables, conesize);
     h_num_const_2ndjet->Fill(num);
     // cout << "the second jet candidate is at" << &(*highestJets)[1] << endl;
     // cout << "secondjet pointer is " << &*secondjet << endl;
@@ -288,7 +288,7 @@ RSAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     // cout << "thirdjet" << endl;
     thirdjet = &(*highestJets)[2];
 
-    int num = countconstituents(thirdjet, stables, conesize);
+//     int num = countconstituents(thirdjet, stables, conesize);
     h_num_const_3rdjet->Fill(num);
     // cout << "the third jet candidate is at" << &(*highestJets)[2] << endl;
     // cout << "thirdjet pointer is " << &*thirdjet << endl;
@@ -302,7 +302,7 @@ RSAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
     // cout << "fourthjet" << endl;
     fourthjet = &(*highestJets)[3];
 
-    int num = countconstituents(fourthjet, stables, conesize);
+//     int num = countconstituents(fourthjet, stables, conesize);
     h_num_const_4thjet->Fill(num);
     h_4thjet_Et->Fill(fourthjet->et());
     h_4thjet_eta->Fill(fourthjet->eta());
@@ -340,10 +340,10 @@ RSAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   
   // PART 4: MET
   // cout << "PART 4: MET" << endl;
-  const GenMETCollection *metcol = met_handle.product();
-  const GenMET met = metcol->front();
+  const CandidateCollection *metcol = met_handle.product();
+  const Candidate* met = &metcol->front();
   
-  double met_pt = met.pt();
+  double met_pt = met->pt();
   
   h_MET->Fill(met_pt);
 
@@ -379,20 +379,19 @@ bool compare(const reco::GenParticle& x, const reco::GenParticle& y)
   return x.pt() < y.pt();
 }
 
-int 
-RSAnalyzer::countconstituents(const Candidate* jet, const CandidateCollection& particles, double conesize) 
-{
-  int result = 0;
+// int RSAnalyzer::countconstituents(const Candidate* jet, const CandidateCollection& particles, double conesize) 
+// {
+//   int result = 0;
   
-  for(CandidateCollection::const_iterator iter = particles.begin(); 
-      iter != particles.end();
-      ++ iter) {
-    double dr = deltaR(jet->eta(), jet->phi(), iter->eta(), iter->phi());
-    if(dr < conesize)
-      ++result;
-  }
-  return result;
-}
+//   for(CandidateCollection::const_iterator iter = particles.begin(); 
+//       iter != particles.end();
+//       ++ iter) {
+//     double dr = deltaR(jet->eta(), jet->phi(), iter->eta(), iter->phi());
+//     if(dr < conesize)
+//       ++result;
+//   }
+//   return result;
+// }
 
 // ------------ method called once each job just before starting event loop  ------------
 void 
