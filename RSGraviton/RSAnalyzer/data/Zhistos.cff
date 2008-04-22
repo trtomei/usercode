@@ -1,0 +1,30 @@
+# Z kinematics histograms
+VPSet histograms = {
+      {
+        untracked int32 itemsToPlot   =     2
+        untracked double min          =   0.0
+        untracked double max          = 500.0 
+        untracked int32 nbins         =   100
+        untracked string name         = "Zcand %d p_{T} [GeV/c]"
+        untracked string description  = "Z_%d_pt"
+        untracked string plotquantity = "pt"
+      },
+      {
+        untracked int32 itemsToPlot   =     2
+        untracked double min          =  -4.0
+        untracked double max          =   4.0
+        untracked int32 nbins         =   100
+        untracked string name         = "Zcand %d pseudo rapidity"
+        untracked string description  = "Z_%d_eta"
+        untracked string plotquantity = "eta"
+      },
+      {
+        untracked int32 itemsToPlot   =     2
+        untracked double min          =   0.0
+        untracked double max          = 400.0
+        untracked int32 nbins         =    80
+        untracked string name         = "Zcand %d mass"
+        untracked string description  = "Zcand_%d_mass"
+        untracked string plotquantity = "mass"
+      }
+}

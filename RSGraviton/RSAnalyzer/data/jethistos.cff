@@ -1,0 +1,21 @@
+# Jet kinematics histograms
+VPSet histograms = {
+      {
+        untracked int32 itemsToPlot   =     5
+        untracked double min          =   0.0
+        untracked double max          = 600.0 
+        untracked int32 nbins         =   120
+        untracked string name         = "jet %d E_{T} [GeV/c]"
+        untracked string description  = "jet_%d_et"
+        untracked string plotquantity = "et"
+      },
+      {
+        untracked int32 itemsToPlot   =     5
+        untracked double min          =  -4.0
+        untracked double max          =   4.0
+        untracked int32 nbins         =   100
+        untracked string name         = "jet %d pseudo rapidity"
+        untracked string description  = "jet_%d_eta"
+        untracked string plotquantity = "eta"
+      }
+}

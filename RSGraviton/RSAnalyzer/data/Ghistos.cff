@@ -1,0 +1,27 @@
+# Graviton kinematics histograms
+VPSet histograms = {
+      {
+        untracked double min          =   0.0
+        untracked double max          = 600.0 
+        untracked int32 nbins         =   120
+        untracked string name         = "Gcand p_{T} [GeV/c]"
+        untracked string description  = "G_pt"
+        untracked string plotquantity = "pt"
+      },
+      {
+        untracked double min          =  -4.0
+        untracked double max          =   4.0
+        untracked int32 nbins         =   100
+        untracked string name         = "Gcand pseudo rapidity"
+        untracked string description  = "G_eta"
+        untracked string plotquantity = "eta"
+      },
+      {
+        untracked double min          =    0.0
+        untracked double max          = 1000.0
+        untracked int32 nbins         =    200
+        untracked string name         = "Gcand mass"
+        untracked string description  = "G_mass"
+        untracked string plotquantity = "mass"
+      }
+}
