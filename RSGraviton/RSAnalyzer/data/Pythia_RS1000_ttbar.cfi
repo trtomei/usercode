@@ -21,7 +21,7 @@
       'MDME(4174,1)=0 ! graviton decay into g',
       'MDME(4175,1)=0 ! graviton decay into gamma',
       'MDME(4176,1)=0 ! graviton decay into Z0',
-      'MDME(4177,1)=1 ! graviton decay into W+ W-',
+      'MDME(4177,1)=0 ! graviton decay into W+ W-',
       'MDME(190,1)= 1 ! W decay into dbar u',
       'MDME(191,1)= 1 ! W decay into dbar c',
       'MDME(192,1)= 1 ! W decay into dbar t',
