@@ -2,7 +2,7 @@
     vstring myParameters = {
       'PMAS(5,1)=4.8 ! b quark mass',
       'PMAS(6,1)=172.3 ! t quark mass',
-      'PMAS(347,1)= 500.0 ! graviton mass',
+      'PMAS(347,1)= 1250.0 ! graviton mass',
       'MSEL=0         ! User defined processes',
       'MSUB(391)=1    ! ffbar->G*',
       'MSUB(392)=1    ! gg->G*',	
@@ -34,7 +34,7 @@
       'MDME(185,1)=0  !Z decay into nu_mu nu_mubar',
       'MDME(186,1)=0  !Z decay into tau- tau+',
       'MDME(187,1)=0  !Z decay into nu_tau nu_taubar',
-      'PARP(50)=0.054  ! related to the mass of the graviton - study this!',
+      'PARP(50)=0.216 ! 5.4 * k/M_pl ratio',
       'CKIN(3)=25.    ! Pt hat lower cut',
       'CKIN(4)=-1.    ! Pt hat upper cut',     
       'CKIN(13)=-10.  ! etamin',

@@ -2,9 +2,9 @@
 VPSet histograms = {
       {
         untracked double min          =   0.0
-        untracked double max          = 600.0 
-        untracked int32 nbins         =   120
-        untracked string name         = "Gcand p_{T} [GeV/c]"
+        untracked double max          = 1000.0 
+        untracked int32 nbins         =   200
+        untracked string name         = "G_pt"
         untracked string description  = "G_pt"
         untracked string plotquantity = "pt"
       },
@@ -12,15 +12,15 @@ VPSet histograms = {
         untracked double min          =  -4.0
         untracked double max          =   4.0
         untracked int32 nbins         =   100
-        untracked string name         = "Gcand pseudo rapidity"
+        untracked string name         = "G_eta"
         untracked string description  = "G_eta"
         untracked string plotquantity = "eta"
       },
       {
         untracked double min          =    0.0
-        untracked double max          = 1000.0
-        untracked int32 nbins         =    200
-        untracked string name         = "Gcand mass"
+        untracked double max          = 2000.0
+        untracked int32 nbins         =    400
+        untracked string name         = "G_mass"
         untracked string description  = "G_mass"
         untracked string plotquantity = "mass"
       }
