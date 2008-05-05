@@ -13,7 +13,7 @@ Implementation:
 //
 // Original Author:  Thiago Fernandez Perez
 //         Created:  Wed Apr 23 17:48:37 CEST 2008
-// $Id$
+// $Id: RSJetAnalyzer.cc,v 1.1 2008/05/02 10:58:19 tomei Exp $
 //
 //
 
@@ -33,6 +33,7 @@ Implementation:
 #include "DataFormats/Candidate/interface/Candidate.h"
 #include "DataFormats/Candidate/interface/CandidateFwd.h"
 #include "DataFormats/Candidate/interface/LeafCandidate.h"
+#include "DataFormats/Candidate/interface/CandMatchMap.h"
 #include "DataFormats/Common/interface/View.h"
 #include "DataFormats/Math/interface/deltaR.h"
 #include "DataFormats/Math/interface/deltaPhi.h"
@@ -52,11 +53,17 @@ public:
   ~RSJetAnalyzer();
 
 private:
+  void assignZDaughters(double&, double&, const reco::Candidate&, const reco::Candidate&);
   virtual void beginJob(const edm::EventSetup&) ;
   virtual void analyze(const edm::Event&, const edm::EventSetup&);
   virtual void endJob() ;
 
   // ----------member data ---------------------------
+  std::vector<reco::LeafCandidate> Jet1Particles;
+  std::vector<reco::LeafCandidate> Jet2Particles;
+  std::vector<reco::LeafCandidate> Jet1ZDaughters;
+  std::vector<reco::LeafCandidate> Jet2ZDaughters;
+  
   TH1F*     h_dR;
   TH1F*     h_dPhi;
   TH2F*     h_EtCorrelation; 
@@ -65,19 +72,26 @@ private:
   TH2F*     h_MassCorrelation; 
   TH1F*     h_Jet1_NumParticles;
   TH1F*     h_Jet2_NumParticles;
-  TH1F*     h_Jet1_dRTwoParticles;
-  TH1F*     h_Jet1_dRJetParticle;
-  TH1F*     h_Jet2_dRTwoParticles;
-  TH1F*     h_Jet2_dRJetParticle;
-  TProfile* p_Jet1_FracxRadius;
-  TProfile* p_Jet2_FracxRadius;
-  TProfile* p_Jet1_Density;
-  TProfile* p_Jet2_Density;
+
+  TH2F* h_Jet1_dRZxMass;
+  TH2F* h_Jet1_dRZxNumParticles;
+  TH2F* h_Jet1_dRZxEt;
+
+  TH2F* h_Jet1_dRDauxMass;
+  TH2F* h_Jet1_dRDauxNumParticles;
+  TH2F* h_Jet1_dRDauxZpt;
+
+  TH2F* h_MassxNumParticles;
+  TH2F* h_Jet1EtxdRDau;
+  TH2F* h_Jet1EtxNumParticles;
+  TH2F* h_Jet1EtxMass;
+  TH2F* h_Jet1EtxEta;
 };
 
 //
 // constants, enums and typedefs
 //
+const int Z_id = 23;
 
 //
 // static data member definitions
@@ -98,14 +112,20 @@ RSJetAnalyzer::RSJetAnalyzer(const edm::ParameterSet& iConfig)
   h_MassCorrelation     = fs->make<TH2F>( "massCorrelation", "massCorrelation", 400, 0., 1000., 400, 0., 1000.); 
   h_Jet1_NumParticles   = fs->make<TH1F>( "jet1Particles", "jet1Particles", 500, 0.5, 500.5);
   h_Jet2_NumParticles   = fs->make<TH1F>( "jet2Particles", "jet2Particles", 500, 0.5, 500.5);
-  h_Jet1_dRTwoParticles = fs->make<TH1F>( "Jet1dRTwoParticles", "Jet1dRTwoParticles", 70, 0., 0.7);
-  h_Jet1_dRJetParticle  = fs->make<TH1F>( "Jet1dRJetParticle", "Jet1dRJetParticle", 70, 0., 0.7);
-  h_Jet2_dRTwoParticles = fs->make<TH1F>( "Jet2dRTwoParticles", "Jet2dRTwoParticles", 70, 0., 0.7);
-  h_Jet2_dRJetParticle  = fs->make<TH1F>( "Jet2dRJetParticle", "Jet2dRJetParticle", 70, 0., 0.7);
-  p_Jet1_FracxRadius    = fs->make<TProfile>( "jet1Etprofile"  , "jet1Etprofile", 66,  0.045, 0.705);
-  p_Jet2_FracxRadius    = fs->make<TProfile>( "jet2Etprofile"  , "jet2Etprofile", 66,  0.045, 0.705);
-  p_Jet1_Density        = fs->make<TProfile>( "jet1Density", "jet1Density", 66, 0.045, 0.705);
-  p_Jet2_Density        = fs->make<TProfile>( "jet2Density", "jet2Density", 66, 0.045, 0.705);
+
+  h_Jet1_dRZxMass         = fs->make<TH2F>( "jet1dRZMass", "jet1dRZMass", 200, 0., 4., 400, 0., 1000.);
+  h_Jet1_dRZxNumParticles = fs->make<TH2F>( "jet1dRZParticles", "jet1dRZParticles", 200, 0., 4., 500, 0.5, 500.5);
+  h_Jet1_dRZxEt          = fs->make<TH2F>( "jet1dRZEt", "jet1dRZEt", 200, 0., 4., 400, 0., 1000.); 
+  
+  h_Jet1_dRDauxMass         = fs->make<TH2F>( "jet1dRDauMass", "jet1dRDauMass", 200, 0., 4., 400, 0., 1000.); 
+  h_Jet1_dRDauxNumParticles = fs->make<TH2F>( "jet1dRDauParticles", "jet1dRDauParticles", 200, 0., 4., 500, 0.5, 500.5); 
+  h_Jet1_dRDauxZpt          = fs->make<TH2F>( "jet1dRDauZPt", "jet1dRDauZPt", 200, 0., 4., 400, 0., 1000.); 
+  
+  h_MassxNumParticles   = fs->make<TH2F>( "jet1MassParticles", "jet1MassParticles", 400, 0., 1000., 500, 0.5, 500.5); 
+  h_Jet1EtxdRDau        = fs->make<TH2F>( "jet1EtdRDau", "jet1EtdRDau", 400, 0., 1000., 400, 0., 4.); 
+  h_Jet1EtxNumParticles = fs->make<TH2F>( "jet1EtParticles", "jet1EtParticles", 400, 0., 1000., 500, 0.5, 500.5); 
+  h_Jet1EtxMass         = fs->make<TH2F>( "jet1EtMass", "jet1EtMass", 400, 0., 1000., 400, 0., 1000.);
+  h_Jet1EtxEta          = fs->make<TH2F>( "jet1EtEta", "jet1EtEta", 400, 0., 1000., 400, -4., 4.); 
 }
 
 
@@ -130,14 +150,22 @@ RSJetAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   using namespace reco;
 
   Handle<View<Candidate> > jetsHandle;
+  Handle<View<Candidate> > ZsHandle;
   Handle<CandidateCollection> particlesHandle;
+
   iEvent.getByLabel("twoJets",jetsHandle);
-  iEvent.getByLabel("genParticlesAllStable", particlesHandle);
+  iEvent.getByLabel("trueZs", ZsHandle);
+  iEvent.getByLabel("genParticleCandidates", particlesHandle);
   
-  // For now, this class only analyzes a collection of two jets.
+  //  std::cout << jetsHandle->size() << " jets" << std::endl;
+  //  std::cout << ZsHandle->size() << " Zs" << std::endl;
+
+  // For now, this class only analyzes a collection of two jets and two Zs
   const Candidate & Jet1 = (* jetsHandle)[0];
   const Candidate & Jet2 = (* jetsHandle)[1];
-
+  const Candidate & Z1 = (* ZsHandle)[0];
+  const Candidate & Z2 = (* ZsHandle)[1];
+  
   // Fills basic histos about these two jets.
   double dR = deltaR(Jet1.eta(), Jet1.phi(), Jet2.eta(), Jet2.phi());
   double dphi = fabs(deltaPhi(Jet1.phi(), Jet2.phi()));
@@ -148,50 +176,11 @@ RSJetAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   h_EtaCorrelation->Fill(Jet1.eta(), Jet2.eta());
   h_PhiCorrelation->Fill(Jet1.phi(), Jet2.phi());
   h_MassCorrelation->Fill(Jet1.mass(), Jet2.mass());
-
-  double minradius = 0.05;
-  double maxradius = 0.705;
-  double step = 0.01;
-  // 66 steps: steps = (maxradius - minradius)/step + 1
-
-  // Calculates for each subradius the sumEt/JetEt of
-  // particles inside, for each jet, and fills a TProfile.
-  // Also normalizing to the radius square.
-  for(double radius = minradius; radius < maxradius; radius += step) {
-    //    math::GlobalVector subJet1;
-    //    math::GlobalVector subJet2;
-    double sumEtJet1 = 0.;
-    double sumEtJet2 = 0.;
-    
-    for(CandidateCollection::const_iterator piter = particlesHandle->begin();
-	piter != particlesHandle->end(); ++piter) {
-      // Check if the particle is inside of the jets.
-      double dRJet1Particle = deltaR(Jet1.eta(),Jet1.phi(),piter->eta(),piter->phi());
-      double dRJet2Particle = deltaR(Jet2.eta(),Jet2.phi(),piter->eta(),piter->phi());
-      if(dRJet1Particle < radius) {
-	//	math::GlobalVector particle(piter->px(),piter->py(),piter->pz());
-	//	subJet1 += particle;
-	sumEtJet1 += piter->et();
-      }
-      if(dRJet2Particle < radius) {
-	//	math::GlobalVector particle(piter->px(),piter->py(),piter->pz());
-	//	subJet2 += particle;
-	sumEtJet2 += piter->et();
-      }
-    }
-    //    p_Jet1_FracxRadius->Fill(sqrt(radius,subJet1.perp2())/Jet1.et());
-    //    p_Jet2_FracxRadius->Fill(sqrt(radius,subJet2.perp2())/Jet2.et());
-    p_Jet1_FracxRadius->Fill(radius,sumEtJet1/Jet1.et());
-    p_Jet2_FracxRadius->Fill(radius,sumEtJet2/Jet2.et());
-    p_Jet1_Density->Fill(radius,(sumEtJet1/Jet1.et())/(radius*radius));
-    p_Jet2_Density->Fill(radius,(sumEtJet2/Jet2.et())/(radius*radius));
-  }
-
-  // Calculates, for each jet, the number of particles inside.
-  // Also, find the two most energetic particles inside the jet
-  // and calculate their mutual distance and distance of the first to the jet axis.
-  std::vector<LeafCandidate> Jet1Particles;
-  std::vector<LeafCandidate> Jet2Particles;
+  
+  // Find the particles inside, and put them in Jet1Particles
+  // and Jet2Particles.
+  Jet1Particles.clear();
+  Jet2Particles.clear();
   double jetradius=0.7;
 
   for(CandidateCollection::const_iterator piter = particlesHandle->begin();
@@ -205,65 +194,90 @@ RSJetAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       Jet2Particles.push_back
 	(LeafCandidate(piter->charge(), piter->p4(), piter->vertex(), piter->pdgId(), piter->status()));
   }
-  
   int nParticlesJet1 = Jet1Particles.size();
   int nParticlesJet2 = Jet2Particles.size();
-
-  // For the first jet
-  double firstMaxPt = 0.;
-  double secondMaxPt = 0.;
-  int firstParticle = 0;
-  int secondParticle = 0;
-  for(int i = 0; i != nParticlesJet1; ++i) {
-    if(Jet1Particles.at(i).pt() > firstMaxPt) {
-      secondParticle = firstParticle;
-      secondMaxPt = firstMaxPt;
-      firstParticle = i;
-      firstMaxPt = Jet1Particles.at(i).pt();
-    }
-    else if(Jet1Particles.at(i).pt() > secondMaxPt) {
-      secondParticle = i;
-      secondMaxPt = Jet1Particles.at(i).pt();
-    }
-  }
-
-  double dRTwoParticles = deltaR(Jet1Particles.at(firstParticle).eta(), Jet1Particles.at(firstParticle).phi(),  
-				 Jet1Particles.at(secondParticle).eta(), Jet1Particles.at(secondParticle).phi());
-  double dRJetParticle = deltaR(Jet1Particles.at(firstParticle).eta(), Jet1Particles.at(firstParticle).phi(),  
-				Jet1.eta(), Jet1.phi());
-  h_Jet1_dRTwoParticles->Fill(dRTwoParticles);
-  h_Jet1_dRJetParticle->Fill(dRJetParticle);
-
-  // For the second jet
-  firstMaxPt = 0.;
-  secondMaxPt = 0.;
-  firstParticle = 0;
-  secondParticle = 0;
-  for(int i = 0; i != nParticlesJet2; ++i) {
-    if(Jet2Particles.at(i).pt() > firstMaxPt) {
-      secondParticle = firstParticle;
-      secondMaxPt = firstMaxPt;
-      firstParticle = i;
-      firstMaxPt = Jet2Particles.at(i).pt();
-    }
-    else if(Jet2Particles.at(i).pt() > secondMaxPt) {
-      secondParticle = i;
-      secondMaxPt = Jet2Particles.at(i).pt();
-    }
-  }
-
-  dRTwoParticles = deltaR(Jet2Particles.at(firstParticle).eta(), Jet2Particles.at(firstParticle).phi(),  
-				 Jet2Particles.at(secondParticle).eta(), Jet2Particles.at(secondParticle).phi());
-  dRJetParticle = deltaR(Jet2Particles.at(firstParticle).eta(), Jet2Particles.at(firstParticle).phi(),  
-				Jet2.eta(), Jet2.phi());
-  h_Jet2_dRTwoParticles->Fill(dRTwoParticles);
-  h_Jet2_dRJetParticle->Fill(dRJetParticle);
-
-  
   h_Jet1_NumParticles->Fill(nParticlesJet1);
   h_Jet2_NumParticles->Fill(nParticlesJet2);
+
+  // Z X jet analysis.
+  // Assign each jet to a Z. "inverse" means Jet1 with Z2, Jet2 with Z1.
+  double dRJet1 = 0.;
+  double dRJet2 = 0.;
+  double dRJet1Z1 = deltaR(Jet1.eta(), Jet1.phi(), Z1.eta(), Z1.phi()); 
+  double dRJet1Z2 = deltaR(Jet1.eta(), Jet1.phi(), Z2.eta(), Z2.phi()); 
+  double dRJet2Z1 = deltaR(Jet2.eta(), Jet2.phi(), Z1.eta(), Z1.phi()); 
+  double dRJet2Z2 = deltaR(Jet2.eta(), Jet2.phi(), Z1.eta(), Z1.phi()); 
+  bool inverse = false;
+  if(dRJet1Z1 < dRJet1Z2) {
+    dRJet1 = dRJet1Z1;
+    dRJet2 = dRJet2Z2;
+    inverse = false;
+  }
+  else { 
+    dRJet1 = dRJet1Z2;
+    dRJet2 = dRJet2Z1;
+    inverse = true;
+  }
+
+  // Get the Z daughters of each Z associated to each jet.
+  
+  double Jet1Zpt = 0;
+  double Jet2Zpt = 0;
+  Jet1ZDaughters.clear();
+  Jet2ZDaughters.clear();
+  
+  if(!inverse)
+    this->assignZDaughters(Jet1Zpt, Jet2Zpt, Z1, Z2);
+  else
+    this->assignZDaughters(Jet1Zpt, Jet2Zpt, Z2, Z1);
+
+  // Calculate the dR in between each Z's daughters, and do some plots. 
+
+  double Jet1dRZDaughters;
+  
+  Jet1dRZDaughters = deltaR(Jet1ZDaughters.at(0).eta(), Jet1ZDaughters.at(0).phi(),
+			    Jet1ZDaughters.at(1).eta(), Jet1ZDaughters.at(1).phi());
+  
+  h_Jet1_dRZxMass->Fill(dRJet1, Jet1.mass());
+  h_Jet1_dRZxNumParticles->Fill(dRJet1, nParticlesJet1);
+  h_Jet1_dRZxEt->Fill(dRJet1, Jet1.et());
+
+  h_Jet1_dRDauxMass->Fill(Jet1dRZDaughters, Jet1.mass());
+  h_Jet1_dRDauxNumParticles->Fill(Jet1dRZDaughters, nParticlesJet1);
+  h_Jet1_dRDauxZpt->Fill(Jet1dRZDaughters, Jet1Zpt);
+
+  h_MassxNumParticles->Fill(Jet1.mass(), nParticlesJet1);
+  h_Jet1EtxdRDau->Fill(Jet1.et(),Jet1dRZDaughters);
+  h_Jet1EtxNumParticles->Fill(Jet1.et(),nParticlesJet1);
+  h_Jet1EtxMass->Fill(Jet1.et(),Jet1.mass());
+  h_Jet1EtxEta->Fill(Jet1.et(),Jet1.eta());
 }
 
+void
+RSJetAnalyzer::assignZDaughters(double& Jet1Zpt, double& Jet2Zpt , const reco::Candidate& Z1, const reco::Candidate& Z2) {
+  
+  Jet1Zpt = Z1.pt();
+  Jet2Zpt = Z2.pt();
+  
+    // Get the Zdaughters of Jet1;
+  for(unsigned int daunum = 0; daunum != Z1.numberOfDaughters(); ++daunum) {
+    if(Z1.daughter(daunum)->pdgId() != Z_id)
+      Jet1ZDaughters.push_back(reco::LeafCandidate(Z1.daughter(daunum)->charge(), 
+						   Z1.daughter(daunum)->p4(), 
+						   Z1.daughter(daunum)->vertex(), 
+						   Z1.daughter(daunum)->pdgId(), 
+						   Z1.daughter(daunum)->status() ) );
+  }
+  // Get the Zdaughters of Jet2;
+  for(unsigned int daunum = 0; daunum != Z2.numberOfDaughters(); ++daunum) {
+    if(Z2.daughter(daunum)->pdgId() != Z_id)
+      Jet2ZDaughters.push_back(reco::LeafCandidate(Z2.daughter(daunum)->charge(), 
+						   Z2.daughter(daunum)->p4(), 
+						   Z2.daughter(daunum)->vertex(), 
+						   Z2.daughter(daunum)->pdgId(), 
+						   Z2.daughter(daunum)->status() ) );
+  }
+}
 
 // ------------ method called once each job just before starting event loop  ------------
 void 
