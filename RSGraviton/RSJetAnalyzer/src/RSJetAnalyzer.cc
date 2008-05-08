@@ -13,7 +13,7 @@ Implementation:
 //
 // Original Author:  Thiago Fernandez Perez
 //         Created:  Wed Apr 23 17:48:37 CEST 2008
-// $Id: RSJetAnalyzer.cc,v 1.1 2008/05/02 10:58:19 tomei Exp $
+// $Id: RSJetAnalyzer.cc,v 1.2 2008/05/05 13:06:50 tomei Exp $
 //
 //
 
@@ -86,6 +86,10 @@ private:
   TH2F* h_Jet1EtxNumParticles;
   TH2F* h_Jet1EtxMass;
   TH2F* h_Jet1EtxEta;
+
+  TH2F* h_EtFracxCalo;
+  TH2F* h_EtFracxGen;
+  TH2F* h_EtFracxEta;
 };
 
 //
@@ -101,6 +105,7 @@ const int Z_id = 23;
 // constructors and destructor
 //
 RSJetAnalyzer::RSJetAnalyzer(const edm::ParameterSet& iConfig)
+
 {
   //now do what ever initialization is needed
   edm::Service<TFileService> fs;
@@ -126,6 +131,9 @@ RSJetAnalyzer::RSJetAnalyzer(const edm::ParameterSet& iConfig)
   h_Jet1EtxNumParticles = fs->make<TH2F>( "jet1EtParticles", "jet1EtParticles", 400, 0., 1000., 500, 0.5, 500.5); 
   h_Jet1EtxMass         = fs->make<TH2F>( "jet1EtMass", "jet1EtMass", 400, 0., 1000., 400, 0., 1000.);
   h_Jet1EtxEta          = fs->make<TH2F>( "jet1EtEta", "jet1EtEta", 400, 0., 1000., 400, -4., 4.); 
+  h_EtFracxCalo         = fs->make<TH2F>( "etFracCalo", "etFracCalo", 400, 0., 1000., 100, 0., 1.);
+  h_EtFracxGen          = fs->make<TH2F>( "etFracGen", "etFracGen", 400, 0., 1000., 100, 0., 1.);
+  h_EtFracxEta          = fs->make<TH2F>( "etFracEta", "etFracEta", 400, -4., 4., 100, 0., 1.);
 }
 
 
@@ -152,13 +160,14 @@ RSJetAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   Handle<View<Candidate> > jetsHandle;
   Handle<View<Candidate> > ZsHandle;
   Handle<CandidateCollection> particlesHandle;
+//   Handle<CandMatchMap> jetsMapHandle;
 
-  iEvent.getByLabel("twoJets",jetsHandle);
+  iEvent.getByLabel("twoCaloJets",jetsHandle);
   iEvent.getByLabel("trueZs", ZsHandle);
-  iEvent.getByLabel("genParticleCandidates", particlesHandle);
-  
-  //  std::cout << jetsHandle->size() << " jets" << std::endl;
-  //  std::cout << ZsHandle->size() << " Zs" << std::endl;
+  iEvent.getByLabel("allTracks", particlesHandle);
+//   iEvent.getByLabel("matchGenJetsCaloJets", jetsMapHandle);  
+
+//   const CandMatchMap* jetsMap = jetsMapHandle.product();
 
   // For now, this class only analyzes a collection of two jets and two Zs
   const Candidate & Jet1 = (* jetsHandle)[0];
@@ -237,6 +246,16 @@ RSJetAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   
   Jet1dRZDaughters = deltaR(Jet1ZDaughters.at(0).eta(), Jet1ZDaughters.at(0).phi(),
 			    Jet1ZDaughters.at(1).eta(), Jet1ZDaughters.at(1).phi());
+
+//   // Calculate how well the CaloJets match the GenJets
+//   for (CandMatchMap::const_iterator it = jetsMap->begin(); it != jetsMap->end(); ++it) {
+//     const Candidate* theGenJet  = it->key->masterClone().get();
+//     const Candidate* theCaloJet = it->val->masterClone().get();
+//     double fraction = double(theCaloJet->et()/theGenJet->et());
+//     h_EtFracxGen->Fill(theGenJet->et(), fraction);
+//     h_EtFracxCalo->Fill(theCaloJet->et(), fraction);
+//     h_EtFracxEta->Fill(theCaloJet->eta(), fraction);
+//   }
   
   h_Jet1_dRZxMass->Fill(dRJet1, Jet1.mass());
   h_Jet1_dRZxNumParticles->Fill(dRJet1, nParticlesJet1);
