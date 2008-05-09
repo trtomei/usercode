@@ -13,7 +13,7 @@ Implementation:
 //
 // Original Author:  Thiago Fernandez Perez
 //         Created:  Wed Mar 19 16:47:30 CET 2008
-// $Id$
+// $Id: EventCounter.cc,v 1.1 2008/03/20 10:17:28 tomei Exp $
 //
 //
 
@@ -29,8 +29,9 @@ Implementation:
 #include "FWCore/Framework/interface/MakerMacros.h"
 
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
-#include "TFile.h"
-#include "TH1.h"
+#include "FWCore/ServiceRegistry/interface/Service.h"
+#include "PhysicsTools/UtilAlgos/interface/TFileService.h"
+#include "TH1F.h"
 //
 // class decleration
 //
@@ -45,8 +46,7 @@ private:
   virtual void beginJob(const edm::EventSetup&) ;
   virtual void analyze(const edm::Event&, const edm::EventSetup&);
   virtual void endJob() ;
-  TFile* hOutputFile;
-  TH1D* H_eventcounter;
+  TH1F* H_eventcounter;
   // ----------member data ---------------------------
 };
 
@@ -65,20 +65,14 @@ EventCounter::EventCounter(const edm::ParameterSet& iConfig)
 
 {
   //now do what ever initialization is needed
-  hOutputFile   = new TFile("count.root", "RECREATE" );
-  H_eventcounter  = new TH1D("eventcounter", "Event counter", 1, 0., 1.); 
+  edm::Service<TFileService> fs;
+  H_eventcounter = fs->make<TH1F>("eventcounter", "eventcounter", 1, -0.5, 0.5); 
 }
 
 
 EventCounter::~EventCounter()
 {
- 
-  // do anything here that needs to be done at desctruction time
-  // (e.g. close files, deallocate resources etc.)
-  hOutputFile->Write() ;
-  hOutputFile->Close() ;
-  return;
-}
+} 
 
 
 //
@@ -90,7 +84,7 @@ void
 EventCounter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
   using namespace edm;
-  H_eventcounter->Fill(0.5, 1.0);
+  H_eventcounter->Fill(1.);
 }
 
 
