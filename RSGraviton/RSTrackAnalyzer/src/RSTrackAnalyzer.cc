@@ -13,7 +13,7 @@
 //
 // Original Author:  Thiago Fernandez Perez
 //         Created:  Tue May  6 17:17:55 CEST 2008
-// $Id$
+// $Id: RSTrackAnalyzer.cc,v 1.1 2008/05/08 08:18:52 tomei Exp $
 //
 //
 
@@ -58,6 +58,10 @@ class RSTrackAnalyzer : public edm::EDAnalyzer {
       virtual void endJob() ;
 
       // ----------member data ---------------------------
+  edm::InputTag tracks_;
+  edm::InputTag charged_;
+  edm::InputTag jets_;
+
   TH1F* h_chargedJet1;
   TH1F* h_chargedJet2;
   TH1F* h_tracksJet1;
@@ -79,8 +83,10 @@ class RSTrackAnalyzer : public edm::EDAnalyzer {
 //
 // constructors and destructor
 //
-RSTrackAnalyzer::RSTrackAnalyzer(const edm::ParameterSet& iConfig)
-
+RSTrackAnalyzer::RSTrackAnalyzer(const edm::ParameterSet& iConfig) :
+  tracks_(iConfig.getParameter<edm::InputTag>("Tracks") ),
+  charged_(iConfig.getParameter<edm::InputTag>("Charged") ),
+  jets_(iConfig.getParameter<edm::InputTag>("Jets") )
 {
    //now do what ever initialization is needed
   edm::Service<TFileService> fs;
@@ -120,9 +126,9 @@ RSTrackAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
    Handle<CandidateCollection> particlesHandle;
    Handle<View<Candidate> > jetsHandle;
    
-   iEvent.getByLabel("ctfGSWithMaterialTracks", tracksHandle);
-   iEvent.getByLabel("genParticlesAllStable", particlesHandle);
-   iEvent.getByLabel("twoCaloJets", jetsHandle);   
+   iEvent.getByLabel(tracks_, tracksHandle);
+   iEvent.getByLabel(charged_, particlesHandle);
+   iEvent.getByLabel(jets_, jetsHandle);   
    
    // Let us get the two jets
    const Candidate & Jet1 = (* jetsHandle)[0];
