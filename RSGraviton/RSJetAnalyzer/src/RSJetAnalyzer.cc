@@ -13,7 +13,7 @@ Implementation:
 //
 // Original Author:  Thiago Fernandez Perez
 //         Created:  Wed Apr 23 17:48:37 CEST 2008
-// $Id: RSJetAnalyzer.cc,v 1.2 2008/05/05 13:06:50 tomei Exp $
+// $Id: RSJetAnalyzer.cc,v 1.3 2008/05/08 08:14:52 tomei Exp $
 //
 //
 
@@ -29,6 +29,7 @@ Implementation:
 #include "FWCore/Framework/interface/MakerMacros.h"
 
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
+#include "FWCore/ParameterSet/interface/InputTag.h"
 
 #include "DataFormats/Candidate/interface/Candidate.h"
 #include "DataFormats/Candidate/interface/CandidateFwd.h"
@@ -59,6 +60,11 @@ private:
   virtual void endJob() ;
 
   // ----------member data ---------------------------
+
+  edm::InputTag jets_;
+  edm::InputTag particles_;
+  edm::InputTag Zs_;
+
   std::vector<reco::LeafCandidate> Jet1Particles;
   std::vector<reco::LeafCandidate> Jet2Particles;
   std::vector<reco::LeafCandidate> Jet1ZDaughters;
@@ -104,8 +110,10 @@ const int Z_id = 23;
 //
 // constructors and destructor
 //
-RSJetAnalyzer::RSJetAnalyzer(const edm::ParameterSet& iConfig)
-
+RSJetAnalyzer::RSJetAnalyzer(const edm::ParameterSet& iConfig) :
+  jets_(iConfig.getParameter<edm::InputTag>("Jets") ),
+  particles_(iConfig.getParameter<edm::InputTag>("Particles") ),
+  Zs_(iConfig.getParameter<edm::InputTag>("Zs") )
 {
   //now do what ever initialization is needed
   edm::Service<TFileService> fs;
@@ -162,9 +170,9 @@ RSJetAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   Handle<CandidateCollection> particlesHandle;
 //   Handle<CandMatchMap> jetsMapHandle;
 
-  iEvent.getByLabel("twoCaloJets",jetsHandle);
-  iEvent.getByLabel("trueZs", ZsHandle);
-  iEvent.getByLabel("allTracks", particlesHandle);
+  iEvent.getByLabel(jets_,jetsHandle);
+  iEvent.getByLabel(Zs_, ZsHandle);
+  iEvent.getByLabel(particles_, particlesHandle);
 //   iEvent.getByLabel("matchGenJetsCaloJets", jetsMapHandle);  
 
 //   const CandMatchMap* jetsMap = jetsMapHandle.product();
