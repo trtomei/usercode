@@ -13,7 +13,7 @@ Implementation:
 //
 // Original Author:  Thiago Fernandez Perez
 //         Created:  Wed Feb 20 15:48:51 CET 2008
-// $Id$
+// $Id: JetCounter.cc,v 1.1 2008/03/20 10:17:29 tomei Exp $
 //
 //
 
@@ -31,16 +31,11 @@ Implementation:
 #include "FWCore/Framework/interface/MakerMacros.h"
 
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
-#include "DataFormats/Common/interface/Handle.h"
+#include "FWCore/ServiceRegistry/interface/Service.h"
+#include "PhysicsTools/UtilAlgos/interface/TFileService.h"
 #include "DataFormats/Candidate/interface/Candidate.h"
-#include "TFile.h"
-#include "TH1.h"
-#include "FWCore/MessageLogger/interface/MessageLogger.h"
-#include "FWCore/Utilities/interface/Exception.h"
-
-using namespace std;
-using namespace reco;
-using namespace edm;
+#include "DataFormats/Candidate/interface/CandidateFwd.h"
+#include "TH1F.h"
 //
 // class decleration
 //
@@ -55,17 +50,13 @@ private:
   virtual void beginJob(const edm::EventSetup&) ;
   virtual void analyze(const edm::Event&, const edm::EventSetup&);
   virtual void endJob() ;
-  InputTag src_;
-  string fOutputFileName_;
-
-  TFile* hOutputFile;
-  TH1D* H_W_numjets;
-  TH1D* H_Z_numjets;
-  TH1D* H_tt_numjets;
-  vector<TH1D*> H_W;
-  vector<TH1D*> H_Z;
-  vector<TH1D*> H_tt;
-
+  edm::InputTag src_;
+  TH1F* numjets0p;
+  TH1F* numjets1p;
+  TH1F* numjets2p;
+  TH1F* numjets3p;
+  TH1F* numjets4p;
+  TH1F* numjets5p;
   // ----------member data ---------------------------
 };
 
@@ -81,42 +72,20 @@ private:
 // constructors and destructor
 //
 JetCounter::JetCounter(const edm::ParameterSet& iConfig):
-  src_(iConfig.getParameter<InputTag>("src") ),
-  fOutputFileName_(iConfig.getUntrackedParameter<string>("HistOutFile", "output.root") )
+  src_(iConfig.getParameter<edm::InputTag>("src") )
 {
   //now do what ever initialization is needed
-  hOutputFile   = new TFile(fOutputFileName_.c_str(), "RECREATE" );
-  char name_W[256];
-  char name_Z[256];
-  char name_tt[256];
-
-  H_W_numjets = new TH1D("numjets_W_total", "Number of jets", 10, 0., 10.);
-  H_Z_numjets = new TH1D("numjets_Z_total", "Number of jets", 10, 0., 10.);
-  H_tt_numjets = new TH1D("numjets_tt_total", "Number of jets", 10, 0., 10.);
-
-  H_W.resize(6);
-  H_Z.resize(6);
-  H_tt.resize(6);
-
-  for (int i=0; i!=6; ++i) {
-    sprintf(name_W, "numjets_%ip_W", i);
-    sprintf(name_Z, "numjets_%ip_Z", i);
-    sprintf(name_tt, "numjets_%ip_tt", i);
-    H_W[i]  = new TH1D(name_W, "Number of jets", 10, 0., 10.);
-    H_Z[i]  = new TH1D(name_Z, "Number of jets", 10, 0., 10.);
-    H_tt[i] = new TH1D(name_tt, "Number of jets", 10, 0., 10.);
-  }  
-  
+  edm::Service<TFileService> fs;
+  numjets0p = fs->make<TH1F>("numjets0p", "numjets0p", 15, -0.5, 14.5);
+  numjets1p = fs->make<TH1F>("numjets1p", "numjets1p", 15, -0.5, 14.5);
+  numjets2p = fs->make<TH1F>("numjets2p", "numjets2p", 15, -0.5, 14.5);
+  numjets3p = fs->make<TH1F>("numjets3p", "numjets3p", 15, -0.5, 14.5);
+  numjets4p = fs->make<TH1F>("numjets4p", "numjets4p", 15, -0.5, 14.5);
+  numjets5p = fs->make<TH1F>("numjets5p", "numjets5p", 15, -0.5, 14.5);
 }
 
 JetCounter::~JetCounter()
 {
- 
-  // do anything here that needs to be done at desctruction time
-  // (e.g. close files, deallocate resources etc.)
-  hOutputFile->Write() ;
-  hOutputFile->Close() ;
-
 }
 
 
@@ -128,85 +97,36 @@ JetCounter::~JetCounter()
 void
 JetCounter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
-  using namespace std;
   using namespace edm;
 
    // CSA07 weights.
   Handle<double> weightHandle;
+  Handle<int> processIDHandle;
   iEvent.getByLabel ("weight","weight", weightHandle);
-  double weight = * weightHandle;
-   
-  LogDebug("Values") << "weight is " << weight;
-
-  bool wevent = false;
-  bool zevent = false;
-  bool ttbarevent = false;
-  int multiplier = 0;
-  int numpartons = 0;
-
-  // Code to decide if I am dealing with:
-  // 1- ttbar event.
-  // 2- w+jets event.
-  // 3- z+jets event.
-  Handle<int> ALPGENHandle;
-  iEvent.getByLabel ("weight","AlpgenProcessID", ALPGENHandle);
-  int alpgen = * ALPGENHandle;
-
-  if( (alpgen >= 1000) && (alpgen < 2000) ){
-    wevent = true;
-    multiplier = 1;
-  }
-  else if( (alpgen >= 2000) && (alpgen < 3000) ){
-    zevent = true;
-    multiplier = 2;
-  }
-  else if( (alpgen >= 3000) && (alpgen < 4000) ){ 
-    ttbarevent = true;
-    multiplier = 3;
-  }
+  iEvent.getByLabel ("weight","AlpgenProcessID", processIDHandle);
+  double weight = *weightHandle;
+  int processID = *processIDHandle;
   
-  numpartons = alpgen - (multiplier*1000);
+  // Get number of partons from processID - it is the last digit.
+  int npartons = processID%10;
 
-  LogDebug("Values") << "numpartons = " << numpartons;
-
-  if(numpartons > 5) {
-    throw cms::Exception("RangeError") << "Too many (" << numpartons << ") hard partons";
-    LogError("ERROR") << "Too many (" << numpartons << ") hard partons";
-  }
-  
-  Handle<CandidateCollection> src;
+  Handle<reco::CandidateView> src;
   iEvent.getByLabel(src_, src);
   int njets = src->size();
-  
-  if(wevent)
-    H_W_numjets->Fill(njets, weight);
-  if(zevent)
-    H_Z_numjets->Fill(njets, weight);
-  if(ttbarevent)
-    H_tt_numjets->Fill(njets, weight);
-  
-  switch(multiplier) {
-  case 1: 
-    {
-      (H_W.at(numpartons))->Fill(njets, weight);
-    }
-    break;
 
-  case 2: 
-    {
-      (H_Z.at(numpartons))->Fill(njets, weight);
-    }
-    break;
-
-  case 3:
-    {
-      (H_tt.at(numpartons))->Fill(njets, weight);
-    }
-    break;
-    
-  } // Closes switch;  
-
-
+  // Stupid code, but... 
+  if(npartons == 0)
+    numjets0p->Fill(njets, weight);
+  if(npartons == 1)
+    numjets1p->Fill(njets, weight);
+  if(npartons == 2)
+    numjets2p->Fill(njets, weight);
+  if(npartons == 3)
+    numjets3p->Fill(njets, weight);
+  if(npartons == 4)
+    numjets4p->Fill(njets, weight);
+  if(npartons == 5)
+    numjets5p->Fill(njets, weight);
 }
 
 // ------------ method called once each job just before starting event loop  ------------

@@ -13,7 +13,7 @@ Implementation:
 //
 // Original Author:  Thiago Fernandez Perez
 //         Created:  Wed Mar 19 16:47:30 CET 2008
-// $Id: EventCounter.cc,v 1.1 2008/03/20 10:17:28 tomei Exp $
+// $Id: EventCounter.cc,v 1.2 2008/05/09 12:38:51 tomei Exp $
 //
 //
 
@@ -84,7 +84,7 @@ void
 EventCounter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
   using namespace edm;
-  H_eventcounter->Fill(1.);
+  H_eventcounter->Fill(0.);
 }
 
 
