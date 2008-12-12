@@ -1,0 +1,11 @@
+<export></export>
+<library name=RSGravitonRSAnalyzer_plugins file=*.cc>
+  <use name=FWCore/Framework>
+  <use name=FWCore/ParameterSet>
+  <use name=DataFormats/RecoCandidate>
+  <use name=DataFormats/JetReco>
+  <use name=PhysicsTools/RecoUtils>
+  <use name=PhysicsTools/CandAlgos>
+  <use name=PhysicsTools/RecoAlgos>
+  <use name=PhysicsTools/UtilAlgos>
+</library>
