@@ -3,11 +3,12 @@
 #include "PhysicsTools/UtilAlgos/interface/SortCollectionSelector.h"
 #include "DataFormats/JetReco/interface/GenJet.h"
 #include "PhysicsTools/Utilities/interface/EtComparator.h"
-typedef ObjectSelector<
-         SortCollectionSelector<
-            reco::GenJetCollection, 
-              GreaterByEt<reco::GenJet> 
-          > 
-        > LargestEtGenJetSelector;
+
+ typedef ObjectSelector<
+   SortCollectionSelector<
+     reco::GenJetCollection, 
+     GreaterByEt<reco::GenJet> 
+   > 
+ > LargestEtGenJetSelector;
 
 DEFINE_FWK_MODULE( LargestEtGenJetSelector );

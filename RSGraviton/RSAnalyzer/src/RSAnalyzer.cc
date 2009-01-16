@@ -14,7 +14,7 @@ Implementation:
 //
 // Original Author:  Thiago Fernandez Perez
 //         Created:  Wed Feb 13 15:08:56 CET 2008
-// $Id: RSAnalyzer.cc,v 1.2 2008/04/14 17:59:46 tomei Exp $
+// $Id: RSAnalyzer.cc,v 1.3 2008/05/02 10:57:48 tomei Exp $
 //
 //
 
@@ -27,27 +27,16 @@ Implementation:
 #include "FWCore/Framework/interface/Frameworkfwd.h"
 #include "FWCore/Framework/interface/EDAnalyzer.h"
 
-#include "DataFormats/Common/interface/Handle.h"
 #include "FWCore/Framework/interface/Event.h"
 #include "FWCore/Framework/interface/MakerMacros.h"
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
+#include "Flow.hh"
+#include "PhysicsTools/Utilities/interface/Parameter.h"
+#include "PhysicsTools/Utilities/interface/RootMinuit.h"
 
-#include "DataFormats/Candidate/interface/Candidate.h"
-#include "DataFormats/Candidate/interface/CandidateFwd.h"
-#include "DataFormats/Candidate/interface/CompositeCandidate.h"
-#include "PhysicsTools/CandUtils/interface/AddFourMomenta.h"
-#include "DataFormats/HepMCCandidate/interface/GenParticle.h"
-#include "DataFormats/Math/interface/deltaR.h"
-#include "FWCore/ServiceRegistry/interface/Service.h"
-#include "PhysicsTools/UtilAlgos/interface/TFileService.h"
-#include "TFile.h"
-#include "TH1.h"
-#include "TH2.h"
-#include "TProfile.h" 
 //
-// class decleration
+// class declaration
 //
-bool compare(const reco::GenParticle& x, const reco::GenParticle& y);
 
 class RSAnalyzer : public edm::EDAnalyzer {
 public:
@@ -60,14 +49,12 @@ private:
   virtual void endJob() ;
   
   // ----------member data ---------------------------
-  TH1F* h_Zdau_dR;
 };
 
 //
 // constants, enums and typedefs
 //
-const int Z_id = 23;
-const int grav_id = 5000039;
+
 //
 // static data member definitions
 //
@@ -76,10 +63,7 @@ const int grav_id = 5000039;
 // constructors and destructor
 //
 RSAnalyzer::RSAnalyzer(const edm::ParameterSet& iConfig)
-
 {
-  edm::Service<TFileService> fs;
-  h_Zdau_dR = fs->make<TH1F>( "Zdau_dR"  , "dR", 50,  0., 2.);
 }
 
 
@@ -100,38 +84,30 @@ RSAnalyzer::~RSAnalyzer()
 void
 RSAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
-  using namespace edm;
-  using namespace reco;
+  using namespace math;
+  XYZVector v(1,2,3);
 
-  Handle<CandidateCollection> genParticles_handle;
-  iEvent.getByLabel("genParticleCandidates", genParticles_handle);
-  const CandidateCollection genParticles = *genParticles_handle.product();
+  XYZVector v1(8,12,9);
+  XYZVector v2(2,-4,7);
+  std::vector<XYZVector> vc;
+  vc.push_back(v1);
+  vc.push_back(v2);
 
-  // Getting the dR between the two children, and plotting it.
-  for(CandidateCollection::const_iterator it = genParticles.begin(); it != genParticles.end();	++it) {
-    const Candidate* Z = &*it;
-    if(Z->pdgId() == Z_id && Z->status() == 3) {
-      std::vector<std::pair<double, double> > Zdaughters;
-      for(Candidate::const_iterator dauit = Z->begin(); dauit != Z->end(); ++dauit) {
-	if(dauit->pdgId() == Z_id)
-	  continue;
-	std::pair<double, double> dau(dauit->eta(),dauit->phi());
-	Zdaughters.push_back(dau);
-      }
-      double eta1 = Zdaughters.at(0).first;
-      double eta2 = Zdaughters.at(1).first;
-      double phi1 = Zdaughters.at(0).second;
-      double phi2 = Zdaughters.at(1).second;
-      double dR = deltaR(eta1, phi1, eta2, phi2);
-      h_Zdau_dR->Fill(dR);
-    }
-  }
- 
-}
+  funct::Parameter phi("Phi",0.7);
 
-bool compare(const reco::GenParticle& x, const reco::GenParticle& y)
-{
-  return x.pt() < y.pt();
+  Flow f(v,vc,phi);
+  //  for (int i=0; i!=31; ++i) {
+  //    phi = double(0.1*i);
+  //    std::cout << "Flow of " << double(0.1*i) << " = " << f() << std::endl;
+  //  }
+  
+  phi = 0.7;
+  fit::RootMinuit<Flow> minuit(f, false);
+  minuit.addParameter(phi, 0.1, 0.0, 1.57);
+  minuit.minimize();
+  minuit.migrad();
+  std::cout << "Min value is " << minuit.minValue() << std::endl;
+  minuit.printParameters();
 }
 
 // ------------ method called once each job just before starting event loop  ------------
