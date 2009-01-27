@@ -10,7 +10,7 @@ process = cms.Process("USER")
 # Basic process controls. #
 ###########################
 
-fileLabel = 'RS750ZZ'
+fileLabel = 'RS1250ZZ'
 # Source
 process.load('RSGraviton.RSAnalyzer.Summer08_'+fileLabel+'_JetMET_cfi')
 

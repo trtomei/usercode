@@ -5,7 +5,7 @@
 // 
 /**\class RSFlowAnalyzer RSFlowAnalyzer.cc RSGraviton/RSFlowAnalyzer/src/RSFlowAnalyzer.cc
 
- Description: <one line class summary>
+ Description: Class to analyze the flow of energy inside jets, using tracks.
 
  Implementation:
      <Notes on implementation>
@@ -13,7 +13,7 @@
 //
 // Original Author:  
 //         Created:  Thu Jan 15 18:14:18 BRST 2009
-// $Id$
+// $Id: RSFlowAnalyzer.cc,v 1.1 2009/01/16 12:16:32 tomei Exp $
 //
 //
 

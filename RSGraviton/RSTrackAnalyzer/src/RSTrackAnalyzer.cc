@@ -5,7 +5,7 @@
 // 
 /**\class RSTrackAnalyzer RSTrackAnalyzer.cc RSGraviton/RSTrackAnalyzer/src/RSTrackAnalyzer.cc
 
- Description: <one line class summary>
+ Description: Class to count tracks inside jets.
 
  Implementation:
      <Notes on implementation>
@@ -13,7 +13,7 @@
 //
 // Original Author:  Thiago Fernandez Perez
 //         Created:  Tue May  6 17:17:55 CEST 2008
-// $Id: RSTrackAnalyzer.cc,v 1.1 2008/05/08 08:18:52 tomei Exp $
+// $Id: RSTrackAnalyzer.cc,v 1.2 2008/05/17 19:37:41 tomei Exp $
 //
 //
 
@@ -29,13 +29,12 @@
 #include "FWCore/Framework/interface/MakerMacros.h"
 
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
+#include "FWCore/ParameterSet/interface/InputTag.h"
 
-#include "DataFormats/Candidate/interface/Candidate.h"
-#include "DataFormats/Candidate/interface/CandidateFwd.h"
-#include "DataFormats/Common/interface/View.h"
+#include "DataFormats/JetReco/interface/Jet.h"
+#include "DataFormats/JetReco/interface/CaloJetCollection.h"
 #include "DataFormats/TrackReco/interface/Track.h"
 #include "DataFormats/TrackReco/interface/TrackFwd.h"
-#include "DataFormats/TrackingRecHit/interface/TrackingRecHit.h"
 #include "DataFormats/Math/interface/deltaR.h"
 #include "FWCore/ServiceRegistry/interface/Service.h"
 #include "PhysicsTools/UtilAlgos/interface/TFileService.h"
@@ -59,17 +58,11 @@ class RSTrackAnalyzer : public edm::EDAnalyzer {
 
       // ----------member data ---------------------------
   edm::InputTag tracks_;
-  edm::InputTag charged_;
   edm::InputTag jets_;
+  double jetRadius_;
 
-  TH1F* h_chargedJet1;
-  TH1F* h_chargedJet2;
   TH1F* h_tracksJet1;
   TH1F* h_tracksJet2;
-  TH1F* h_matchedJet1;
-  TH1F* h_matchedJet2;
-  TH1F* h_unmatchedJet1;
-  TH1F* h_unmatchedJet2;
 };
 
 //
@@ -84,21 +77,14 @@ class RSTrackAnalyzer : public edm::EDAnalyzer {
 // constructors and destructor
 //
 RSTrackAnalyzer::RSTrackAnalyzer(const edm::ParameterSet& iConfig) :
-  tracks_(iConfig.getParameter<edm::InputTag>("Tracks") ),
-  charged_(iConfig.getParameter<edm::InputTag>("Charged") ),
-  jets_(iConfig.getParameter<edm::InputTag>("Jets") )
+  tracks_(iConfig.getParameter<edm::InputTag>("tracks") ),
+  jets_(iConfig.getParameter<edm::InputTag>("jets") ),
+  jetRadius_(iConfig.getParameter<double>("jetRadius") )
 {
    //now do what ever initialization is needed
   edm::Service<TFileService> fs;
-  h_chargedJet1  = fs->make<TH1F>( "chargedJet1"  , "chargedJet1", 500,  0.5, 500.5);
-  h_chargedJet2  = fs->make<TH1F>( "chargedJet2"  , "chargedJet2", 500,  0.5, 500.5);
   h_tracksJet1  = fs->make<TH1F>( "tracksJet1"  , "tracksJet1", 500,  0.5, 500.5);
   h_tracksJet2  = fs->make<TH1F>( "tracksJet2"  , "tracksJet2", 500,  0.5, 500.5);
-  h_matchedJet1  = fs->make<TH1F>( "matchedJet1"  , "matchedJet1", 500,  0.5, 500.5);
-  h_matchedJet2  = fs->make<TH1F>( "matchedJet2"  , "matchedJet2", 500,  0.5, 500.5);
-  h_unmatchedJet1  = fs->make<TH1F>( "unmatchedJet1"  , "unmatchedJet1", 500,  0.5, 500.5);
-  h_unmatchedJet2  = fs->make<TH1F>( "unmatchedJet2"  , "unmatchedJet2", 500,  0.5, 500.5);
-
 }
 
 
@@ -123,67 +109,17 @@ RSTrackAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
    using namespace reco;
    
    Handle<TrackCollection> tracksHandle;
-   Handle<CandidateCollection> particlesHandle;
-   Handle<View<Candidate> > jetsHandle;
+   Handle<CaloJetCollection> jetsHandle;
    
    iEvent.getByLabel(tracks_, tracksHandle);
-   iEvent.getByLabel(charged_, particlesHandle);
    iEvent.getByLabel(jets_, jetsHandle);   
    
    // Let us get the two jets
-   const Candidate & Jet1 = (* jetsHandle)[0];
-   const Candidate & Jet2 = (* jetsHandle)[1];
+   const Jet & Jet1 = (* jetsHandle)[0];
+   const Jet & Jet2 = (* jetsHandle)[1];
 
    // Find the particles inside, and compare
    // them to the tracks.
-   double jetradius=0.7;
-   double matchradius = 0.075; // Is this reasonable?
-   int nMatchedJet1 = 0;
-   int nUnmatchedJet1 = 0;
-   int nChargedJet1 = 0;
-   int nMatchedJet2 = 0;
-   int nUnmatchedJet2 = 0;
-   int nChargedJet2 = 0;
-
-   for(CandidateCollection::const_iterator piter = particlesHandle->begin();
-       piter != particlesHandle->end(); ++piter) {
-     if(piter->charge() == 0) 
-       continue;
-     double dR1 = deltaR(Jet1.eta(),Jet1.phi(),piter->eta(),piter->phi());
-     double dR2 = deltaR(Jet2.eta(),Jet2.phi(),piter->eta(),piter->phi());
-     
-     if(dR1 < jetradius) { // Inside jet 1
-       ++nChargedJet1;
-       double matched = false;
-       for(TrackCollection::const_iterator titer = tracksHandle->begin();
-	   titer != tracksHandle->end(); ++titer) {
-	 double dRPartTrack = deltaR(piter->eta(), piter->phi(), titer->eta(), titer->phi());
-	 if(dRPartTrack < matchradius)
-	   matched = true;
-       }
-       if(matched)
-	 ++nMatchedJet1;
-       else
-	 ++nUnmatchedJet1;
-     }
-     
-     if(dR2 < jetradius) { // Inside jet 2
-       ++nChargedJet2;
-       double matched = false;
-       for(TrackCollection::const_iterator titer = tracksHandle->begin();
-	   titer != tracksHandle->end(); ++titer) {
-	 double dRPartTrack = deltaR(piter->eta(), piter->phi(), titer->eta(), titer->phi());
-	 if(dRPartTrack < matchradius)
-	   matched = true;
-       }
-       if(matched)
-	 ++nMatchedJet2;
-       else
-	 ++nUnmatchedJet2;
-     }
-     
-   }
-
    int nTracksJet1 = 0;
    int nTracksJet2 = 0;
    
@@ -193,20 +129,14 @@ RSTrackAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
      double dR1 = deltaR(Jet1.eta(),Jet1.phi(),titer->eta(),titer->phi());
      double dR2 = deltaR(Jet2.eta(),Jet2.phi(),titer->eta(),titer->phi());
      
-     if(dR1 < jetradius)
+     if(dR1 < jetRadius_)
        ++nTracksJet1;
-     if(dR2 < jetradius)
+     if(dR2 < jetRadius_)
        ++nTracksJet2;     
    }
 
-   h_chargedJet1->Fill(nChargedJet1);
-   h_chargedJet2->Fill(nChargedJet2);
    h_tracksJet1->Fill(nTracksJet1);
    h_tracksJet2->Fill(nTracksJet2);
-   h_matchedJet1->Fill(nMatchedJet1);
-   h_matchedJet2->Fill(nMatchedJet2);
-   h_unmatchedJet1->Fill(nUnmatchedJet1);
-   h_unmatchedJet2->Fill(nUnmatchedJet2);
 }
 
 

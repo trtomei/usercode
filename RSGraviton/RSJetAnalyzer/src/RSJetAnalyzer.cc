@@ -13,7 +13,7 @@ Implementation:
 //
 // Original Author:  Thiago Fernandez Perez
 //         Created:  Wed Apr 23 17:48:37 CEST 2008
-// $Id: RSJetAnalyzer.cc,v 1.3 2008/05/08 08:14:52 tomei Exp $
+// $Id: RSJetAnalyzer.cc,v 1.4 2008/05/17 16:41:32 tomei Exp $
 //
 //
 
@@ -31,13 +31,9 @@ Implementation:
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 #include "FWCore/ParameterSet/interface/InputTag.h"
 
-#include "DataFormats/Candidate/interface/Candidate.h"
-#include "DataFormats/Candidate/interface/CandidateFwd.h"
-#include "DataFormats/Candidate/interface/LeafCandidate.h"
-#include "DataFormats/Candidate/interface/CandMatchMap.h"
-#include "DataFormats/Common/interface/View.h"
+#include "DataFormats/JetReco/interface/Jet.h"
+#include "DataFormats/JetReco/interface/CaloJetCollection.h"
 #include "DataFormats/Math/interface/deltaR.h"
-#include "DataFormats/Math/interface/deltaPhi.h"
 #include "DataFormats/Math/interface/Vector3D.h"
 #include "FWCore/ServiceRegistry/interface/Service.h"
 #include "PhysicsTools/UtilAlgos/interface/TFileService.h"
@@ -54,54 +50,32 @@ public:
   ~RSJetAnalyzer();
 
 private:
-  void assignZDaughters(double&, double&, const reco::Candidate&, const reco::Candidate&);
   virtual void beginJob(const edm::EventSetup&) ;
   virtual void analyze(const edm::Event&, const edm::EventSetup&);
   virtual void endJob() ;
-
+  double getMajor(const reco::Jet&) ;
+  double getMinor(const reco::Jet&) ;
   // ----------member data ---------------------------
 
   edm::InputTag jets_;
-  edm::InputTag particles_;
-  edm::InputTag Zs_;
 
-  std::vector<reco::LeafCandidate> Jet1Particles;
-  std::vector<reco::LeafCandidate> Jet2Particles;
-  std::vector<reco::LeafCandidate> Jet1ZDaughters;
-  std::vector<reco::LeafCandidate> Jet2ZDaughters;
-  
   TH1F*     h_dR;
   TH1F*     h_dPhi;
   TH2F*     h_EtCorrelation; 
   TH2F*     h_EtaCorrelation;  
   TH2F*     h_PhiCorrelation;  
   TH2F*     h_MassCorrelation; 
-  TH1F*     h_Jet1_NumParticles;
-  TH1F*     h_Jet2_NumParticles;
-
-  TH2F* h_Jet1_dRZxMass;
-  TH2F* h_Jet1_dRZxNumParticles;
-  TH2F* h_Jet1_dRZxEt;
-
-  TH2F* h_Jet1_dRDauxMass;
-  TH2F* h_Jet1_dRDauxNumParticles;
-  TH2F* h_Jet1_dRDauxZpt;
-
-  TH2F* h_MassxNumParticles;
-  TH2F* h_Jet1EtxdRDau;
-  TH2F* h_Jet1EtxNumParticles;
-  TH2F* h_Jet1EtxMass;
-  TH2F* h_Jet1EtxEta;
-
-  TH2F* h_EtFracxCalo;
-  TH2F* h_EtFracxGen;
-  TH2F* h_EtFracxEta;
+  TH1F*     h_Jet1Major;
+  TH1F*     h_Jet2Major;
+  TH1F*     h_Jet1Minor;
+  TH1F*     h_Jet2Minor;
+  TH2F*     h_MajorCorrelation;
+  TH2F*     h_MinorCorrelation;
 };
 
 //
 // constants, enums and typedefs
 //
-const int Z_id = 23;
 
 //
 // static data member definitions
@@ -111,9 +85,7 @@ const int Z_id = 23;
 // constructors and destructor
 //
 RSJetAnalyzer::RSJetAnalyzer(const edm::ParameterSet& iConfig) :
-  jets_(iConfig.getParameter<edm::InputTag>("Jets") ),
-  particles_(iConfig.getParameter<edm::InputTag>("Particles") ),
-  Zs_(iConfig.getParameter<edm::InputTag>("Zs") )
+  jets_(iConfig.getParameter<edm::InputTag>("jets") )
 {
   //now do what ever initialization is needed
   edm::Service<TFileService> fs;
@@ -123,25 +95,13 @@ RSJetAnalyzer::RSJetAnalyzer(const edm::ParameterSet& iConfig) :
   h_EtaCorrelation      = fs->make<TH2F>( "etaCorrelation", "etaCorrelation", 400, -4., 4., 400, -4., 4.);
   h_PhiCorrelation      = fs->make<TH2F>( "phiCorrelation", "phiCorrelation", 144, -M_PI, M_PI, 144, -M_PI, M_PI);
   h_MassCorrelation     = fs->make<TH2F>( "massCorrelation", "massCorrelation", 400, 0., 1000., 400, 0., 1000.); 
-  h_Jet1_NumParticles   = fs->make<TH1F>( "jet1Particles", "jet1Particles", 500, 0.5, 500.5);
-  h_Jet2_NumParticles   = fs->make<TH1F>( "jet2Particles", "jet2Particles", 500, 0.5, 500.5);
+  h_Jet1Major           = fs->make<TH1F>( "jet1Major", "jet1Major", 500, 0., 5.);
+  h_Jet2Major           = fs->make<TH1F>( "jet2Major", "jet2Major", 500, 0., 5.);
+  h_Jet1Minor           = fs->make<TH1F>( "jet1Minor", "jet1Minor", 500, 0., 5.);
+  h_Jet2Minor           = fs->make<TH1F>( "jet2Minor", "jet2Minor", 500, 0., 5.);
+  h_MajorCorrelation    = fs->make<TH2F>( "majorCorrelation", "majorCorrelation", 500, 0., 5., 500, 0., 5.);
+  h_MinorCorrelation    = fs->make<TH2F>( "minorCorrelation", "minorCorrelation", 500, 0., 5., 500, 0., 5.);
 
-  h_Jet1_dRZxMass         = fs->make<TH2F>( "jet1dRZMass", "jet1dRZMass", 200, 0., 4., 400, 0., 1000.);
-  h_Jet1_dRZxNumParticles = fs->make<TH2F>( "jet1dRZParticles", "jet1dRZParticles", 200, 0., 4., 500, 0.5, 500.5);
-  h_Jet1_dRZxEt          = fs->make<TH2F>( "jet1dRZEt", "jet1dRZEt", 200, 0., 4., 400, 0., 1000.); 
-  
-  h_Jet1_dRDauxMass         = fs->make<TH2F>( "jet1dRDauMass", "jet1dRDauMass", 200, 0., 4., 400, 0., 1000.); 
-  h_Jet1_dRDauxNumParticles = fs->make<TH2F>( "jet1dRDauParticles", "jet1dRDauParticles", 200, 0., 4., 500, 0.5, 500.5); 
-  h_Jet1_dRDauxZpt          = fs->make<TH2F>( "jet1dRDauZPt", "jet1dRDauZPt", 200, 0., 4., 400, 0., 1000.); 
-  
-  h_MassxNumParticles   = fs->make<TH2F>( "jet1MassParticles", "jet1MassParticles", 400, 0., 1000., 500, 0.5, 500.5); 
-  h_Jet1EtxdRDau        = fs->make<TH2F>( "jet1EtdRDau", "jet1EtdRDau", 400, 0., 1000., 400, 0., 4.); 
-  h_Jet1EtxNumParticles = fs->make<TH2F>( "jet1EtParticles", "jet1EtParticles", 400, 0., 1000., 500, 0.5, 500.5); 
-  h_Jet1EtxMass         = fs->make<TH2F>( "jet1EtMass", "jet1EtMass", 400, 0., 1000., 400, 0., 1000.);
-  h_Jet1EtxEta          = fs->make<TH2F>( "jet1EtEta", "jet1EtEta", 400, 0., 1000., 400, -4., 4.); 
-  h_EtFracxCalo         = fs->make<TH2F>( "etFracCalo", "etFracCalo", 400, 0., 1000., 100, 0., 1.);
-  h_EtFracxGen          = fs->make<TH2F>( "etFracGen", "etFracGen", 400, 0., 1000., 100, 0., 1.);
-  h_EtFracxEta          = fs->make<TH2F>( "etFracEta", "etFracEta", 400, -4., 4., 100, 0., 1.);
 }
 
 
@@ -149,8 +109,7 @@ RSJetAnalyzer::~RSJetAnalyzer()
 {
  
   // do anything here that needs to be done at desctruction time
-  // (e.g. close files, deallocate resources etc.)
-
+  // (e.g. close files, deallocate resources etc.
 }
 
 
@@ -165,23 +124,12 @@ RSJetAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   using namespace edm;
   using namespace reco;
 
-  Handle<View<Candidate> > jetsHandle;
-  Handle<View<Candidate> > ZsHandle;
-  Handle<CandidateCollection> particlesHandle;
-//   Handle<CandMatchMap> jetsMapHandle;
-
+  Handle<CaloJetCollection> jetsHandle;
   iEvent.getByLabel(jets_,jetsHandle);
-  iEvent.getByLabel(Zs_, ZsHandle);
-  iEvent.getByLabel(particles_, particlesHandle);
-//   iEvent.getByLabel("matchGenJetsCaloJets", jetsMapHandle);  
 
-//   const CandMatchMap* jetsMap = jetsMapHandle.product();
-
-  // For now, this class only analyzes a collection of two jets and two Zs
-  const Candidate & Jet1 = (* jetsHandle)[0];
-  const Candidate & Jet2 = (* jetsHandle)[1];
-  const Candidate & Z1 = (* ZsHandle)[0];
-  const Candidate & Z2 = (* ZsHandle)[1];
+  // For now, this class only analyzes a collection of two jets.
+  const Jet & Jet1 = (* jetsHandle)[0];
+  const Jet & Jet2 = (* jetsHandle)[1];
   
   // Fills basic histos about these two jets.
   double dR = deltaR(Jet1.eta(), Jet1.phi(), Jet2.eta(), Jet2.phi());
@@ -194,116 +142,43 @@ RSJetAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   h_PhiCorrelation->Fill(Jet1.phi(), Jet2.phi());
   h_MassCorrelation->Fill(Jet1.mass(), Jet2.mass());
   
-  // Find the particles inside, and put them in Jet1Particles
-  // and Jet2Particles.
-  Jet1Particles.clear();
-  Jet2Particles.clear();
-  double jetradius=0.7;
-
-  for(CandidateCollection::const_iterator piter = particlesHandle->begin();
-      piter != particlesHandle->end(); ++piter) {
-    double dR1 = deltaR(Jet1.eta(),Jet1.phi(),piter->eta(),piter->phi());
-    double dR2 = deltaR(Jet2.eta(),Jet2.phi(),piter->eta(),piter->phi());
-    if(dR1 < jetradius)
-      Jet1Particles.push_back
-	(LeafCandidate(piter->charge(), piter->p4(), piter->vertex(), piter->pdgId(), piter->status()));
-    if(dR2 < jetradius) 
-      Jet2Particles.push_back
-	(LeafCandidate(piter->charge(), piter->p4(), piter->vertex(), piter->pdgId(), piter->status()));
-  }
-  int nParticlesJet1 = Jet1Particles.size();
-  int nParticlesJet2 = Jet2Particles.size();
-  h_Jet1_NumParticles->Fill(nParticlesJet1);
-  h_Jet2_NumParticles->Fill(nParticlesJet2);
-
-  // Z X jet analysis.
-  // Assign each jet to a Z. "inverse" means Jet1 with Z2, Jet2 with Z1.
-  double dRJet1 = 0.;
-  double dRJet2 = 0.;
-  double dRJet1Z1 = deltaR(Jet1.eta(), Jet1.phi(), Z1.eta(), Z1.phi()); 
-  double dRJet1Z2 = deltaR(Jet1.eta(), Jet1.phi(), Z2.eta(), Z2.phi()); 
-  double dRJet2Z1 = deltaR(Jet2.eta(), Jet2.phi(), Z1.eta(), Z1.phi()); 
-  double dRJet2Z2 = deltaR(Jet2.eta(), Jet2.phi(), Z1.eta(), Z1.phi()); 
-  bool inverse = false;
-  if(dRJet1Z1 < dRJet1Z2) {
-    dRJet1 = dRJet1Z1;
-    dRJet2 = dRJet2Z2;
-    inverse = false;
-  }
-  else { 
-    dRJet1 = dRJet1Z2;
-    dRJet2 = dRJet2Z1;
-    inverse = true;
-  }
-
-  // Get the Z daughters of each Z associated to each jet.
-  
-  double Jet1Zpt = 0;
-  double Jet2Zpt = 0;
-  Jet1ZDaughters.clear();
-  Jet2ZDaughters.clear();
-  
-  if(!inverse)
-    this->assignZDaughters(Jet1Zpt, Jet2Zpt, Z1, Z2);
-  else
-    this->assignZDaughters(Jet1Zpt, Jet2Zpt, Z2, Z1);
-
-  // Calculate the dR in between each Z's daughters, and do some plots. 
-
-  double Jet1dRZDaughters;
-  
-  Jet1dRZDaughters = deltaR(Jet1ZDaughters.at(0).eta(), Jet1ZDaughters.at(0).phi(),
-			    Jet1ZDaughters.at(1).eta(), Jet1ZDaughters.at(1).phi());
-
-//   // Calculate how well the CaloJets match the GenJets
-//   for (CandMatchMap::const_iterator it = jetsMap->begin(); it != jetsMap->end(); ++it) {
-//     const Candidate* theGenJet  = it->key->masterClone().get();
-//     const Candidate* theCaloJet = it->val->masterClone().get();
-//     double fraction = double(theCaloJet->et()/theGenJet->et());
-//     h_EtFracxGen->Fill(theGenJet->et(), fraction);
-//     h_EtFracxCalo->Fill(theCaloJet->et(), fraction);
-//     h_EtFracxEta->Fill(theCaloJet->eta(), fraction);
-//   }
-  
-  h_Jet1_dRZxMass->Fill(dRJet1, Jet1.mass());
-  h_Jet1_dRZxNumParticles->Fill(dRJet1, nParticlesJet1);
-  h_Jet1_dRZxEt->Fill(dRJet1, Jet1.et());
-
-  h_Jet1_dRDauxMass->Fill(Jet1dRZDaughters, Jet1.mass());
-  h_Jet1_dRDauxNumParticles->Fill(Jet1dRZDaughters, nParticlesJet1);
-  h_Jet1_dRDauxZpt->Fill(Jet1dRZDaughters, Jet1Zpt);
-
-  h_MassxNumParticles->Fill(Jet1.mass(), nParticlesJet1);
-  h_Jet1EtxdRDau->Fill(Jet1.et(),Jet1dRZDaughters);
-  h_Jet1EtxNumParticles->Fill(Jet1.et(),nParticlesJet1);
-  h_Jet1EtxMass->Fill(Jet1.et(),Jet1.mass());
-  h_Jet1EtxEta->Fill(Jet1.et(),Jet1.eta());
+  // Get the jets major and minor.
+  double jet1Major = getMajor(Jet1);
+  double jet2Major = getMajor(Jet2);
+  double jet1Minor = getMinor(Jet1);
+  double jet2Minor = getMinor(Jet1);
+  h_Jet1Major->Fill(jet1Major);
+  h_Jet2Major->Fill(jet2Major);
+  h_Jet1Minor->Fill(jet1Minor);
+  h_Jet2Minor->Fill(jet2Minor);
+  h_MajorCorrelation->Fill(jet1Major,jet2Major);
+  h_MinorCorrelation->Fill(jet1Minor,jet2Minor);
 }
 
-void
-RSJetAnalyzer::assignZDaughters(double& Jet1Zpt, double& Jet2Zpt , const reco::Candidate& Z1, const reco::Candidate& Z2) {
-  
-  Jet1Zpt = Z1.pt();
-  Jet2Zpt = Z2.pt();
-  
-    // Get the Zdaughters of Jet1;
-  for(unsigned int daunum = 0; daunum != Z1.numberOfDaughters(); ++daunum) {
-    if(Z1.daughter(daunum)->pdgId() != Z_id)
-      Jet1ZDaughters.push_back(reco::LeafCandidate(Z1.daughter(daunum)->charge(), 
-						   Z1.daughter(daunum)->p4(), 
-						   Z1.daughter(daunum)->vertex(), 
-						   Z1.daughter(daunum)->pdgId(), 
-						   Z1.daughter(daunum)->status() ) );
-  }
-  // Get the Zdaughters of Jet2;
-  for(unsigned int daunum = 0; daunum != Z2.numberOfDaughters(); ++daunum) {
-    if(Z2.daughter(daunum)->pdgId() != Z_id)
-      Jet2ZDaughters.push_back(reco::LeafCandidate(Z2.daughter(daunum)->charge(), 
-						   Z2.daughter(daunum)->p4(), 
-						   Z2.daughter(daunum)->vertex(), 
-						   Z2.daughter(daunum)->pdgId(), 
-						   Z2.daughter(daunum)->status() ) );
-  }
+double
+RSJetAnalyzer::getMajor(const reco::Jet& jet) {
+  double sEtaEta = 0.;
+  double sPhiPhi = 0.;
+  double sEtaPhi = 0.;
+  sEtaEta = jet.etaetaMoment();
+  sPhiPhi = jet.phiphiMoment();
+  sEtaPhi = jet.etaphiMoment();
+  double major = ( sEtaEta + sPhiPhi
+		   + sqrt ((sEtaEta-sPhiPhi)*(sEtaEta-sPhiPhi)+4*sEtaPhi*sEtaPhi))/2.0;
+  return major;
+}
+
+double
+RSJetAnalyzer::getMinor(const reco::Jet& jet) {
+  double sEtaEta = 0.;
+  double sPhiPhi = 0.;
+  double sEtaPhi = 0.;
+  sEtaEta = jet.etaetaMoment();
+  sPhiPhi = jet.phiphiMoment();
+  sEtaPhi = jet.etaphiMoment();
+  double minor = ( sEtaEta + sPhiPhi
+		   + sqrt ((sEtaEta-sPhiPhi)*(sEtaEta-sPhiPhi)+4*sEtaPhi*sEtaPhi))/2.0;
+  return minor;
 }
 
 // ------------ method called once each job just before starting event loop  ------------
