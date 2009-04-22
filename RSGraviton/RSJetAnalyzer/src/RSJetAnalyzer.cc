@@ -13,7 +13,7 @@ Implementation:
 //
 // Original Author:  Thiago Fernandez Perez
 //         Created:  Wed Apr 23 17:48:37 CEST 2008
-// $Id: RSJetAnalyzer.cc,v 1.4 2008/05/17 16:41:32 tomei Exp $
+// $Id: RSJetAnalyzer.cc,v 1.5 2009/01/27 19:45:46 tomei Exp $
 //
 //
 
@@ -55,6 +55,7 @@ private:
   virtual void endJob() ;
   double getMajor(const reco::Jet&) ;
   double getMinor(const reco::Jet&) ;
+  double getIntegratedJetShape(const reco::Jet&) ;
   // ----------member data ---------------------------
 
   edm::InputTag jets_;
@@ -65,12 +66,18 @@ private:
   TH2F*     h_EtaCorrelation;  
   TH2F*     h_PhiCorrelation;  
   TH2F*     h_MassCorrelation; 
+
   TH1F*     h_Jet1Major;
   TH1F*     h_Jet2Major;
   TH1F*     h_Jet1Minor;
   TH1F*     h_Jet2Minor;
   TH2F*     h_MajorCorrelation;
   TH2F*     h_MinorCorrelation;
+
+  TH1F*     h_Jet1Shape;
+  TH1F*     h_Jet2Shape;
+  TH2F*     h_Jet1ShapeMass_corr;
+  TH2F*     h_Jet2ShapeMass_corr;
 };
 
 //
@@ -95,6 +102,7 @@ RSJetAnalyzer::RSJetAnalyzer(const edm::ParameterSet& iConfig) :
   h_EtaCorrelation      = fs->make<TH2F>( "etaCorrelation", "etaCorrelation", 400, -4., 4., 400, -4., 4.);
   h_PhiCorrelation      = fs->make<TH2F>( "phiCorrelation", "phiCorrelation", 144, -M_PI, M_PI, 144, -M_PI, M_PI);
   h_MassCorrelation     = fs->make<TH2F>( "massCorrelation", "massCorrelation", 400, 0., 1000., 400, 0., 1000.); 
+
   h_Jet1Major           = fs->make<TH1F>( "jet1Major", "jet1Major", 500, 0., 5.);
   h_Jet2Major           = fs->make<TH1F>( "jet2Major", "jet2Major", 500, 0., 5.);
   h_Jet1Minor           = fs->make<TH1F>( "jet1Minor", "jet1Minor", 500, 0., 5.);
@@ -102,6 +110,11 @@ RSJetAnalyzer::RSJetAnalyzer(const edm::ParameterSet& iConfig) :
   h_MajorCorrelation    = fs->make<TH2F>( "majorCorrelation", "majorCorrelation", 500, 0., 5., 500, 0., 5.);
   h_MinorCorrelation    = fs->make<TH2F>( "minorCorrelation", "minorCorrelation", 500, 0., 5., 500, 0., 5.);
 
+  h_Jet1Shape           = fs->make<TH1F>( "jet1Shape", "jet1Shape", 200, 0.0, 0.2);
+  h_Jet2Shape           = fs->make<TH1F>( "jet2Shape", "jet2Shape", 200, 0.0, 0.2);;
+  h_Jet1ShapeMass_corr  = fs->make<TH2F>( "jet1ShapeMass_corr", "jet1ShapeMass_corr", 200, 0.0, 0.2, 400, 0., 1000.);
+  h_Jet2ShapeMass_corr  = fs->make<TH2F>( "jet2ShapeMass_corr", "jet2ShapeMass_corr", 200, 0.0, 0.2, 400, 0., 1000.);
+  
 }
 
 
@@ -131,7 +144,7 @@ RSJetAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   const Jet & Jet1 = (* jetsHandle)[0];
   const Jet & Jet2 = (* jetsHandle)[1];
   
-  // Fills basic histos about these two jets.
+  // Fills basic histos about these two jets taken together.
   double dR = deltaR(Jet1.eta(), Jet1.phi(), Jet2.eta(), Jet2.phi());
   double dphi = fabs(deltaPhi(Jet1.phi(), Jet2.phi()));
   h_dR->Fill(dR);
@@ -153,6 +166,14 @@ RSJetAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   h_Jet2Minor->Fill(jet2Minor);
   h_MajorCorrelation->Fill(jet1Major,jet2Major);
   h_MinorCorrelation->Fill(jet1Minor,jet2Minor);
+
+  // Get the integrated shapes.
+  double jet1Shape = getIntegratedJetShape(Jet1);
+  double jet2Shape = getIntegratedJetShape(Jet2);
+  h_Jet1Shape->Fill(jet1Shape);
+  h_Jet2Shape->Fill(jet2Shape);
+  h_Jet1ShapeMass_corr->Fill(jet1Shape, Jet1.mass());
+  h_Jet2ShapeMass_corr->Fill(jet2Shape, Jet2.mass());
 }
 
 double
@@ -177,8 +198,25 @@ RSJetAnalyzer::getMinor(const reco::Jet& jet) {
   sPhiPhi = jet.phiphiMoment();
   sEtaPhi = jet.etaphiMoment();
   double minor = ( sEtaEta + sPhiPhi
-		   + sqrt ((sEtaEta-sPhiPhi)*(sEtaEta-sPhiPhi)+4*sEtaPhi*sEtaPhi))/2.0;
+		   - sqrt ((sEtaEta-sPhiPhi)*(sEtaEta-sPhiPhi)+4*sEtaPhi*sEtaPhi))/2.0;
   return minor;
+}
+
+double
+RSJetAnalyzer::getIntegratedJetShape(const reco::Jet& jet) {
+  double numerator = 0.;
+  double denominator = 0.;
+  int nTowers = jet.nConstituents();
+  if(nTowers == 0) return -1.0;
+  
+  std::vector<const reco::Candidate*> towers = jet.getJetConstituentsQuick();
+  nTowers = towers.size();
+  for(int i=0; i!=nTowers; ++i) {
+    numerator += (deltaR2(jet.eta(),jet.phi(),towers.at(i)->eta(),towers.at(i)->phi()) * towers.at(i)->et());
+    denominator += towers.at(i)->et();
+  }
+
+  return (numerator/denominator);
 }
 
 // ------------ method called once each job just before starting event loop  ------------

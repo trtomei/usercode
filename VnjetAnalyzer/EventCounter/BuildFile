@@ -5,7 +5,7 @@
 <use name=PhysicsTools/UtilAlgos>
 <flags EDM_PLUGIN=1>
 <export>
-   <lib name=VnjetAnalyzerEventCounter>
+   <lib name=RSGravitonEventCounter>
    <use name=FWCore/Framework>
    <use name=FWCore/PluginManager>
    <use name=FWCore/ParameterSet>
