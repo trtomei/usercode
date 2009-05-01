@@ -11,11 +11,11 @@ process = cms.Process("USER")
 # Basic process controls. #
 ###########################
 today = str(datetime.date.today())
-fileLabel = 'RS1000ZZ_'
+fileLabel = 'RS1250ZZ_'
 
 # Source
 process.load('RSGraviton.RSAnalyzer.Summer08_'+fileLabel+'JetMET_cfi')
-process.maxEvents.input = 1;
+process.maxEvents.input = -1;
 
 ##################
 # Basic services #
@@ -27,7 +27,7 @@ process.TFileService = cms.Service("TFileService",
     fileName = cms.string('results_'+fileLabel+today+'.root')
 )
 
-process.Tracer = cms.Service("Tracer")
+#process.Tracer = cms.Service("Tracer")
 
 from RSGraviton.RSAnalyzer.Zhistos_cff import histograms as Zhistos
 from RSGraviton.RSAnalyzer.Ghistos_cff import histograms as Ghistos
@@ -44,8 +44,13 @@ process.GlobalTag.globaltag = cms.string('IDEAL_V9::All')
 process.load("Configuration.StandardSequences.MagneticField_cff")
 
 # CATopJets
-process.load("TopQuarkAnalysis.TopPairBSM.caTopJets_cff")
-process.load("TopQuarkAnalysis.TopPairBSM.CATopJetTagger_cfi")
+from RecoJets.JetProducers.CATopJetParameters_cfi import *
+from RecoJets.JetProducers.GenJetParameters_cfi import *
+from RecoJets.JetProducers.CaloJetParameters_cfi import *
+process.caTopJetsProducer = cms.EDProducer("CATopJetProducer",
+                                           CATopJetParameters,
+                                           CaloJetParameters
+                                           )
 
 # turn off sum-et dependent stuff.
 process.caTopJetsProducer.ptBins = cms.vdouble(0,10e9)
@@ -59,17 +64,18 @@ process.makeCAJets = cms.Sequence(process.caTopJetsProducer)
 # Kinematic cuts #
 ##################
 
-process.jetsAboveHundred = cms.EDFilter("CandViewSelector",
-    src = cms.InputTag("caTopJetsProducer"),
-    cut = cms.string("pt > 15.0")
-)
+process.twoJetsAboveHundred = cms.EDFilter("EtMinBasicJetCountFilter",
+                                           src = cms.InputTag("caTopJetsProducer"),
+                                           minNumber = cms.uint32(2),
+                                           etMin = cms.double(100.0)
+                                           )
 
-process.twoJetsAboveHundred = cms.EDFilter("CandViewCountFilter",
-    src = cms.InputTag("jetsAboveHundred"),
-    minNumber = cms.uint32(2)
-)
+process.getTwoJetsAboveHundred = cms.EDProducer("LargestEtBasicJetSelector",
+                                                src = cms.InputTag("caTopJetsProducer"),
+                                                maxNumber = cms.uint32(2)
+                                                )
 
-process.makeCACuts = cms.Sequence(process.jetsAboveHundred + process.twoJetsAboveHundred)
+process.makeCACuts = cms.Sequence(process.twoJetsAboveHundred + process.getTwoJetsAboveHundred)
 
 #########
 # Plots #
@@ -77,13 +83,13 @@ process.makeCACuts = cms.Sequence(process.jetsAboveHundred + process.twoJetsAbov
 
 # Basic jet plots
 process.plotJetsGeneral = cms.EDAnalyzer("CandViewHistoAnalyzer",
-    src = cms.InputTag("twoJetsAboveHundred"),
+    src = cms.InputTag("getTwoJetsAboveHundred"),
     histograms = jethistos
 )
 
 # Run my analyzer.
 process.compoundJetAnalyzer = cms.EDAnalyzer("CompoundJetAnalyzer",
-                                             src = cms.InputTag("twoJetsAboveHundred")
+                                             src = cms.InputTag("getTwoJetsAboveHundred")
                                              )
 
 process.makeCAPlots = cms.Sequence(process.plotJetsGeneral + process.compoundJetAnalyzer)
