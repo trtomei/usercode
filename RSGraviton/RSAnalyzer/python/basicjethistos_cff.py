@@ -2,7 +2,7 @@ import FWCore.ParameterSet.Config as cms
 
 histograms = cms.VPSet(cms.PSet(
 # Basic kinematics
-    nbins = cms.untracked.int32(400),
+    nbins = cms.untracked.int32(100),
     description = cms.untracked.string('jet_%d_et'),
     plotquantity = cms.untracked.string('et'),
     min = cms.untracked.double(0.0),
@@ -21,11 +21,11 @@ histograms = cms.VPSet(cms.PSet(
     ), 
 # Jet mass
      cms.PSet(
-        nbins = cms.untracked.int32(400),
+        nbins = cms.untracked.int32(120),
         description = cms.untracked.string('jet_%d_mass'),
         plotquantity = cms.untracked.string('mass'),
         min = cms.untracked.double(0.0),
-        max = cms.untracked.double(1000.0),
+        max = cms.untracked.double(300.0),
         itemsToPlot = cms.untracked.int32(4),
         name = cms.untracked.string('jet_%d_mass')
     ))

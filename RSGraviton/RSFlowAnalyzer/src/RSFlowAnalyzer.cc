@@ -13,7 +13,7 @@
 //
 // Original Author:  
 //         Created:  Thu Jan 15 18:14:18 BRST 2009
-// $Id: RSFlowAnalyzer.cc,v 1.1 2009/01/16 12:16:32 tomei Exp $
+// $Id: RSFlowAnalyzer.cc,v 1.2 2009/01/27 19:45:45 tomei Exp $
 //
 //
 
@@ -25,7 +25,7 @@
 
 // user include files
 #include "FWCore/Framework/interface/Frameworkfwd.h"
-#include "FWCore/Framework/interface/EDAnalyzer.h"
+#include "FWCore/Framework/interface/EDProducer.h"
 #include "FWCore/Framework/interface/Event.h"
 #include "FWCore/Framework/interface/MakerMacros.h"
 
@@ -33,22 +33,19 @@
 #include "FWCore/ParameterSet/interface/InputTag.h"
 #include "DataFormats/TrackReco/interface/Track.h"
 #include "DataFormats/TrackReco/interface/TrackFwd.h"
-#include "DataFormats/JetReco/interface/CaloJet.h"
-#include "DataFormats/JetReco/interface/CaloJetCollection.h"
+#include "DataFormats/JetReco/interface/BasicJet.h"
+#include "DataFormats/JetReco/interface/BasicJetCollection.h"
 #include "DataFormats/Math/interface/Vector3D.h"
 #include "PhysicsTools/Utilities/interface/deltaR.h"
 #include "RSGraviton/RSFlowAnalyzer/interface/Flow.hh"
 #include "PhysicsTools/Utilities/interface/Parameter.h"
 #include "PhysicsTools/Utilities/interface/RootMinuit.h"
-#include "FWCore/ServiceRegistry/interface/Service.h"
-#include "PhysicsTools/UtilAlgos/interface/TFileService.h"
-#include "TH1F.h"
 
 //
 // class decleration
 //
 
-class RSFlowAnalyzer : public edm::EDAnalyzer {
+class RSFlowAnalyzer : public edm::EDProducer {
 public:
   explicit RSFlowAnalyzer(const edm::ParameterSet&);
   ~RSFlowAnalyzer();
@@ -56,15 +53,14 @@ public:
   
 private:
   virtual void beginJob(const edm::EventSetup&) ;
-  virtual void analyze(const edm::Event&, const edm::EventSetup&);
+  virtual void produce(edm::Event&, const edm::EventSetup&);
   virtual void endJob() ;
   
   // ----------member data ---------------------------
-  TH1F* h_flow;
   edm::InputTag tracks_;
   edm::InputTag jets_;
   double maxDeltaR_;
-  int jetNumber_;
+  typedef std::vector<double> FlowValueCollection;
 };
 
 //
@@ -84,9 +80,7 @@ RSFlowAnalyzer::RSFlowAnalyzer(const edm::ParameterSet& iConfig)
   tracks_ = iConfig.getParameter<edm::InputTag>("tracks");
   jets_ = iConfig.getParameter<edm::InputTag>("jets");
   maxDeltaR_ = iConfig.getParameter<double>("maxDeltaR");
-  jetNumber_ = iConfig.getParameter<int>("jetNumber");
-  edm::Service<TFileService> fs;
-  h_flow = fs->make<TH1F>("flow", "Jet Transverse Flow", 100, 0., 1.);
+  produces<FlowValueCollection>();
 }
 
 
@@ -105,39 +99,44 @@ RSFlowAnalyzer::~RSFlowAnalyzer()
 
 // ------------ method called to for each event  ------------
 void
-RSFlowAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
+RSFlowAnalyzer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
    using namespace edm;
 
    Handle<reco::TrackCollection> tracksHandle;
    iEvent.getByLabel(tracks_,tracksHandle);
-   Handle<reco::CaloJetCollection> jetsHandle;
+   Handle<reco::BasicJetCollection> jetsHandle;
    iEvent.getByLabel(jets_,jetsHandle);
 
-   // Get the jet vector.
-   math::XYZVector jetVector;
-   jetVector = jetsHandle->at(jetNumber_).momentum();
+   // The products.
+   std::auto_ptr<FlowValueCollection> flowValues(new FlowValueCollection);
 
    // Create a vector for the XYZVectors from the tracks.
-   // But ONLY for those tracks inside the cone of the jet.
    std::vector<math::XYZVector> trackVectors;
-   trackVectors.reserve(tracksHandle->size());
-   for(reco::TrackCollection::const_iterator i = tracksHandle->begin();
-       i != tracksHandle->end(); ++i) {
-     if(reco::deltaR(i->eta(),i->phi(),jetVector.eta(),jetVector.phi()) < maxDeltaR_)
-	trackVectors.push_back(i->momentum());
+
+   for(reco::BasicJetCollection::const_iterator j = jetsHandle->begin();
+       j != jetsHandle->end(); ++j) {
+     // Get the jet vector.
+     math::XYZVector jetVector(j->momentum());
+     // Get tracks inside the jet.
+     for(reco::TrackCollection::const_iterator i = tracksHandle->begin();
+	 i != tracksHandle->end(); ++i) {
+       if(reco::deltaR(i->eta(),i->phi(),jetVector.eta(),jetVector.phi()) < maxDeltaR_)
+	 trackVectors.push_back(i->momentum());
+     }
+     // Do the flow.
+     funct::Parameter phi("Phi",0.7);
+     Flow f(jetVector,trackVectors,phi);
+     fit::RootMinuit<Flow> minuit(f, false);
+     minuit.addParameter(phi, 0.1, 0.0, M_PI_2);
+     minuit.minimize();
+     minuit.migrad();
+     double flow (-minuit.minValue());
+     flowValues->push_back(flow); 
    }
-
-   // Do the flow.
-   funct::Parameter phi("Phi",0.7);
-   Flow f(jetVector,trackVectors,phi);
-   fit::RootMinuit<Flow> minuit(f, false);
-   minuit.addParameter(phi, 0.1, 0.0, M_PI_2);
-   minuit.minimize();
-   minuit.migrad();
-   h_flow->Fill(-minuit.minValue());
+   
+   iEvent.put(flowValues);
 }
-
 
 // ------------ method called once each job just before starting event loop  ------------
 void 
