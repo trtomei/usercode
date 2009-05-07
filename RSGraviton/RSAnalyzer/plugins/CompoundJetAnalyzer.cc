@@ -41,6 +41,7 @@ private:
   TH1F* h_jet1_subJet1Pt;
   TH1F* h_jet1_subJet2Pt;
   TH1F* h_jet1_invMassSubJets;
+  TH1F* h_jet1_flow;
   TH2F* h_jet1_EtMass;
   TH2F* h_jet1_EtFlow;
   TH2F* h_jet1_FlowMass;
@@ -48,6 +49,7 @@ private:
   TH1F* h_jet2_subJet1Pt;
   TH1F* h_jet2_subJet2Pt;
   TH1F* h_jet2_invMassSubJets;
+  TH1F* h_jet2_flow;
   TH2F* h_jet2_EtMass;
   TH2F* h_jet2_EtFlow;
   TH2F* h_jet2_FlowMass;
@@ -82,16 +84,18 @@ CompoundJetAnalyzer::CompoundJetAnalyzer(const edm::ParameterSet& iConfig):
   h_jet1_subJet1Pt = fs->make<TH1F> ("jet1_subJet1Pt","jet1_subJet1Pt",100,0.0,1000.0);
   h_jet1_subJet2Pt = fs->make<TH1F> ("jet1_subJet2Pt","jet1_subJet2Pt",100,0.0,1000.0);
   h_jet1_invMassSubJets = fs->make<TH1F> ("jet1_invMassSubJets","jet1_invMassSubJets",100,0.0,200.0);
+  h_jet1_flow = fs->make<TH1F> ("jet1_flow","jet1_flow",100,0.0,1.0);
   h_jet1_EtMass = fs->make<TH2F> ("jet1_EtMass","jet1_EtMass",100,0.0,1000.0, 100,0.0,200.0);
   h_jet1_EtFlow = fs->make<TH2F> ("jet1_EtFlow","jet1_EtFlow",100,0.0,1000.0, 100,0.0,1.0);
-  h_jet1_FlowMass = fs->make<TH2F> ("jet1_FlowMass","jet1_FlowMass",100,0.0,1.0, 100,0.0,20.0);
+  h_jet1_FlowMass = fs->make<TH2F> ("jet1_FlowMass","jet1_FlowMass",100,0.0,1.0, 100,0.0,200.0);
 
   h_jet2_subJet1Pt = fs->make<TH1F> ("jet2_subJet1Pt","jet2_subJet1Pt",100,0.0,1000.0);
   h_jet2_subJet2Pt = fs->make<TH1F> ("jet2_subJet2Pt","jet2_subJet2Pt",100,0.0,1000.0);
   h_jet2_invMassSubJets = fs->make<TH1F> ("jet2_invMassSubJets","jet2_invMassSubJets",100,0.0,200.0);
+  h_jet2_flow = fs->make<TH1F> ("jet2_flow","jet2_flow",100,0.0,1.0);
   h_jet2_EtMass = fs->make<TH2F> ("jet2_EtMass","jet2_EtMass",100,0.0,1000.0, 100,0.0,200.0);
   h_jet2_EtFlow = fs->make<TH2F> ("jet2_EtFlow","jet2_EtFlow",100,0.0,1000.0, 100,0.0,1.0);
-  h_jet2_FlowMass = fs->make<TH2F> ("jet2_FlowMass","jet2_FlowMass",100,0.0,1.0, 100,0.0,20.0);
+  h_jet2_FlowMass = fs->make<TH2F> ("jet2_FlowMass","jet2_FlowMass",100,0.0,1.0, 100,0.0,200.0);
 
   h_bothJets_Et = fs->make<TH2F> ("bothjets_Et", "bothJets_Et", 100,0.0,1000.0, 100,0.0,1000.0 );
   h_bothJets_Mass = fs->make<TH2F> ("bothjets_Mass", "bothJets_Mass", 100,0.0,200.0, 100,0.0,200.0 );
@@ -179,11 +183,13 @@ CompoundJetAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 
      // Intrajet correlations.
      if(iihardJet==0) {
+       h_jet1_flow->Fill((*pFlows)[0]);
        h_jet1_EtMass->Fill(ihardJet->et(),ihardJet->mass());
        h_jet1_EtFlow->Fill(ihardJet->et(),(*pFlows)[0]);
        h_jet1_FlowMass->Fill((*pFlows)[0],ihardJet->et());
      }
      if(iihardJet==1) {
+       h_jet2_flow->Fill((*pFlows)[1]);
        h_jet2_EtMass->Fill(ihardJet->et(),ihardJet->mass());
        h_jet2_EtFlow->Fill(ihardJet->et(),(*pFlows)[1]);
        h_jet2_FlowMass->Fill((*pFlows)[1],ihardJet->et());
