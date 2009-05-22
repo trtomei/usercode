@@ -13,7 +13,7 @@ Implementation:
 //
 // Original Author:  Thiago Fernandez Perez
 //         Created:  Wed Apr 23 17:48:37 CEST 2008
-// $Id: RSSubJetComparison.cc,v 1.6 2009/04/22 18:39:49 tomei Exp $
+// $Id: RSSubjetComparison.cc,v 1.1 2009/05/13 15:38:08 tomei Exp $
 //
 //
 
@@ -42,6 +42,9 @@ Implementation:
 #include "FWCore/ServiceRegistry/interface/Service.h"
 #include "PhysicsTools/UtilAlgos/interface/TFileService.h"
 #include "TH1F.h"
+#include "TLorentzVector.h"
+#include "TVector3.h"
+#include "TLorentzRotation.h" 
 //
 // class decleration
 //
@@ -58,9 +61,11 @@ private:
   // ----------member data ---------------------------
 
   edm::InputTag src_;
+  edm::InputTag boost_;
   TH1F* h_dR;
   TH1F* h_dPhi;
   TH1F* h_mass;
+  TH1F* h_helicity;
   TH1F* h_numJets;
 };
 
@@ -76,7 +81,8 @@ private:
 // constructors and destructor
 //
 RSSubJetComparison::RSSubJetComparison(const edm::ParameterSet& iConfig) :
-  src_(iConfig.getParameter<edm::InputTag>("src") )
+  src_(iConfig.getParameter<edm::InputTag>("src") ),
+  boost_(iConfig.getParameter<edm::InputTag>("boost") )
 {
   //now do what ever initialization is needed
   edm::Service<TFileService> fs;
@@ -84,6 +90,7 @@ RSSubJetComparison::RSSubJetComparison(const edm::ParameterSet& iConfig) :
   h_dR                  = fs->make<TH1F>( "dR"  , "dR", 100,  0., 5.);
   h_dPhi                = fs->make<TH1F>( "dPhi", "dPhi", 72,  -M_PI, M_PI);
   h_mass                = fs->make<TH1F>( "mass", "mass", 40,  0., 200.);
+  h_helicity            = fs->make<TH1F>( "helicity", "helicity", 50, -1.0, 1.0);
 }
 
 
@@ -108,6 +115,11 @@ RSSubJetComparison::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
 
   Handle<CandidateView> srcHandle;
   iEvent.getByLabel(src_,srcHandle);
+  // Get also the graviton and the boost vector.
+  Handle<CandidateView > gravitonHandle;
+  iEvent.getByLabel("directGravitons", gravitonHandle);
+  Handle<math::XYZVector> boostVectorHandle;
+  iEvent.getByLabel(boost_,boostVectorHandle);
 
   int firstJet = -1;
   int secondJet = -1;
@@ -115,6 +127,8 @@ RSSubJetComparison::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   double secLargerEt = 0.;
 
   h_numJets->Fill(srcHandle->size());
+
+  // We check for deltaR, deltaPhi, mass and helicity only IF there are at least two subjets.
   if(srcHandle->size() < 2) {
     return;
   }
@@ -140,8 +154,17 @@ RSSubJetComparison::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   double thisDeltaR = deltaR(theFirstJet.eta(), theFirstJet.phi(), theSecondJet.eta(), theSecondJet.phi());
   double thisDeltaPhi = deltaPhi(theFirstJet.phi(), theSecondJet.phi());
   
+  // The helicity is complicated...
+  const Candidate& theGraviton = (*gravitonHandle)[0];
+  TLorentzVector pB(theGraviton.px(), theGraviton.py(), theGraviton.pz(), theGraviton.energy());
+  TVector3 boostRes(-boostVectorHandle->X(), -boostVectorHandle->Y(), -boostVectorHandle->Z());
+  TLorentzRotation ResRif(boostRes);
+  TVector3 alreadyBoostedp1Vector(theFirstJet.px(), theFirstJet.py(), theFirstJet.pz());
+  double CosThetaHel = (alreadyBoostedp1Vector*(ResRif*pB).Vect())/(alreadyBoostedp1Vector.Mag()*(ResRif*pB).Vect().Mag());
+
   h_dR->Fill(thisDeltaR);
   h_dPhi->Fill(thisDeltaPhi);
+  h_helicity->Fill(CosThetaHel);
 
   CompositeCandidate comp;
   comp.addDaughter( theFirstJet );

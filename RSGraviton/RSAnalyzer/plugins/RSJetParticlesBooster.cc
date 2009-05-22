@@ -13,7 +13,7 @@
 //
 // Original Author:  
 //         Created:  Thu Jan 15 18:14:18 BRST 2009
-// $Id: RSJetParticlesBooster.cc,v 1.3 2009/05/07 13:52:19 tomei Exp $
+// $Id: RSJetParticlesBooster.cc,v 1.1 2009/05/13 15:38:08 tomei Exp $
 //
 //
 
@@ -32,13 +32,13 @@
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 #include "FWCore/ParameterSet/interface/InputTag.h"
 #include "DataFormats/Candidate/interface/Candidate.h"
-#include "DataFormats/Candidate/interface/LeafCandidate.h"
-#include "DataFormats/JetReco/interface/GenJet.h"
-#include "DataFormats/JetReco/interface/GenJetCollection.h"
-#include "DataFormats/HepMCCandidate/interface/GenParticle.h"
-#include "DataFormats/HepMCCandidate/interface/GenParticleFwd.h"
+#include "DataFormats/ParticleFlowCandidate/interface/PFCandidate.h"
+#include "DataFormats/ParticleFlowCandidate/interface/PFCandidateFwd.h"
+#include "DataFormats/JetReco/interface/PFJet.h"
+#include "DataFormats/JetReco/interface/PFJetCollection.h"
 
 #include "DataFormats/Math/interface/LorentzVector.h"
+#include "DataFormats/Math/interface/Vector3D.h"
 #include <TLorentzVector.h> 
 #include <TVector3.h>
 
@@ -78,7 +78,8 @@ RSJetParticlesBooster::RSJetParticlesBooster(const edm::ParameterSet& iConfig)
 {
   jets_ = iConfig.getParameter<edm::InputTag>("jets");
   nJet_ = iConfig.getParameter<unsigned int>("nJet");
-  produces<reco::GenParticleCollection>();
+  produces<reco::PFCandidateCollection>();
+  produces<math::XYZVector>();
 }
 
 
@@ -102,20 +103,22 @@ RSJetParticlesBooster::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
    using namespace edm;
    using namespace reco;
    
-   Handle<GenJetCollection> jetsHandle;
+   Handle<PFJetCollection> jetsHandle;
    iEvent.getByLabel(jets_,jetsHandle);
-   const GenJetCollection theJets = *jetsHandle;
+   const PFJetCollection theJets = *jetsHandle;
    
    // The products.
-   std::auto_ptr<GenParticleCollection> boostedParticlesJet(new GenParticleCollection);
+   std::auto_ptr<PFCandidateCollection> boostedParticlesJet(new PFCandidateCollection);
+   std::auto_ptr<math::XYZVector> boostVector(new math::XYZVector);
 
    // Get the correct jet.
-   const GenJet& theJet(theJets[nJet_]);
+   const PFJet& theJet(theJets[nJet_]);
    // Get the jet 4vector, and make it into a suitable TLorentzVector.
    TLorentzVector theFourVec(theJet.px(), theJet.py(), theJet.pz(), theJet.energy());
    // Get the BoostVector.
    TVector3 boostVec (theFourVec.BoostVector());
-   
+   boostVector->SetXYZ(boostVec.X(), boostVec.Y(), boostVec.Z());
+
    // Get the constituents of the jet and boost them to jet rest frame.
    std::vector<const Candidate*> theConstituents = theJet.getJetConstituentsQuick();
    for(std::vector<const Candidate*>::const_iterator c = theConstituents.begin();
@@ -124,13 +127,13 @@ RSJetParticlesBooster::produce(edm::Event& iEvent, const edm::EventSetup& iSetup
      theParticle.Boost(-boostVec);
      math::XYZTLorentzVector theBoostedParticle; 
      theBoostedParticle.SetPxPyPzE(theParticle.Px(), theParticle.Py(), theParticle.Pz(), theParticle.E()); 
-     LeafCandidate theBP2((*c)->charge(), theBoostedParticle);
-     GenParticle theBP3(theBP2);
+     PFCandidate theBP2(0, theBoostedParticle, PFCandidate::h0);
      
      // After all those format shifts, put the particle back in the collection.
-     boostedParticlesJet->push_back(theBP3);
+     boostedParticlesJet->push_back(theBP2);
    }
    
+   iEvent.put(boostVector);
    iEvent.put(boostedParticlesJet);
 }
 

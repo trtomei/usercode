@@ -11,7 +11,7 @@ process = cms.Process("USER")
 # Basic process controls. #
 ###########################
 today = str(datetime.date.today())
-fileLabel = 'test'
+fileLabel = ''
 
 # Source
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
@@ -39,36 +39,25 @@ from RSGraviton.RSAnalyzer.basicjethistos_cff import histograms as jethistos
 ##################
 
 # Make SISCone 1.0 jets.
-from RecoJets.JetProducers.GenJetParameters_cfi import *
+from RecoJets.JetProducers.PFJetParameters_cfi import *
 from RecoJets.JetProducers.FastjetParameters_cfi import *
 from RecoJets.JetProducers.SISConeJetParameters_cfi import *
 
-process.genParticlesForJets = cms.EDFilter("InputGenJetsParticleSelector",
-                                           src = cms.InputTag("genParticles"),
-                                           ignoreParticleIDs = cms.vuint32(1000022, 2000012, 2000014, 2000016, 1000039,
-                                                                           5000039, 4000012, 9900012, 9900014, 9900016,
-                                                                           39),
-                                           partonicFinalState = cms.bool(False),
-                                           excludeResonances = cms.bool(True),
-                                           excludeFromResonancePids = cms.vuint32(12, 13, 14, 16),
-                                           tausAsJets = cms.bool(False)
-                                           )
+process.sisCone10PFJets = cms.EDProducer("SISConeJetProducer",
+                                         PFJetParameters,
+                                         SISConeJetParameters,
+                                         FastjetNoPU,
+                                         coneRadius = cms.double(1.0)
+                                         )
 
-process.sisCone10GenJets = cms.EDProducer("SISConeJetProducer",
-                                          GenJetParameters,
-                                          SISConeJetParameters,
-                                          FastjetNoPU,
-                                          coneRadius = cms.double(1.0)
-                                          )
-
-process.twoJets = cms.EDFilter("EtMinGenJetCountFilter",
-                               src = cms.InputTag("sisCone10GenJets"),
+process.twoJets = cms.EDFilter("EtMinPFJetCountFilter",
+                               src = cms.InputTag("sisCone10PFJets"),
                                minNumber = cms.uint32(2),
-                               etMin = cms.double(1.314)
+                               etMin = cms.double(70.0)
                                )
 
-process.getTwoJets = cms.EDProducer("LargestEtGenJetSelector",
-                                    src = cms.InputTag("sisCone10GenJets"),
+process.getTwoJets = cms.EDProducer("LargestEtPFJetSelector",
+                                    src = cms.InputTag("sisCone10PFJets"),
                                     maxNumber = cms.uint32(2)
                                     )
 
@@ -77,67 +66,18 @@ process.plotTwoJets = cms.EDAnalyzer("CandViewHistoAnalyzer",
                                      histograms = jethistos
                                      )
 
-process.doSisConeJets = cms.Sequence(process.genParticlesForJets + process.sisCone10GenJets + process.twoJets + process.getTwoJets + process.plotTwoJets)
-
-# Make CATop 0.7 and compare with SISCone 0.7 from Event. 
-# Load geometry
-process.load("Configuration.StandardSequences.Geometry_cff")
-process.load("Configuration.StandardSequences.FrontierConditions_GlobalTag_cff")
-process.GlobalTag.globaltag = cms.string('IDEAL_V9::All')
-process.load("Configuration.StandardSequences.MagneticField_cff")
-
-from RecoJets.JetProducers.CaloJetParameters_cfi import *
-from RecoJets.JetProducers.CATopJetParameters_cfi import *
-process.compound7CaloJets = cms.EDProducer("CATopJetProducer",
-                                           CATopJetParameters,
-                                           CaloJetParameters
-                                           )
-
-# turn off sum-et dependent stuff.
-process.compound7CaloJets.ptBins = cms.vdouble(0,10e9)
-process.compound7CaloJets.rBins  = cms.vdouble(0.7,0.7)
-process.compound7CaloJets.ptFracBins = cms.vdouble(0.05,0.05)
-process.compound7CaloJets.nCellBins = cms.vint32(1,1)
-
-process.twoCAJets = cms.EDFilter("EtMinBasicJetCountFilter",
-                                 src = cms.InputTag("compound7CaloJets"),
-                                 minNumber = cms.uint32(2),
-                                 etMin = cms.double(1.314)
-                                 )
-
-process.getTwoCAJets = cms.EDProducer("LargestEtBasicJetSelector",
-                                      src = cms.InputTag("compound7CaloJets"),
-                                      maxNumber = cms.uint32(2)
-                                      )
-
-process.plotTwoCAJets = cms.EDAnalyzer("CandViewHistoAnalyzer",
-                                       src = cms.InputTag("getTwoCAJets"),
-                                       histograms = jethistos
+process.directGravitons = cms.EDFilter("CandViewCombiner",
+                                       cut = cms.string('600.0 < mass < 2000.0'),
+                                       decay = cms.string('getTwoJets getTwoJets')
                                        )
 
-process.twoSISJets = cms.EDFilter("EtMinCaloJetCountFilter",
-                                 src = cms.InputTag("sisCone7CaloJets"),
-                                 minNumber = cms.uint32(2),
-                                 etMin = cms.double(1.314)
-                                 )
+process.plotDirectGravitons = cms.EDAnalyzer("CandViewHistoAnalyzer",
+                                             src = cms.InputTag("directGravitons"),
+                                             histograms = Ghistos
+                                             )
 
-process.getTwoSISJets = cms.EDProducer("LargestEtCaloJetSelector",
-                                       src = cms.InputTag("sisCone7CaloJets"),
-                                       maxNumber = cms.uint32(2)
-                                       )
-
-process.plotTwoSISJets = cms.EDAnalyzer("CandViewHistoAnalyzer",
-                                        src = cms.InputTag("getTwoSISJets"),
-                                        histograms = jethistos
-                                        )
-
-process.compareJets = cms.EDAnalyzer("RSJetComparison",
-                                     src = cms.InputTag("getTwoCAJets"),
-                                     matched = cms.InputTag("getTwoSISJets")
-                                     )
-
-process.doCompoundJets = cms.Sequence(process.compound7CaloJets + process.twoCAJets + process.getTwoCAJets + process.plotTwoCAJets
-                                      + process.twoSISJets + process.getTwoSISJets + process.plotTwoSISJets + process.compareJets)
+process.doSisConeJets = cms.Sequence(process.sisCone10PFJets + process.twoJets + process.getTwoJets + process.plotTwoJets)
+process.doGravitons = cms.Sequence(process.directGravitons + process.plotDirectGravitons)
 
 # Write collection of particles inside each jet, boosted to the jet rest frame.
 
@@ -154,61 +94,180 @@ process.particlesSecondJet = cms.EDProducer("RSJetParticlesBooster",
 process.getParticlesInJets = cms.Sequence(process.particlesFirstJet + process.particlesSecondJet)
 
 # Redo jets with those particles. I expect to find two jets back to back.
-process.jetsFromFirstJet = cms.EDProducer("SISConeJetProducer",
-                                          GenJetParameters,
-                                          SISConeJetParameters,
-                                          FastjetNoPU,
-                                          coneRadius = cms.double(0.5)
-                                          )
-process.jetsFromSecondJet = cms.EDProducer("SISConeJetProducer",
-                                           GenJetParameters,
-                                           SISConeJetParameters,
-                                           FastjetNoPU,
-                                           coneRadius = cms.double(0.5)
-                                           )
-
-process.jetsFromFirstJet.src = cms.InputTag("particlesFirstJet")
-process.jetsFromSecondJet.src = cms.InputTag("particlesSecondJet")
-
-process.jetsFromFirstJet10 = cms.EDFilter("PtMinGenJetSelector",
-                                          src = cms.InputTag("jetsFromFirstJet"),
-                                          ptMin = cms.double(10.0)
-                                          )
-
-process.jetsFromSecondJet10 = cms.EDFilter("PtMinGenJetSelector",
-                                           src = cms.InputTag("jetsFromSecondJet"),
-                                           ptMin = cms.double(10.0)
-                                           )
-
-process.makeBoostedJets = cms.Sequence(process.jetsFromFirstJet + process.jetsFromSecondJet + process.jetsFromFirstJet10 + process.jetsFromSecondJet10)
-
-# Analysis
-process.directGravitons = cms.EDFilter("CandViewCombiner",
-                                       cut = cms.string('600.0 < mass < 2000.0'),
-                                       decay = cms.string('getTwoJets getTwoJets')
-                                       )
-
-process.plotDirectGravitons = cms.EDAnalyzer("CandViewHistoAnalyzer",
-                                             src = cms.InputTag("directGravitons"),
-                                             histograms = Ghistos
+process.jetsFromFirstJet03 = cms.EDProducer("SISConeJetProducer",
+                                            PFJetParameters,
+                                            SISConeJetParameters,
+                                            FastjetNoPU,
+                                            coneRadius = cms.double(0.3)
+                                            )
+process.jetsFromSecondJet03 = cms.EDProducer("SISConeJetProducer",
+                                             PFJetParameters,
+                                             SISConeJetParameters,
+                                             FastjetNoPU,
+                                             coneRadius = cms.double(0.3)
+                                             )
+process.jetsFromFirstJet04 = cms.EDProducer("SISConeJetProducer",
+                                            PFJetParameters,
+                                            SISConeJetParameters,
+                                            FastjetNoPU,
+                                            coneRadius = cms.double(0.4)
+                                            )
+process.jetsFromSecondJet04 = cms.EDProducer("SISConeJetProducer",
+                                             PFJetParameters,
+                                             SISConeJetParameters,
+                                             FastjetNoPU,
+                                             coneRadius = cms.double(0.4)
+                                             )
+process.jetsFromFirstJet05 = cms.EDProducer("SISConeJetProducer",
+                                            PFJetParameters,
+                                            SISConeJetParameters,
+                                            FastjetNoPU,
+                                            coneRadius = cms.double(0.5)
+                                            )
+process.jetsFromSecondJet05 = cms.EDProducer("SISConeJetProducer",
+                                             PFJetParameters,
+                                             SISConeJetParameters,
+                                             FastjetNoPU,
+                                             coneRadius = cms.double(0.5)
+                                             )
+process.jetsFromFirstJet06 = cms.EDProducer("SISConeJetProducer",
+                                            PFJetParameters,
+                                            SISConeJetParameters,
+                                            FastjetNoPU,
+                                            coneRadius = cms.double(0.6)
+                                            )
+process.jetsFromSecondJet06 = cms.EDProducer("SISConeJetProducer",
+                                             PFJetParameters,
+                                             SISConeJetParameters,
+                                             FastjetNoPU,
+                                             coneRadius = cms.double(0.6)
+                                             )
+process.jetsFromFirstJet07 = cms.EDProducer("SISConeJetProducer",
+                                            PFJetParameters,
+                                            SISConeJetParameters,
+                                            FastjetNoPU,
+                                            coneRadius = cms.double(0.6)
+                                            )
+process.jetsFromSecondJet07 = cms.EDProducer("SISConeJetProducer",
+                                             PFJetParameters,
+                                             SISConeJetParameters,
+                                             FastjetNoPU,
+                                             coneRadius = cms.double(0.7)
                                              )
 
-process.analysisFirstJet = cms.EDAnalyzer("RSSubJetComparison",
-                                          src = cms.InputTag("jetsFromFirstJet10")
-                                          )
+process.jetsFromFirstJet03.src = cms.InputTag("particlesFirstJet")
+process.jetsFromSecondJet03.src = cms.InputTag("particlesSecondJet")
+process.jetsFromFirstJet04.src = cms.InputTag("particlesFirstJet")
+process.jetsFromSecondJet04.src = cms.InputTag("particlesSecondJet")
+process.jetsFromFirstJet05.src = cms.InputTag("particlesFirstJet")
+process.jetsFromSecondJet05.src = cms.InputTag("particlesSecondJet")
+process.jetsFromFirstJet06.src = cms.InputTag("particlesFirstJet")
+process.jetsFromSecondJet06.src = cms.InputTag("particlesSecondJet")
+process.jetsFromFirstJet07.src = cms.InputTag("particlesFirstJet")
+process.jetsFromSecondJet07.src = cms.InputTag("particlesSecondJet")
 
-process.analysisSecondJet = cms.EDAnalyzer("RSSubJetComparison",
-                                           src = cms.InputTag("jetsFromSecondJet10")
-                                           )
+process.getjetsFromFirstJet03 = cms.EDFilter("PtMinPFJetSelector",
+                                             src = cms.InputTag("jetsFromFirstJet03"),
+                                             ptMin = cms.double(10.0)
+                                             )
+process.getjetsFromSecondJet03 = cms.EDFilter("PtMinPFJetSelector",
+                                              src = cms.InputTag("jetsFromSecondJet03"),
+                                              ptMin = cms.double(10.0)
+                                              )
+process.getjetsFromFirstJet04 = cms.EDFilter("PtMinPFJetSelector",
+                                             src = cms.InputTag("jetsFromFirstJet04"),
+                                             ptMin = cms.double(10.0)
+                                             )
+process.getjetsFromSecondJet04 = cms.EDFilter("PtMinPFJetSelector",
+                                              src = cms.InputTag("jetsFromSecondJet04"),
+                                              ptMin = cms.double(10.0)
+                                              )
+process.getjetsFromFirstJet05 = cms.EDFilter("PtMinPFJetSelector",
+                                             src = cms.InputTag("jetsFromFirstJet05"),
+                                             ptMin = cms.double(10.0)
+                                             )
+process.getjetsFromSecondJet05 = cms.EDFilter("PtMinPFJetSelector",
+                                              src = cms.InputTag("jetsFromSecondJet05"),
+                                              ptMin = cms.double(10.0)
+                                              )
+process.getjetsFromFirstJet06 = cms.EDFilter("PtMinPFJetSelector",
+                                             src = cms.InputTag("jetsFromFirstJet06"),
+                                             ptMin = cms.double(10.0)
+                                             )
+process.getjetsFromSecondJet06 = cms.EDFilter("PtMinPFJetSelector",
+                                              src = cms.InputTag("jetsFromSecondJet06"),
+                                              ptMin = cms.double(10.0)
+                                              )
+process.getjetsFromFirstJet07 = cms.EDFilter("PtMinPFJetSelector",
+                                             src = cms.InputTag("jetsFromFirstJet07"),
+                                             ptMin = cms.double(10.0)
+                                             )
+process.getjetsFromSecondJet07 = cms.EDFilter("PtMinPFJetSelector",
+                                              src = cms.InputTag("jetsFromSecondJet07"),
+                                              ptMin = cms.double(10.0)
+                                              )
 
-process.analysis = cms.Sequence(process.directGravitons + process.plotDirectGravitons + process.analysisFirstJet + process.analysisSecondJet)
+process.makeBoostedJets = cms.Sequence(process.jetsFromFirstJet03 + process.jetsFromSecondJet03 + process.getjetsFromFirstJet03 + process.getjetsFromSecondJet03 +
+                                       process.jetsFromFirstJet04 + process.jetsFromSecondJet04 + process.getjetsFromFirstJet04 + process.getjetsFromSecondJet04 +
+                                       process.jetsFromFirstJet05 + process.jetsFromSecondJet05 + process.getjetsFromFirstJet05 + process.getjetsFromSecondJet05 +
+                                       process.jetsFromFirstJet06 + process.jetsFromSecondJet06 + process.getjetsFromFirstJet06 + process.getjetsFromSecondJet06 +
+                                       process.jetsFromFirstJet07 + process.jetsFromSecondJet07 + process.getjetsFromFirstJet07 + process.getjetsFromSecondJet07 +
+
+# Analysis
+process.analysisFirstJet03 = cms.EDAnalyzer("RSSubJetComparison",
+                                            src = cms.InputTag("getjetsFromFirstJet03"),
+                                            boost = cms.InputTag("particlesFirstJet")
+                                            )
+process.analysisSecondJet03 = cms.EDAnalyzer("RSSubJetComparison",
+                                             src = cms.InputTag("getjetsFromSecondJet03"),
+                                             boost = cms.InputTag("particlesSecondJet")
+                                             )
+process.analysisFirstJet04 = cms.EDAnalyzer("RSSubJetComparison",
+                                            src = cms.InputTag("getjetsFromFirstJet04"),
+                                            boost = cms.InputTag("particlesFirstJet")
+                                            )
+process.analysisSecondJet04 = cms.EDAnalyzer("RSSubJetComparison",
+                                             src = cms.InputTag("getjetsFromSecondJet04"),
+                                             boost = cms.InputTag("particlesSecondJet")
+                                             )
+process.analysisFirstJet05 = cms.EDAnalyzer("RSSubJetComparison",
+                                            src = cms.InputTag("getjetsFromFirstJet05"),
+                                            boost = cms.InputTag("particlesFirstJet")
+                                            )
+process.analysisSecondJet05 = cms.EDAnalyzer("RSSubJetComparison",
+                                             src = cms.InputTag("getjetsFromSecondJet05"),
+                                             boost = cms.InputTag("particlesSecondJet")
+                                             )
+process.analysisFirstJet06 = cms.EDAnalyzer("RSSubJetComparison",
+                                            src = cms.InputTag("getjetsFromFirstJet06"),
+                                            boost = cms.InputTag("particlesFirstJet")
+                                            )
+process.analysisSecondJet06 = cms.EDAnalyzer("RSSubJetComparison",
+                                             src = cms.InputTag("getjetsFromSecondJet06"),
+                                             boost = cms.InputTag("particlesSecondJet")
+                                             )
+process.analysisFirstJet07 = cms.EDAnalyzer("RSSubJetComparison",
+                                            src = cms.InputTag("getjetsFromFirstJet07"),
+                                            boost = cms.InputTag("particlesFirstJet")
+                                            )
+process.analysisSecondJet07 = cms.EDAnalyzer("RSSubJetComparison",
+                                             src = cms.InputTag("getjetsFromSecondJet07"),
+                                             boost = cms.InputTag("particlesSecondJet")
+                                             )
+
+process.analysisSubJets = cms.Sequence(process.analysisFirstJet03 + process.analysisSecondJet03 +
+                                       process.analysisFirstJet04 + process.analysisSecondJet04 +
+                                       process.analysisFirstJet05 + process.analysisSecondJet05 +
+                                       process.analysisFirstJet06 + process.analysisSecondJet06 +
+                                       process.analysisFirstJet07 + process.analysisSecondJet07)
 
 #########
 # Paths #
 #########
 
 # Make the jets.
-process.p1 = cms.Path(process.doSisConeJets + process.getParticlesInJets + process.makeBoostedJets + process.analysis)
-process.p2 = cms.Path(process.doCompoundJets)
+process.p1 = cms.Path(process.doSisConeJets + process.doGravitons +
+                      process.getParticlesInJets + process.makeBoostedJets + process.analysisSubJets)
+#process.p2 = cms.Path(process.doCompoundJets)
 #process.copyAll = cms.OutputModule("PoolOutputModule", fileName = cms.untracked.string("out.root") )
 #process.out = cms.EndPath(process.copyAll)
