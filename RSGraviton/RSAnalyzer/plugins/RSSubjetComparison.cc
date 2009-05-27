@@ -13,7 +13,7 @@ Implementation:
 //
 // Original Author:  Thiago Fernandez Perez
 //         Created:  Wed Apr 23 17:48:37 CEST 2008
-// $Id: RSSubjetComparison.cc,v 1.1 2009/05/13 15:38:08 tomei Exp $
+// $Id: RSSubjetComparison.cc,v 1.2 2009/05/22 11:48:11 tomei Exp $
 //
 //
 
@@ -42,9 +42,7 @@ Implementation:
 #include "FWCore/ServiceRegistry/interface/Service.h"
 #include "PhysicsTools/UtilAlgos/interface/TFileService.h"
 #include "TH1F.h"
-#include "TLorentzVector.h"
-#include "TVector3.h"
-#include "TLorentzRotation.h" 
+#include "TH2F.h"
 //
 // class decleration
 //
@@ -58,15 +56,28 @@ private:
   virtual void beginJob(const edm::EventSetup&) ;
   virtual void analyze(const edm::Event&, const edm::EventSetup&);
   virtual void endJob() ;
+  int countSubJets(const reco::CandidateView v, const double momentumCut);
+
   // ----------member data ---------------------------
 
-  edm::InputTag src_;
-  edm::InputTag boost_;
-  TH1F* h_dR;
-  TH1F* h_dPhi;
-  TH1F* h_mass;
-  TH1F* h_helicity;
-  TH1F* h_numJets;
+  edm::InputTag srcFirst_;
+  edm::InputTag srcSecond_;
+  double momentumCut_;
+  TH1F* h_jetE_first;
+  TH1F* h_jetEt_first;
+  TH1F* h_jetE_second;
+  TH1F* h_jetEt_second;
+  TH1F* h_numJetsFirst;
+  TH1F* h_numJetsSecond;
+  TH2F* h_numJetsCorr;
+  TH1F* h_massFirst;
+  TH1F* h_massSecond;
+  TH1F* h_massFirst_inc;
+  TH1F* h_massSecond_inc;
+  TH1F* h_dR3_First;
+  TH1F* h_dR3_Second;
+  TH2F* h_massCorr;
+  TH2F* h_massCorr_inc;
 };
 
 //
@@ -81,16 +92,28 @@ private:
 // constructors and destructor
 //
 RSSubJetComparison::RSSubJetComparison(const edm::ParameterSet& iConfig) :
-  src_(iConfig.getParameter<edm::InputTag>("src") ),
-  boost_(iConfig.getParameter<edm::InputTag>("boost") )
+  srcFirst_(iConfig.getParameter<edm::InputTag>("srcFirst") ),
+  srcSecond_(iConfig.getParameter<edm::InputTag>("srcSecond") ),
+  momentumCut_(iConfig.getParameter<double>("momentumCut") )
 {
   //now do what ever initialization is needed
   edm::Service<TFileService> fs;
-  h_numJets             = fs->make<TH1F>( "numJets", "numJets", 10, -0.5, 9.5);
-  h_dR                  = fs->make<TH1F>( "dR"  , "dR", 100,  0., 5.);
-  h_dPhi                = fs->make<TH1F>( "dPhi", "dPhi", 72,  -M_PI, M_PI);
-  h_mass                = fs->make<TH1F>( "mass", "mass", 40,  0., 200.);
-  h_helicity            = fs->make<TH1F>( "helicity", "helicity", 50, -1.0, 1.0);
+  h_jetE_first          = fs->make<TH1F>( "subJetE_first", "subJetE_first", 80, 0., 200.);
+  h_jetEt_first         = fs->make<TH1F>( "subJetEt_first", "subJetEt_first", 80, 0., 200.);
+  h_jetE_second         = fs->make<TH1F>( "subJetE_second", "subJetE_second", 80, 0., 200.);
+  h_jetEt_second        = fs->make<TH1F>( "subJetEt_second", "subJetEt_second", 80, 0., 200.);
+  h_numJetsFirst        = fs->make<TH1F>( "numJetsFirst", "numJetsFirst", 10, -0.5, 9.5);
+  h_numJetsSecond       = fs->make<TH1F>( "numJetsSecond", "numJetsSecond", 10, -0.5, 9.5);
+  h_numJetsCorr         = fs->make<TH2F>( "numJetsCorr", "numJetsCorr", 10, -0.5, 9.5, 10, -0.5, 9.5);
+  h_massFirst           = fs->make<TH1F>( "massFirst", "massFirst", 40,  0., 200.);
+  h_massSecond          = fs->make<TH1F>( "massSecond", "massSecond", 40,  0., 200.);
+  h_massFirst_inc       = fs->make<TH1F>( "massFirst_inc", "massFirst_inc", 40,  0., 200.);
+  h_massSecond_inc      = fs->make<TH1F>( "massSecond_inc", "massSecond_inc", 40,  0., 200.);
+  h_dR3_First           = fs->make<TH1F>( "dR3_first", "dR3_first", 50, 0.0, 5.0);
+  h_dR3_Second          = fs->make<TH1F>( "dR3_second", "dR3_second", 50, 0.0, 5.0);
+  h_massCorr            = fs->make<TH2F>( "massCorr", "massCorr", 40,  0., 200., 40, 0., 200.);
+  h_massCorr_inc        = fs->make<TH2F>( "massCorr_inc", "massCorr_inc", 40,  0., 200., 40, 0., 200.);
+ 
 }
 
 
@@ -113,67 +136,173 @@ RSSubJetComparison::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   using namespace edm;
   using namespace reco;
 
-  Handle<CandidateView> srcHandle;
-  iEvent.getByLabel(src_,srcHandle);
-  // Get also the graviton and the boost vector.
-  Handle<CandidateView > gravitonHandle;
-  iEvent.getByLabel("directGravitons", gravitonHandle);
-  Handle<math::XYZVector> boostVectorHandle;
-  iEvent.getByLabel(boost_,boostVectorHandle);
+  // Get subjets from first and second jets.
+  Handle<CandidateView> firstHandle;
+  Handle<CandidateView> secondHandle;
+  iEvent.getByLabel(srcFirst_,firstHandle);
+  iEvent.getByLabel(srcSecond_,secondHandle);
 
-  int firstJet = -1;
-  int secondJet = -1;
-  double largerEt = 0.;
-  double secLargerEt = 0.;
-
-  h_numJets->Fill(srcHandle->size());
-
-  // We check for deltaR, deltaPhi, mass and helicity only IF there are at least two subjets.
-  if(srcHandle->size() < 2) {
-    return;
+  // Zeroeth part: get the spectrum of those subjets. 
+  for(size_t i = 0; i != firstHandle->size(); ++i) {
+    h_jetE_first->Fill((*firstHandle)[i].energy());
+    h_jetEt_first->Fill((*firstHandle)[i].et());
+  }
+  for(size_t i = 0; i != secondHandle->size(); ++i) {
+    h_jetE_second->Fill((*secondHandle)[i].energy());
+    h_jetEt_second->Fill((*secondHandle)[i].et());
   }
 
-  for(size_t i = 0; i != srcHandle->size(); ++i) {
+  // Count number of subjets in each.
+  int numSubJetsFirst  = this->countSubJets(*firstHandle,momentumCut_);
+  int numSubJetsSecond = this->countSubJets(*secondHandle,momentumCut_);
+  h_numJetsFirst->Fill(numSubJetsFirst);
+  h_numJetsSecond->Fill(numSubJetsSecond);
+  h_numJetsCorr->Fill(numSubJetsFirst,numSubJetsSecond);
 
-    double thisEt = ((*srcHandle)[i]).et();
-    if(thisEt > largerEt) {
-      secLargerEt = largerEt;
-      secondJet = firstJet;
-      largerEt = thisEt;
-      firstJet = i;
-    }
-    else if(thisEt > secLargerEt) {
-      secLargerEt = thisEt;
-      secondJet = i;
-    }
+  // Some variables to use later;
+  double mass1;
+  double mass2;
+  double mass1inc;
+  double mass2inc;
+  //---------------------------- First subjet ----------------------------
+  
+  // First part: check if number of subjets is two. If it is, then combine the two jets.
+  if(numSubJetsFirst == 2) {
+    CompositeCandidate comp;
+    const Candidate& dau1 = (*firstHandle)[0];
+    const Candidate& dau2 = (*firstHandle)[1];
+    comp.addDaughter( dau1 );
+    comp.addDaughter( dau2 );
+    AddFourMomenta addP4;
+    addP4.set( comp );
+    mass1 = comp.mass();
+    h_massFirst->Fill(mass1); 
   }
 
-  const Candidate& theFirstJet = (*srcHandle)[firstJet];
-  const Candidate& theSecondJet = (*srcHandle)[secondJet];
-  
-  double thisDeltaR = deltaR(theFirstJet.eta(), theFirstJet.phi(), theSecondJet.eta(), theSecondJet.phi());
-  double thisDeltaPhi = deltaPhi(theFirstJet.phi(), theSecondJet.phi());
-  
-  // The helicity is complicated...
-  const Candidate& theGraviton = (*gravitonHandle)[0];
-  TLorentzVector pB(theGraviton.px(), theGraviton.py(), theGraviton.pz(), theGraviton.energy());
-  TVector3 boostRes(-boostVectorHandle->X(), -boostVectorHandle->Y(), -boostVectorHandle->Z());
-  TLorentzRotation ResRif(boostRes);
-  TVector3 alreadyBoostedp1Vector(theFirstJet.px(), theFirstJet.py(), theFirstJet.pz());
-  double CosThetaHel = (alreadyBoostedp1Vector*(ResRif*pB).Vect())/(alreadyBoostedp1Vector.Mag()*(ResRif*pB).Vect().Mag());
+  // Second part: if number of subjets is larger than two, do it with the most energetic two,
+  // and check if the third is close. 
+  if(numSubJetsFirst > 2) {
+    int firstJet = -1;
+    int secondJet = -1;
+    int thirdJet = -1;
+    double largerEnergy = 0.;
+    double secLargerEnergy = 0.;
+    double terLargerEnergy = 0.;
+ 
+    for(size_t i = 0; i != firstHandle->size(); ++i) {
+      
+      double thisEnergy = ((*firstHandle)[i]).energy();
+      if(thisEnergy > largerEnergy) {
+	terLargerEnergy = secLargerEnergy;
+	secLargerEnergy = largerEnergy;
+	thirdJet = secondJet;
+	secondJet = firstJet;
+	largerEnergy = thisEnergy;
+	firstJet = i;
+      }
+      else if(thisEnergy > secLargerEnergy) {
+	terLargerEnergy = secLargerEnergy;
+	thirdJet = secondJet;
+	secLargerEnergy = thisEnergy;
+	secondJet = i;
+      }
+      else if(thisEnergy > terLargerEnergy) {
+	terLargerEnergy = thisEnergy;
+	thirdJet = i;
+      }
+    }
 
-  h_dR->Fill(thisDeltaR);
-  h_dPhi->Fill(thisDeltaPhi);
-  h_helicity->Fill(CosThetaHel);
+    CompositeCandidate comp;
+    const Candidate& dau1 = (*firstHandle)[firstJet];
+    const Candidate& dau2 = (*firstHandle)[secondJet];
+    const Candidate& extraJet = (*firstHandle)[thirdJet];
+    comp.addDaughter( dau1 );
+    comp.addDaughter( dau2 );
+    AddFourMomenta addP4;
+    addP4.set( comp );
+    mass1inc = comp.mass();
+    h_massFirst_inc->Fill(mass1inc);
 
-  CompositeCandidate comp;
-  comp.addDaughter( theFirstJet );
-  comp.addDaughter( theSecondJet );
-  AddFourMomenta addP4;
-  addP4.set( comp );
+    // Find to whom the third jet is closest, and plot it.
+    double deltaR1e = deltaR(dau1.eta(), dau1.phi(), extraJet.eta(), extraJet.phi());
+    double deltaR2e = deltaR(dau2.eta(), dau2.phi(), extraJet.eta(), extraJet.phi());
+    if(deltaR1e < deltaR2e)
+      h_dR3_First->Fill(deltaR1e);
+    else
+      h_dR3_First->Fill(deltaR2e);
+  }
 
-  h_mass->Fill(comp.mass());
+  //---------------------------- Second subjet ----------------------------
 
+  // First part: check if number of subjets is two. If it is, then combine the two jets.
+  if(numSubJetsSecond == 2) {
+    CompositeCandidate comp;
+    const Candidate& dau1 = (*secondHandle)[0];
+    const Candidate& dau2 = (*secondHandle)[1];
+    comp.addDaughter( dau1 );
+    comp.addDaughter( dau2 );
+    AddFourMomenta addP4;
+    addP4.set( comp );
+    mass2 = comp.mass();
+    h_massSecond->Fill(mass2); 
+  }
+
+  // Second part: if number of subjets is larger than two, do it with the most energetic two,
+  // and check if the third is close. 
+  if(numSubJetsSecond > 2) {
+    int firstJet = -1;
+    int secondJet = -1;
+    int thirdJet = -1;
+    double largerEnergy = 0.;
+    double secLargerEnergy = 0.;
+    double terLargerEnergy = 0.;
+ 
+    for(size_t i = 0; i != secondHandle->size(); ++i) {
+      
+      double thisEnergy = ((*secondHandle)[i]).energy();
+      if(thisEnergy > largerEnergy) {
+	terLargerEnergy = secLargerEnergy;
+	secLargerEnergy = largerEnergy;
+	thirdJet = secondJet;
+	secondJet = firstJet;
+	largerEnergy = thisEnergy;
+	firstJet = i;
+      }
+      else if(thisEnergy > secLargerEnergy) {
+	terLargerEnergy = secLargerEnergy;
+	thirdJet = secondJet;
+	secLargerEnergy = thisEnergy;
+	secondJet = i;
+      }
+      else if(thisEnergy > terLargerEnergy) {
+	terLargerEnergy = thisEnergy;
+	thirdJet = i;
+      }
+    }
+
+    CompositeCandidate comp;
+    const Candidate& dau1 = (*secondHandle)[firstJet];
+    const Candidate& dau2 = (*secondHandle)[secondJet];
+    const Candidate& extraJet = (*secondHandle)[thirdJet];
+    comp.addDaughter( dau1 );
+    comp.addDaughter( dau2 );
+    AddFourMomenta addP4;
+    addP4.set( comp );
+    mass2inc = comp.mass();
+    h_massSecond_inc->Fill(mass2inc);
+
+    // Find to whom the third jet is closest, and plot it.
+    double deltaR1e = deltaR(dau1.eta(), dau1.phi(), extraJet.eta(), extraJet.phi());
+    double deltaR2e = deltaR(dau2.eta(), dau2.phi(), extraJet.eta(), extraJet.phi());
+    if(deltaR1e < deltaR2e)
+      h_dR3_Second->Fill(deltaR1e);
+    else
+      h_dR3_Second->Fill(deltaR2e);
+  }
+
+  // Fill the correlation histograms.
+  h_massCorr->Fill(mass1,mass2);
+  h_massCorr_inc->Fill(mass1inc, mass2inc);
 }
 
 // ------------ method called once each job just before starting event loop  ------------
@@ -185,6 +314,16 @@ RSSubJetComparison::beginJob(const edm::EventSetup&)
 // ------------ method called once each job just after ending the event loop  ------------
 void 
 RSSubJetComparison::endJob() {
+}
+
+int
+RSSubJetComparison::countSubJets(const reco::CandidateView v, const double momentumCut) {
+  int count(0);
+  for(size_t i = 0; i != v.size(); ++i) {
+    if(v[i].p() > momentumCut) 
+      count++; 
+  }
+  return count;
 }
 
 //define this as a plug-in
