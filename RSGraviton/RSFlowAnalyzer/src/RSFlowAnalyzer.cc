@@ -13,7 +13,7 @@
 //
 // Original Author:  
 //         Created:  Thu Jan 15 18:14:18 BRST 2009
-// $Id: RSFlowAnalyzer.cc,v 1.2 2009/01/27 19:45:45 tomei Exp $
+// $Id: RSFlowAnalyzer.cc,v 1.3 2009/05/07 13:52:19 tomei Exp $
 //
 //
 
@@ -36,7 +36,7 @@
 #include "DataFormats/JetReco/interface/BasicJet.h"
 #include "DataFormats/JetReco/interface/BasicJetCollection.h"
 #include "DataFormats/Math/interface/Vector3D.h"
-#include "PhysicsTools/Utilities/interface/deltaR.h"
+#include "DataFormats/Math/interface/deltaR.h"
 #include "RSGraviton/RSFlowAnalyzer/interface/Flow.hh"
 #include "PhysicsTools/Utilities/interface/Parameter.h"
 #include "PhysicsTools/Utilities/interface/RootMinuit.h"

@@ -9,7 +9,7 @@
 #include "PhysicsTools/UtilAlgos/interface/ObjectSelector.h"
 #include "PhysicsTools/UtilAlgos/interface/SortCollectionSelector.h"
 #include "DataFormats/JetReco/interface/BasicJet.h"
-#include "PhysicsTools/Utilities/interface/EtComparator.h"
+#include "CommonTools/Utils/interface/EtComparator.h"
 
 typedef ObjectSelector<
           SortCollectionSelector<
