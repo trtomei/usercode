@@ -13,7 +13,7 @@
 //
 // Original Author:  Thiago Tomei
 //         Created:  Thu Mar  4 16:26:36 BRT 2010
-// $Id$
+// $Id: JetConfigurableSelector.cc,v 1.1 2010/03/22 16:39:33 tomei Exp $
 //
 //
 
@@ -49,11 +49,9 @@ class JetConfigurableSelector : public edm::EDFilter {
       
       // ----------member data ---------------------------
   edm::InputTag src_;
-  double ptMin_;
-  double etaMax_;
-  double emfMin_;
-  double massMin_;
+  std::string theCut_;
   int minNumber_;
+  char buffer[1024];
   typedef StringCutObjectSelector<reco::CaloJet> JetStringFilterFunctor;
 };
 
@@ -70,13 +68,11 @@ class JetConfigurableSelector : public edm::EDFilter {
 //
 JetConfigurableSelector::JetConfigurableSelector(const edm::ParameterSet& iConfig) :
   src_(iConfig.getParameter<edm::InputTag>("src")),
-  ptMin_(iConfig.getParameter<double>("ptMin")),
-  etaMax_(iConfig.getParameter<double>("etaMax")),
-  emfMin_(iConfig.getParameter<double>("emfMin")),
-  massMin_(iConfig.getParameter<double>("massMin")),
+  theCut_(iConfig.getParameter<std::string>("theCut")),
   minNumber_(iConfig.getParameter<int>("minNumber"))
 {
   produces<reco::CaloJetCollection>();
+  strcpy(buffer,theCut_.c_str());
 }
 
 
@@ -105,8 +101,6 @@ JetConfigurableSelector::filter(edm::Event& iEvent, const edm::EventSetup& iSetu
   passingJets->reserve( size );
 
   //  JetConfigurableSelectionFunctor jetCut(ptMin_, etaMax_, emfMin_, massMin_);  
-  char buffer[64];
-  sprintf(buffer,"abs(eta) < %4.1f | emEnergyFraction > %4.2f",etaMax_,emfMin_);
   JetStringFilterFunctor theFilter(buffer);
 
   for(reco::CaloJetCollection::const_iterator ijet = jetsHandle->begin();

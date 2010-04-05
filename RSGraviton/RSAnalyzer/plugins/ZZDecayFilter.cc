@@ -81,24 +81,28 @@ ZZDecayFilter::filter(edm::Event& iEvent, const edm::EventSetup& iSetup)
 	piter != myGenEvent->particles_end(); ++piter ) {
     // Check for Z bosons.
     const HepMC::GenParticle* p =  *piter;
-    if(p->pdg_id() == 23) {
-      // Get the decay vertex.
-      HepMC::GenVertex* ZDecayVertex = p->end_vertex();
+    if(verbose_) p->print();
+    if(p->pdg_id() != 23) continue;
+    
+    // Get the decay vertex.
+    HepMC::GenVertex* ZDecayVertex = p->end_vertex();
+    if(ZDecayVertex == 0) continue;
 
-      for (HepMC::GenVertex::particle_iterator d = ZDecayVertex->particles_begin(HepMC::children);
-	   d != ZDecayVertex->particles_end(HepMC::children); d++) {
-	const HepMC::GenParticle* theDaughter = *d;
-	if(isQuark(theDaughter)) {ZDecayToQuarks=true;}
-	if(isNeutrino(theDaughter)) {ZDecayToNeutrinos=true;}
-	if(verbose_ && isQuark(theDaughter)) {
-	  std::cout << "A quark from the Z" << std::endl;
-	  theDaughter->print(); 
-	}
-	if(verbose_ && isNeutrino(theDaughter)) {
-	  std::cout << "A neutrino from the Z" << std::endl;
-	  theDaughter->print();
-	}
-      }    
+    for (HepMC::GenVertex::particle_iterator d = ZDecayVertex->particles_begin(HepMC::children);
+	 d != ZDecayVertex->particles_end(HepMC::children); d++) {
+      const HepMC::GenParticle* theDaughter = *d;
+      if(isQuark(theDaughter)) {ZDecayToQuarks=true;}
+      if(isNeutrino(theDaughter)) {ZDecayToNeutrinos=true;}
+
+      if(verbose_ && isQuark(theDaughter)) {
+	std::cout << "A quark from the Z" << std::endl;
+	theDaughter->print(); 
+      }
+      if(verbose_ && isNeutrino(theDaughter)) {
+	std::cout << "A neutrino from the Z" << std::endl;
+	theDaughter->print();
+      }
+	  
     }
   }
   
@@ -107,6 +111,8 @@ ZZDecayFilter::filter(edm::Event& iEvent, const edm::EventSetup& iSetup)
   if(accepted) 
     if(verbose_)
       std::cout << "ACCEPTED" << std::endl;
+
+  delete myGenEvent;
   
   return accepted;
 }

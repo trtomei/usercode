@@ -2,11 +2,14 @@
 <library name=RSGravitonRSAnalyzer_plugins file=*.cc>
   <use name=FWCore/Framework>
   <use name=FWCore/ParameterSet>
+  <use name=FWCore/Utilities>
   <use name=DataFormats/Candidate>
   <use name=DataFormats/RecoCandidate>
   <use name=DataFormats/HepMCCandidate>
   <use name=DataFormats/ParticleFlowCandidate>
   <use name=DataFormats/JetReco>
+  <use name=DataFormats/METReco>
+  <use name=SimDataFormats/GeneratorProducts>
   <use name=PhysicsTools/RecoUtils>
   <use name=PhysicsTools/RecoAlgos>
   <use name=PhysicsTools/UtilAlgos>
