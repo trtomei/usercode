@@ -5,7 +5,7 @@
 import FWCore.ParameterSet.Config as cms
 import datetime
 
-process = cms.Process("NTP")
+process = cms.Process("SKIM")
 
 ###########################
 # Basic process controls. #
@@ -70,6 +70,17 @@ process.ptCut = cms.EDFilter("JetConfigurableSelector",
                              theCut = cms.string("pt > 60.0"),
                              minNumber = cms.int32(1),
                              )
+process.massCut = cms.EDFilter("JetConfigurableSelector",
+                               src = cms.InputTag("getLargestJet"),
+                               theCut = cms.string("mass > 40.0"),
+                               minNumber = cms.int32(1),
+                               )
+process.METCut = cms.EDFilter("PtMinCandViewSelector",
+                              src = cms.InputTag("corMetGlobalMuons"),
+                              ptMin = cms.double(60.0),
+                              minNumber = cms.uint32(1),
+                              filter = cms.bool(True)
+                              )
 
 #########
 # Paths #
@@ -79,7 +90,10 @@ process.ptCut = cms.EDFilter("JetConfigurableSelector",
 process.cuts1 = cms.Sequence(process.oneJetAboveZero * process.getLargestJet)
 process.cuts2 = cms.Sequence(process.minimalCut)
 process.cuts3 = cms.Sequence(process.ptCut)
-process.selectionCuts = cms.Sequence(process.cuts1 + process.cuts1 + process.cuts2 + process.cuts3)
+process.cuts4 = cms.Sequence(process.massCut)
+process.cuts5 = cms.Sequence(process.METCut)
+process.selectionCuts = cms.Sequence(process.cuts1 + process.cuts2 + process.cuts3
+                                     + process.cuts4 + process.cuts5)
 
 process.p = cms.Path(process.selectionCuts)
 
@@ -88,9 +102,8 @@ process.p = cms.Path(process.selectionCuts)
 process.ntuplesOut = cms.OutputModule("PoolOutputModule",
                                       fileName = cms.untracked.string('qcdSkimming.root'),
                                       SelectEvents = cms.untracked.PSet(SelectEvents = cms.vstring('p')),
-                                      outputCommands = cms.untracked.vstring("drop *",
-                                                                             "keep *_L2L3CorJetSC7Calo_*_*",
-                                                                             "keep *_corMetGlobalMuons_*_*"
+                                      outputCommands = cms.untracked.vstring("keep *",
+                                                                             "drop *_*_*_SKIM"
                                                                              )
                                       )
 
