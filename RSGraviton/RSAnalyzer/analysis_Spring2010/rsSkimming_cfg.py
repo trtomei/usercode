@@ -67,17 +67,17 @@ process.minimalCut = cms.EDFilter("JetConfigurableSelector",
 
 process.ptCut = cms.EDFilter("JetConfigurableSelector",
                              src = cms.InputTag("getLargestJet"),
-                             theCut = cms.string("pt > 60.0"),
+                             theCut = cms.string("pt > 40.0"),
                              minNumber = cms.int32(1),
                              )
 process.massCut = cms.EDFilter("JetConfigurableSelector",
                                src = cms.InputTag("getLargestJet"),
-                               theCut = cms.string("mass > 40.0"),
+                               theCut = cms.string("mass > 30.0"),
                                minNumber = cms.int32(1),
                                )
 process.METCut = cms.EDFilter("PtMinCandViewSelector",
                               src = cms.InputTag("corMetGlobalMuons"),
-                              ptMin = cms.double(60.0),
+                              ptMin = cms.double(40.0),
                               minNumber = cms.uint32(1),
                               filter = cms.bool(True)
                               )
