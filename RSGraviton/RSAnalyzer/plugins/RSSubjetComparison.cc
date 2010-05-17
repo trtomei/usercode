@@ -13,7 +13,7 @@ Implementation:
 //
 // Original Author:  Thiago Fernandez Perez
 //         Created:  Wed Apr 23 17:48:37 CEST 2008
-// $Id: RSSubjetComparison.cc,v 1.2 2009/05/22 11:48:11 tomei Exp $
+// $Id: RSSubjetComparison.cc,v 1.3 2009/05/27 13:48:55 tomei Exp $
 //
 //
 
@@ -35,12 +35,12 @@ Implementation:
 #include "DataFormats/Candidate/interface/Candidate.h"
 #include "DataFormats/Candidate/interface/CandidateFwd.h"
 #include "DataFormats/Candidate/interface/CompositeCandidate.h"
-#include "PhysicsTools/CandUtils/interface/AddFourMomenta.h"
+#include "CommonTools/CandUtils/interface/AddFourMomenta.h"
 
 #include "DataFormats/Common/interface/View.h"
 #include "DataFormats/Math/interface/deltaR.h"
 #include "FWCore/ServiceRegistry/interface/Service.h"
-#include "PhysicsTools/UtilAlgos/interface/TFileService.h"
+#include "CommonTools/UtilAlgos/interface/TFileService.h"
 #include "TH1F.h"
 #include "TH2F.h"
 //

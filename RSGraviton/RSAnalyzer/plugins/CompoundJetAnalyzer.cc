@@ -14,10 +14,10 @@
 #include "DataFormats/JetReco/interface/BasicJet.h"
 #include "DataFormats/JetReco/interface/CaloJet.h"
 #include "DataFormats/Candidate/interface/CompositeCandidate.h"
-#include "PhysicsTools/CandUtils/interface/AddFourMomenta.h"
+#include "CommonTools/CandUtils/interface/AddFourMomenta.h"
 
 #include "FWCore/ServiceRegistry/interface/Service.h"
-#include "PhysicsTools/UtilAlgos/interface/TFileService.h"
+#include "CommonTools/UtilAlgos/interface/TFileService.h"
 #include <TH1F.h>
 #include <TH2F.h>
 //

@@ -8,12 +8,12 @@
  */
 #include "FWCore/Framework/interface/MakerMacros.h"
 #include "DataFormats/METReco/interface/CaloMET.h"
-#include "PhysicsTools/UtilAlgos/interface/ObjectCountFilter.h"
-#include "PhysicsTools/UtilAlgos/interface/EtMinSelector.h"
+#include "CommonTools/UtilAlgos/interface/ObjectCountFilter.h"
+#include "CommonTools/UtilAlgos/interface/EtMinSelector.h"
 
 typedef ObjectCountFilter<
   reco::CaloMET, 
   EtMinSelector
-  > EtMinCaloMetCountFilter;
+  >::type EtMinCaloMetCountFilter;
 
 DEFINE_FWK_MODULE( EtMinCaloMetCountFilter );

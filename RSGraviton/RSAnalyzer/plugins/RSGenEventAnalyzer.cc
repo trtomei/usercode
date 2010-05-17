@@ -21,7 +21,7 @@
 #include "DataFormats/JetReco/interface/GenJetCollection.h"
 #include "DataFormats/Math/interface/deltaR.h"
 #include "FWCore/ServiceRegistry/interface/Service.h"
-#include "PhysicsTools/UtilAlgos/interface/TFileService.h"
+#include "CommonTools/UtilAlgos/interface/TFileService.h"
 #include "TLorentzVector.h"
 #include "TVector3.h"
 #include "TH1F.h"

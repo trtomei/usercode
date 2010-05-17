@@ -13,7 +13,7 @@ Implementation:
 //
 // Original Author:  Thiago Fernandez Perez
 //         Created:  Wed Apr 23 17:48:37 CEST 2008
-// $Id: RSJetAnalyzerV2.cc,v 1.1 2010/04/05 14:23:22 tomei Exp $
+// $Id: RSJetAnalyzerV2.cc,v 1.2 2010/05/17 08:44:27 tomei Exp $
 //
 //
 
@@ -34,7 +34,7 @@ Implementation:
 #include "DataFormats/JetReco/interface/Jet.h"
 #include "DataFormats/JetReco/interface/CaloJetCollection.h"
 #include "FWCore/ServiceRegistry/interface/Service.h"
-#include "PhysicsTools/UtilAlgos/interface/TFileService.h"
+#include "CommonTools/UtilAlgos/interface/TFileService.h"
 #include "TH2F.h"
 //
 // class decleration

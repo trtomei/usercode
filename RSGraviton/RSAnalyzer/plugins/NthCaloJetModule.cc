@@ -1,5 +1,5 @@
 #include "FWCore/Framework/interface/MakerMacros.h"
-#include "PhysicsTools/UtilAlgos/interface/SingleObjectRefSelector.h"
+#include "CommonTools/UtilAlgos/interface/SingleObjectRefSelector.h"
 #include "DataFormats/JetReco/interface/CaloJet.h"
 
 template<typename T>

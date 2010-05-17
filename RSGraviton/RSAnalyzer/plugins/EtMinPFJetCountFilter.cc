@@ -8,12 +8,12 @@
  */
 #include "FWCore/Framework/interface/MakerMacros.h"
 #include "DataFormats/JetReco/interface/PFJet.h"
-#include "PhysicsTools/UtilAlgos/interface/ObjectCountFilter.h"
-#include "PhysicsTools/UtilAlgos/interface/EtMinSelector.h"
+#include "CommonTools/UtilAlgos/interface/ObjectCountFilter.h"
+#include "CommonTools/UtilAlgos/interface/EtMinSelector.h"
 
 typedef ObjectCountFilter<
   reco::PFJetCollection, 
   EtMinSelector
-  > EtMinPFJetCountFilter;
+  >::type EtMinPFJetCountFilter;
 
 DEFINE_FWK_MODULE( EtMinPFJetCountFilter );

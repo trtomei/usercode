@@ -8,12 +8,12 @@
  */
 #include "FWCore/Framework/interface/MakerMacros.h"
 #include "DataFormats/JetReco/interface/CaloJet.h"
-#include "PhysicsTools/UtilAlgos/interface/ObjectCountFilter.h"
-#include "PhysicsTools/UtilAlgos/interface/PtMinSelector.h"
+#include "CommonTools/UtilAlgos/interface/ObjectCountFilter.h"
+#include "CommonTools/UtilAlgos/interface/PtMinSelector.h"
 
 typedef ObjectCountFilter<
   reco::CaloJetCollection, 
   PtMinSelector
-  > PtMinCaloJetCountFilter;
+  >::type PtMinCaloJetCountFilter;
 
 DEFINE_FWK_MODULE( PtMinCaloJetCountFilter );

@@ -13,4 +13,6 @@
   <use name=PhysicsTools/RecoUtils>
   <use name=PhysicsTools/RecoAlgos>
   <use name=PhysicsTools/UtilAlgos>
+  <use name=CommonTools/UtilAlgos>
+  <use name=CommonTools/CandUtils>
 </library>

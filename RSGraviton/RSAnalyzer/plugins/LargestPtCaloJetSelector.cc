@@ -6,8 +6,8 @@
  *
  */
 #include "FWCore/Framework/interface/MakerMacros.h"
-#include "PhysicsTools/UtilAlgos/interface/ObjectSelector.h"
-#include "PhysicsTools/UtilAlgos/interface/SortCollectionSelector.h"
+#include "CommonTools/UtilAlgos/interface/ObjectSelector.h"
+#include "CommonTools/UtilAlgos/interface/SortCollectionSelector.h"
 #include "DataFormats/JetReco/interface/CaloJet.h"
 #include "CommonTools/Utils/interface/PtComparator.h"
 

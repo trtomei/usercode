@@ -13,6 +13,7 @@
 
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 #include "FWCore/Utilities/interface/Exception.h"
+#include "CommonTools/UtilAlgos/interface/TFileService.h"
 #include "CommonTools/UtilAlgos/interface/ExpressionHisto.h"
 #include "SimDataFormats/GeneratorProducts/interface/GenEventInfoProduct.h"
 

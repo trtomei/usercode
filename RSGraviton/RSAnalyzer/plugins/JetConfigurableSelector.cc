@@ -13,7 +13,7 @@
 //
 // Original Author:  Thiago Tomei
 //         Created:  Thu Mar  4 16:26:36 BRT 2010
-// $Id: JetConfigurableSelector.cc,v 1.1 2010/03/22 16:39:33 tomei Exp $
+// $Id: JetConfigurableSelector.cc,v 1.2 2010/04/05 14:23:22 tomei Exp $
 //
 //
 
@@ -30,7 +30,7 @@
 
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 //#include "RSGraviton/RSAnalyzer/interface/JetConfigurableSelectionFunctor.h"
-#include "PhysicsTools/UtilAlgos/interface/StringCutObjectSelector.h"
+#include "CommonTools/UtilAlgos/interface/StringCutObjectSelector.h"
 #include "DataFormats/JetReco/interface/CaloJetCollection.h"
 
 //

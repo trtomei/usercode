@@ -13,7 +13,7 @@ Implementation:
 //
 // Original Author:  Thiago Fernandez Perez
 //         Created:  Wed Mar 19 16:47:30 CET 2008
-// $Id: EventCounter.cc,v 1.3 2008/06/23 11:16:01 tomei Exp $
+// $Id: EventCounter.cc,v 1.1 2010/03/22 16:39:33 tomei Exp $
 //
 //
 
@@ -30,7 +30,7 @@ Implementation:
 
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 #include "FWCore/ServiceRegistry/interface/Service.h"
-#include "PhysicsTools/UtilAlgos/interface/TFileService.h"
+#include "CommonTools/UtilAlgos/interface/TFileService.h"
 #include "TH1F.h"
 //
 // class decleration
