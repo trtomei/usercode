@@ -13,6 +13,7 @@
 
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 #include "FWCore/Utilities/interface/Exception.h"
+#include "SimDataFormats/GeneratorProducts/interface/LHERunInfoProduct.h"
 #include "SimDataFormats/GeneratorProducts/interface/GenRunInfoProduct.h"
 #include "SimDataFormats/GeneratorProducts/interface/GenEventInfoProduct.h"
 
@@ -87,15 +88,29 @@ void
 PythiaXSecAnalyzer::endRun(const edm::Run& iRun, const edm::EventSetup& iESetup) {
   edm::Handle<GenRunInfoProduct> handleRunInfo;
   iRun.getByLabel("generator",handleRunInfo);
+  //  edm::Handle<LHERunInfoProduct> handleLHE;
+  //  iRun.getByLabel("source",handleLHE);
+
   GenRunInfoProduct::XSec crossSection = handleRunInfo->internalXSec();
+  GenRunInfoProduct::XSec extCrossSection = handleRunInfo->externalXSecNLO();
   double xSecValue = 0.0;
+  double extXSecValue = 0.0;
   if(crossSection.isSet()) xSecValue = crossSection.value();
+  if(extCrossSection.isSet()) extXSecValue = extCrossSection.value();
   double xSecError = 0.0;
   if(crossSection.hasError()) xSecError = crossSection.error();
   
   std::ofstream myfile;
   myfile.open (outFileName_.c_str());
   myfile << massParameter_ << "\t" << xSecValue << std::endl;
+  //  std::cout << "Found " << handleLHE->headers_size() << " headers." << std::endl;
+
+  //  std::vector<LHERunInfoProduct::Header>::const_iterator header = handleLHE->headers_begin();
+  //  header++; 
+
+  //  for(LHERunInfoProduct::Header::const_iterator i = header->begin(); i != header->end(); ++i) {
+  //    myfile << *i;
+  //  }
   myfile.close();
 }
 //define this as a plug-in

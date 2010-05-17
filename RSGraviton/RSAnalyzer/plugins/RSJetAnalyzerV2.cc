@@ -13,7 +13,7 @@ Implementation:
 //
 // Original Author:  Thiago Fernandez Perez
 //         Created:  Wed Apr 23 17:48:37 CEST 2008
-// $Id: RSJetAnalyzerV2.cc,v 1.6 2009/04/22 18:39:49 tomei Exp $
+// $Id: RSJetAnalyzerV2.cc,v 1.1 2010/04/05 14:23:22 tomei Exp $
 //
 //
 
@@ -56,6 +56,9 @@ private:
   TH2F*     h_pT_mass;
   TH2F*     h_pT_energy;
   TH2F*     h_energy_mass;
+  TH1F*     h_ptOverMass;
+  TH1F*     h_ptOverEnergy;
+  TH1F*     h_massOverEnergy;
 };
 
 //
@@ -78,6 +81,9 @@ RSJetAnalyzerV2::RSJetAnalyzerV2(const edm::ParameterSet& iConfig) :
   h_pT_mass       = fs->make<TH2F>( "pT_mass", "pT X mass", 500, 0., 1000., 500, 0., 1000.);
   h_pT_energy     = fs->make<TH2F>( "pT_energy", "pT X energy", 500, 0., 1000., 500, 0., 1000.);
   h_energy_mass   = fs->make<TH2F>( "energy_mass", "energy X mass", 500, 0., 1000., 500, 0., 1000.);
+  h_ptOverMass    = fs->make<TH1F>( "ptOverMass", "pT over mass", 500, 0., 50.);
+  h_ptOverEnergy  = fs->make<TH1F>( "ptOverEnergy", "pT over energy", 20, 0., 1.);
+  h_massOverEnergy= fs->make<TH1F>( "massOverEnergy", "mass over energy",20,0., 1.);
 }
 
 
@@ -110,11 +116,17 @@ RSJetAnalyzerV2::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 
   // Choose which jet to analyze.
   const Jet & theJet = (* jetsHandle)[numberInCollection_];
+  double theMass = theJet.mass();
+  double theEnergy = theJet.energy();
+  double thePt = theJet.pt();
   
   // Fill the histograms.
-  h_pT_mass->Fill(theJet.pt(), theJet.mass());
-  h_pT_energy->Fill(theJet.pt(), theJet.energy());
-  h_energy_mass->Fill(theJet.energy(), theJet.mass());
+  h_pT_mass->Fill(thePt, theMass);
+  h_pT_energy->Fill(thePt, theEnergy);
+  h_energy_mass->Fill(theEnergy, theMass);
+  h_ptOverMass->Fill(thePt/theMass);
+  h_ptOverEnergy->Fill(thePt/theEnergy);
+  h_massOverEnergy->Fill(theMass/theEnergy);
 }
 
 // ------------ method called once each job just before starting event loop  ------------
