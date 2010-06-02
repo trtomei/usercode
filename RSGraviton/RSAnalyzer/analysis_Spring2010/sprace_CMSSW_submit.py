@@ -78,8 +78,8 @@ shellfile.write('cmsRun '+configname+' ptCut='+str(sys.argv[3])+
 		' metCut='+str(sys.argv[6])+
 		' fileLabel='+str(sys.argv[7])+
 		' print\n')
-shellfile.write('myfilename=`cat weAreCreatingTheFile.txt`\n')
-shellfile.write('cp $myfilename '+workingdir+'\n')
+#shellfile.write('myfilename=`cat weAreCreatingTheFile.txt`\n')
+#shellfile.write('cp $myfilename '+workingdir+'\n')
 shellfile.close()
 
 # Fix random seeds in the Alpgen config file.

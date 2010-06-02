@@ -13,7 +13,7 @@ Implementation:
 //
 // Original Author:  Thiago Fernandez Perez
 //         Created:  Wed Mar 19 16:47:30 CET 2008
-// $Id: EventCounter.cc,v 1.1 2010/03/22 16:39:33 tomei Exp $
+// $Id: EventCounter.cc,v 1.2 2010/05/17 11:27:46 tomei Exp $
 //
 //
 
@@ -43,7 +43,7 @@ public:
 
 
 private:
-  virtual void beginJob(const edm::EventSetup&) ;
+  virtual void beginJob();
   virtual void analyze(const edm::Event&, const edm::EventSetup&);
   virtual void endJob() ;
   TH1F* H_eventcounter;
@@ -90,7 +90,7 @@ EventCounter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
 // ------------ method called once each job just before starting event loop  ------------
 void 
-EventCounter::beginJob(const edm::EventSetup&)
+EventCounter::beginJob()
 {
 }
 

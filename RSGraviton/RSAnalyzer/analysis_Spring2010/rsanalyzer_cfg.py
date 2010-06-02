@@ -11,176 +11,29 @@ process = cms.Process("USER")
 ###########################
 # Basic process controls. #
 ###########################
-# Source
-#process.load('RSGraviton.RSAnalyzer.Summer10_MinBias_LocalData_cfi')
-#process.load('RSGraviton.RSAnalyzer.Spring10_QCD_MC_cfi')
-process.source = cms.Source("PoolSource",
-                            fileNames = cms.untracked.vstring()
-                            )
-#     'file:/storage/trtomei/data/QCD_pt30_MERGED.root'
-#     'file:/storage/trtomei/data/QCD_pt80_MERGED.root'
-
-# Many inputs
-myInput_signal = (
-    'file:/storage/trtomei/data/Pythia_800GeV_kmpl005_RECO.root',
-    'file:/storage/trtomei/data/Pythia_800GeV_kmpl005_RECO_02.root',
-    'file:/storage/trtomei/data/Pythia_800GeV_kmpl005_RECO_03.root'
-    )
+# Dictionaries
 #####
-myInput_pythia = ('file:/storage/trtomei/data/QCD_pt80_MERGED.root',)  
-myInput_2j_40to120 = ('',)
-myInput_2j_120to280 = ('file:/storage/trtomei/data/QCD_ALPGEN_2j_120to280_MERGED.root',)
-myInput_2j_280to500 = ('file:/storage/trtomei/data/QCD_ALPGEN_2j_280to500_MERGED.root',)
-myInput_2j_500to5000 = (
-    'file:/storage/trtomei/data/QCD_ALPGEN_2j_500to5000_1.root',
-    'file:/storage/trtomei/data/QCD_ALPGEN_2j_500to5000_2.root',
-    'file:/storage/trtomei/data/QCD_ALPGEN_2j_500to5000_3.root',
-    'file:/storage/trtomei/data/QCD_ALPGEN_2j_500to5000_4.root',
-    'file:/storage/trtomei/data/QCD_ALPGEN_2j_500to5000_5.root',
-    'file:/storage/trtomei/data/QCD_ALPGEN_2j_500to5000_6.root'
-    )
-#####
-myInput_3j_40to120 = ('file:/storage/trtomei/data/QCD_ALPGEN_3j_40to120_MERGED.root',)
-myInput_3j_120to280 = (
-    '/store/user/tomei/QCD_ALPGEN3j_120to280/qcdSkimming_1.root',
-    '/store/user/tomei/QCD_ALPGEN3j_120to280/qcdSkimming_2.root',
-    '/store/user/tomei/QCD_ALPGEN3j_120to280/qcdSkimming_3.root',
-    '/store/user/tomei/QCD_ALPGEN3j_120to280/qcdSkimming_4.root',
-    '/store/user/tomei/QCD_ALPGEN3j_120to280/qcdSkimming_5.root',
-    '/store/user/tomei/QCD_ALPGEN3j_120to280/qcdSkimming_6.root'
-    )
-myInput_3j_280to500 = (
-    '/store/user/tomei/QCD_ALPGEN3j_280to500/qcdSkimming_1.root',
-    '/store/user/tomei/QCD_ALPGEN3j_280to500/qcdSkimming_2.root',
-    '/store/user/tomei/QCD_ALPGEN3j_280to500/qcdSkimming_3.root',
-    '/store/user/tomei/QCD_ALPGEN3j_280to500/qcdSkimming_4.root',
-    '/store/user/tomei/QCD_ALPGEN3j_280to500/qcdSkimming_5.root',
-    '/store/user/tomei/QCD_ALPGEN3j_280to500/qcdSkimming_6.root'
-    )
-myInput_3j_500to5000 = (
-    '/store/user/tomei/QCD_ALPGEN3j_500to5000/qcdSkimming_1.root',
-    '/store/user/tomei/QCD_ALPGEN3j_500to5000/qcdSkimming_2.root',
-    '/store/user/tomei/QCD_ALPGEN3j_500to5000/qcdSkimming_3.root',
-    '/store/user/tomei/QCD_ALPGEN3j_500to5000/qcdSkimming_4.root',
-    '/store/user/tomei/QCD_ALPGEN3j_500to5000/qcdSkimming_5.root',
-    '/store/user/tomei/QCD_ALPGEN3j_500to5000/qcdSkimming_6.root'
-    )
-#####
-myInput_4j_40to120 = ('/store/user/tomei/QCD_ALPGEN4j_40to120/qcdSkimming_6.root',)
-myInput_4j_120to280 = (
-    '/store/user/tomei/QCD_ALPGEN4j_120to280/qcdSkimming_1.root',
-    '/store/user/tomei/QCD_ALPGEN4j_120to280/qcdSkimming_2.root',
-    '/store/user/tomei/QCD_ALPGEN4j_120to280/qcdSkimming_3.root'
-    )
-myInput_4j_280to500 = (
-    '/store/user/tomei/QCD_ALPGEN4j_280to500/qcdSkimming_1.root',
-    '/store/user/tomei/QCD_ALPGEN4j_280to500/qcdSkimming_2.root'
-    )
-myInput_4j_500to5000 = (
-    '/store/user/tomei/QCD_ALPGEN4j_500to5000/qcdSkimming_1.root',
-    '/store/user/tomei/QCD_ALPGEN4j_500to5000/qcdSkimming_2.root',
-    '/store/user/tomei/QCD_ALPGEN4j_500to5000/qcdSkimming_3.root'
-    )
-#####
-myInput_5j_40to120 = (
-    '/store/user/tomei/QCD_ALPGEN5j_40to120/qcdSkimming_1.root',
-    '/store/user/tomei/QCD_ALPGEN5j_40to120/qcdSkimming_2.root',
-    '/store/user/tomei/QCD_ALPGEN5j_40to120/qcdSkimming_3.root',
-    '/store/user/tomei/QCD_ALPGEN5j_40to120/qcdSkimming_4.root',
-    '/store/user/tomei/QCD_ALPGEN5j_40to120/qcdSkimming_5.root'
-    )
-myInput_5j_120to280 = (
-    '/store/user/tomei/QCD_ALPGEN5j_120to280/qcdSkimming_1.root',
-    '/store/user/tomei/QCD_ALPGEN5j_120to280/qcdSkimming_2.root',
-    '/store/user/tomei/QCD_ALPGEN5j_120to280/qcdSkimming_3.root',
-    '/store/user/tomei/QCD_ALPGEN5j_120to280/qcdSkimming_4.root',
-    '/store/user/tomei/QCD_ALPGEN5j_120to280/qcdSkimming_5.root',
-    '/store/user/tomei/QCD_ALPGEN5j_120to280/qcdSkimming_6.root',
-    '/store/user/tomei/QCD_ALPGEN5j_120to280/qcdSkimming_7.root'
-    )
-myInput_5j_280to500 = (
-    '/store/user/tomei/QCD_ALPGEN5j_280to500_final/qcdSkimming_1.root',
-    '/store/user/tomei/QCD_ALPGEN5j_280to500_final/qcdSkimming_2.root',
-    '/store/user/tomei/QCD_ALPGEN5j_280to500_final/qcdSkimming_3.root',
-    '/store/user/tomei/QCD_ALPGEN5j_280to500_final/qcdSkimming_4.root'
-    )
-myInput_5j_500to5000 = (
-    '/store/user/tomei/QCD_ALPGEN5j_500to5000_v2/qcdSkimming_1.root',
-    '/store/user/tomei/QCD_ALPGEN5j_500to5000/qcdSkimming_2.root',
-    '/store/user/tomei/QCD_ALPGEN5j_500to5000/qcdSkimming_3.root',
-    '/store/user/tomei/QCD_ALPGEN5j_500to5000/qcdSkimming_4.root',   
-    '/store/user/tomei/QCD_ALPGEN5j_500to5000/qcdSkimming_5.root',
-    '/store/user/tomei/QCD_ALPGEN5j_500to5000/qcdSkimming_6.root',
-    '/store/user/tomei/QCD_ALPGEN5j_500to5000/qcdSkimming_7.root',
-    '/store/user/tomei/QCD_ALPGEN5j_500to5000/qcdSkimming_8.root'
-    )
-#####
-myInput_6j_40to120 = (
-    '/store/user/tomei/QCD_ALPGEN6j_40to120/qcdSkimming_1.root',
-    '/store/user/tomei/QCD_ALPGEN6j_40to120/qcdSkimming_2.root',
-    '/store/user/tomei/QCD_ALPGEN6j_40to120/qcdSkimming_3.root'
-    )
-myInput_6j_120to280 = (
-    '/store/user/tomei/QCD_ALPGEN6j_120to280/qcdSkimming_1.root',
-    '/store/user/tomei/QCD_ALPGEN6j_120to280/qcdSkimming_2.root',
-    '/store/user/tomei/QCD_ALPGEN6j_120to280/qcdSkimming_3.root'
-    )
-myInput_6j_280to500 = (
-    '/store/user/tomei/QCD_ALPGEN6j_280to500/qcdSkimming_1.root',
-    '/store/user/tomei/QCD_ALPGEN6j_280to500/qcdSkimming_2.root',
-    '/store/user/tomei/QCD_ALPGEN6j_280to500/qcdSkimming_3.root'
-    )
-myInput_6j_500to5000 = (
-    '/store/user/tomei/QCD_ALPGEN6j_500to5000/qcdSkimming_1.root',
-    '/store/user/tomei/QCD_ALPGEN6j_500to5000/qcdSkimming_2.root',
-    '/store/user/tomei/QCD_ALPGEN6j_500to5000/qcdSkimming_3.root'
-    )
-
-myInputDict = dict({'pythia':myInput_pythia,
-                      'signal':myInput_signal,
-                      '2j_40to120':myInput_2j_40to120,
-                      '2j_120to280':myInput_2j_120to280,
-                      '2j_280to500':myInput_2j_280to500,
-                      '2j_500to5000':myInput_2j_500to5000,
-                      '3j_40to120':myInput_3j_40to120,
-                      '3j_120to280':myInput_3j_120to280,
-                      '3j_280to500':myInput_3j_280to500,
-                      '3j_500to5000':myInput_3j_500to5000,
-                      '4j_40to120':myInput_4j_40to120,
-                      '4j_120to280':myInput_4j_120to280,
-                      '4j_280to500':myInput_4j_280to500,
-                      '4j_500to5000':myInput_4j_500to5000,
-                      '5j_40to120':myInput_5j_40to120,
-                      '5j_120to280':myInput_5j_120to280,
-                      '5j_280to500':myInput_5j_280to500,
-                      '5j_500to5000':myInput_5j_500to5000,
-                      '6j_40to120':myInput_6j_40to120,
-                      '6j_120to280':myInput_6j_120to280,
-                      '6j_280to500':myInput_6j_280to500,
-                      '6j_500to5000':myInput_6j_500to5000
-                      })
-myWeightDict =      dict({'pythia':2.88E+002,
-                          'signal':6.47E-004,
+myWeightDict =      dict({'signal':6.49E-004,
+                          '2j_120to280':1.91E+001,
+                          '2j_280to500':2.29E-001,
                           '2j_40to120':3.60E+003,
-                          '2j_120to280':1.94E+001,
-                          '2j_280to500':2.27E-001,
-                          '2j_500to5000':1.12E-002,
-                          '3j_40to120':5.85E+002,
+                          '2j_500to5000':1.08E-002,
                           '3j_120to280':2.86E+001,
                           '3j_280to500':8.89E-001,
+                          '3j_40to120':5.85E+002,
                           '3j_500to5000':3.30E-002,
-                          '4j_40to120':7.85E+001,
-                          '4j_120to280':1.74E+001,
+                          '4j_120to280':1.63E+001,
                           '4j_280to500':5.34E-001,
+                          '4j_40to120':7.80E+001,
                           '4j_500to5000':1.92E-002,
-                          '5j_40to120':3.14E+001,
                           '5j_120to280':1.16E+001,
-                          '5j_280to500':2.62E-001,
+                          '5j_280to500':2.70E-001,
+                          '5j_40to120':3.22E+001,
                           '5j_500to5000':2.04E-002,
-                          '6j_40to120':1.79E+000,
                           '6j_120to280':1.48E+000,
                           '6j_280to500':9.19E-002,
-                          '6j_500to5000':2.28E-002,
+                          '6j_40to120':1.79E+000,
+                          '6j_500to5000':2.28E-002
                           })
 ##################
 # Basic services #
@@ -188,7 +41,6 @@ myWeightDict =      dict({'pythia':2.88E+002,
 # import of standard configurations
 process.load('Configuration.StandardSequences.Services_cff')
 process.load('FWCore.MessageService.MessageLogger_cfi')
-process.MessageLogger.cerr.threshold = 'WARNING'
 
 # Command-line options
 import FWCore.ParameterSet.VarParsing as VarParsing
@@ -241,22 +93,24 @@ options.setupTags (tag = 'metCut%d',
 # setup any defaults you want, and fix some of the options
 options.parseArguments()
 outputFileName = 'results_'+options.fileLabel+'_'+today+'.root'
-myInput = myInputDict[options.fileLabel]
 myWeight = myWeightDict[options.fileLabel]
-
-options.output=outputFileName
 options.tenEtaCut = 10*options.etaCut
-
 process.maxEvents = cms.untracked.PSet(
     input = cms.untracked.int32(-1)
     )
 
+### The input
+if options.fileLabel != "signal":
+    myInput = "RSGraviton.RSAnalyzer.Spring10.Alpgen"+options.fileLabel+"_cfi"
+else:
+    myInput = "RSGraviton.RSAnalyzer.Spring10."+options.fileLabel+"_cfi"
+process.load(myInput)
+
+### The output
+options.output=outputFileName
 process.TFileService = cms.Service("TFileService",
-    fileName = cms.string(options.output)
-)
-process.source.fileNames = myInput
-print process.source.fileNames
-print myWeight
+                                   fileName = cms.string(options.output)
+                                   )
 #process.Tracer = cms.Service("Tracer")
 
 from RSGraviton.RSAnalyzer.Zhistos_cff import histograms as Zhistos
@@ -319,12 +173,23 @@ process.hltHighLevel = cms.EDFilter("HLTHighLevel",
 # The noise cut.
 process.noiseCut = cms.EDFilter("HcalNoiseFilter")
 
+##########
+# Jet ID #
+##########
+process.jetIdCut = cms.EDAnalyzer("RSJetIdSelector",
+                                  jets = cms.InputTag("ak7CaloJets"),
+                                  jetID = cms.InputTag("ak7JetID")
+                                  )
+
 ###############
 # Corrections #
 ###############
-# This will pull in the L2L3CorJetSC7Calo module
-process.load("JetMETCorrections.Configuration.L2L3Corrections_Summer09_7TeV_cff")
-process.pcorrection = cms.Path(process.L2L3CorJetSC7Calo)
+process.load("JetMETCorrections.Configuration.L2L3Corrections_Summer09_7TeV_ReReco332_cff")
+process.myL2L3CorJetAK7Calo = cms.EDProducer('CaloJetCorrectionProducer',
+                                             src        = cms.InputTag('jetIdCut'),
+                                             correctors = cms.vstring('L2L3JetCorrectorAK7Calo')
+                                             )
+process.myCorrections = cms.Sequence(process.myL2L3CorJetAK7Calo)
 
 ##################
 # Kinematic cuts #
@@ -333,7 +198,7 @@ process.pcorrection = cms.Path(process.L2L3CorJetSC7Calo)
 ### For Path 1 - FAT jet from Z.
 
 process.oneJetAboveZero = cms.EDFilter("JetConfigurableSelector",
-                                       src = cms.InputTag("L2L3CorJetSC7Calo"),
+                                       src = cms.InputTag("myL2L3CorJetAK7Calo"),
                                        theCut = cms.string("pt > -1.0"),
                                        minNumber = cms.int32(1)                                       
                                        )
@@ -343,12 +208,6 @@ process.getLargestJet = cms.EDProducer("LargestPtCaloJetSelector",
                                        maxNumber = cms.uint32(1)
                                        )
 
-process.minimalCut = cms.EDFilter("JetConfigurableSelector",
-                                  src = cms.InputTag("getLargestJet"),
-                                  theCut = cms.string("emEnergyFraction > 0.01"),
-                                  minNumber = cms.int32(1)
-                                  )
-
 process.ptCut = cms.EDFilter("JetConfigurableSelector",
                              src = cms.InputTag("getLargestJet"),
                              theCut = cms.string("pt > "+str(options.ptCut)),
@@ -356,8 +215,8 @@ process.ptCut = cms.EDFilter("JetConfigurableSelector",
                              )
 
 process.differentPtCut = cms.EDFilter("JetConfigurableSelector",
-                                      src = cms.InputTag("L2L3CorJetSC7Calo"),
-                                      theCut = cms.string("pt > 40.0 & emEnergyFraction > 0.01"),
+                                      src = cms.InputTag("myL2L3CorJetAK7Calo"),
+                                      theCut = cms.string("pt > 15.0"),
                                       minNumber = cms.int32(1)                                       
                                       )
 
@@ -502,8 +361,8 @@ process.plotJetsGeneral = cms.EDAnalyzer("CaloJetHistoAnalyzer",
 #########
 
 # Paths after cuts.
+process.jetId  = cms.Sequence(process.jetIdCut + process.myCorrections)
 process.cuts0  = cms.Sequence(process.oneJetAboveZero)
-process.cuts0b = cms.Sequence(process.minimalCut)
 process.cuts1  = cms.Sequence(process.ptCut)
 process.cuts2  = cms.Sequence(process.etaCut)
 process.cuts3  = cms.Sequence(process.massCut)
@@ -511,18 +370,20 @@ process.cuts4  = cms.Sequence(process.METCut)
 process.doMultiJets = cms.Sequence(process.differentPtCut + process.getHardJets)# + process.deltaPhiFilter + process.plotJetsGeneral)
 process.cuts5 = cms.Sequence(process.deltaPhiFilter)
 
-#process.pathCutByCut = cms.Path(process.eventCounter + process.cuts0 +
-#                                process.eventCounterTwo + process.getLargestJet + process.cuts0b +
-#                                process.eventCounterThree + process.cuts1 +
-#                                process.eventCounterFour + process.cuts2 +
-#                                process.eventCounterFive + process.cuts3 +
-#                                process.eventCounterSix + process.cuts4 +
-#                                process.eventCounterSeven)
+process.pathCutByCut = cms.Path(process.eventCounter + process.jetId + process.cuts0 +
+                                process.eventCounterTwo + process.getLargestJet +
+                                process.eventCounterThree + process.cuts1 +
+                                process.eventCounterFour + process.cuts2 +
+                                process.eventCounterFive + process.cuts3 +
+                                process.eventCounterSix + process.cuts4 +
+                                process.eventCounterSeven +
+                                process.doMultiJets + process.plotMET + process.plotJetsGeneral + process.eventAnalyzer
+                                )
 
 
-process.p = cms.Path(process.cuts0 + process.getLargestJet + process.cuts0b + process.cuts1 + process.cuts3 + process.cuts4 +
-                     process.eventCounter +
-                     process.doMultiJets +
+#process.p = cms.Path(process.cuts0 + process.getLargestJet + process.cuts0b + process.cuts1 + process.cuts3 + process.cuts4 +
+#                     process.eventCounter +
+#                     process.doMultiJets +
 #                     process.deltaPhiFilter +
-                     process.plotMET + 
-                     process.plotJetsGeneral + process.eventAnalyzer)
+#                     process.plotMET + 
+#                     process.plotJetsGeneral + process.eventAnalyzer)
