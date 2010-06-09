@@ -1,0 +1,41 @@
+import FWCore.ParameterSet.Config as cms
+
+maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
+readFiles = cms.untracked.vstring()
+secFiles = cms.untracked.vstring() 
+source = cms.Source ("PoolSource",fileNames = readFiles, secondaryFileNames = secFiles)
+readFiles.extend( [
+       '/store/mc/Spring10/W4Jets_Pt0to100-alpgen/GEN-SIM-RECO/START3X_V26_S09-v1/0027/E635668C-8247-DF11-B2CA-001A4BA5A65E.root',
+       '/store/mc/Spring10/W4Jets_Pt0to100-alpgen/GEN-SIM-RECO/START3X_V26_S09-v1/0027/E04D6A8A-8247-DF11-877A-001A4BA61192.root',
+       '/store/mc/Spring10/W4Jets_Pt0to100-alpgen/GEN-SIM-RECO/START3X_V26_S09-v1/0027/ACD1ED89-8247-DF11-801A-001A4BA81F54.root',
+       '/store/mc/Spring10/W4Jets_Pt0to100-alpgen/GEN-SIM-RECO/START3X_V26_S09-v1/0027/8884E48B-8247-DF11-A867-001A4BD22406.root',
+       '/store/mc/Spring10/W4Jets_Pt0to100-alpgen/GEN-SIM-RECO/START3X_V26_S09-v1/0027/4EFE218C-8247-DF11-9679-001A4BA8FF70.root',
+       '/store/mc/Spring10/W4Jets_Pt0to100-alpgen/GEN-SIM-RECO/START3X_V26_S09-v1/0027/4CDB1A8B-8247-DF11-9B5A-001A4BA68808.root',
+       '/store/mc/Spring10/W4Jets_Pt0to100-alpgen/GEN-SIM-RECO/START3X_V26_S09-v1/0027/2E99AC86-8247-DF11-8E77-0019BB2AD1C6.root',
+       '/store/mc/Spring10/W4Jets_Pt0to100-alpgen/GEN-SIM-RECO/START3X_V26_S09-v1/0027/2A3A5889-8247-DF11-87F6-001A4BA5815C.root',
+       '/store/mc/Spring10/W4Jets_Pt0to100-alpgen/GEN-SIM-RECO/START3X_V26_S09-v1/0027/2279BA8B-8247-DF11-836E-0019BB36D0E0.root',
+       '/store/mc/Spring10/W4Jets_Pt0to100-alpgen/GEN-SIM-RECO/START3X_V26_S09-v1/0027/1E937498-8247-DF11-972C-001A4BA44D2A.root',
+       '/store/mc/Spring10/W4Jets_Pt0to100-alpgen/GEN-SIM-RECO/START3X_V26_S09-v1/0027/141F9587-8247-DF11-922E-0019BB3F73A4.root',
+       '/store/mc/Spring10/W4Jets_Pt0to100-alpgen/GEN-SIM-RECO/START3X_V26_S09-v1/0026/685B3FA1-2E47-DF11-A171-E0CB4E1A117C.root',
+       '/store/mc/Spring10/W4Jets_Pt0to100-alpgen/GEN-SIM-RECO/START3X_V26_S09-v1/0026/5C532890-2E47-DF11-A426-0030487C6A90.root',
+       '/store/mc/Spring10/W4Jets_Pt0to100-alpgen/GEN-SIM-RECO/START3X_V26_S09-v1/0026/3814D78F-2E47-DF11-AD4C-90E6BA0D09B0.root',
+       '/store/mc/Spring10/W4Jets_Pt0to100-alpgen/GEN-SIM-RECO/START3X_V26_S09-v1/0026/18804F12-4247-DF11-B9FF-E0CB4E1A118B.root',
+       '/store/mc/Spring10/W4Jets_Pt0to100-alpgen/GEN-SIM-RECO/START3X_V26_S09-v1/0025/D039DA73-1B47-DF11-A06D-001A4BA6EE7C.root',
+       '/store/mc/Spring10/W4Jets_Pt0to100-alpgen/GEN-SIM-RECO/START3X_V26_S09-v1/0025/C8C07C75-1B47-DF11-ADB1-0019BB3F741E.root',
+       '/store/mc/Spring10/W4Jets_Pt0to100-alpgen/GEN-SIM-RECO/START3X_V26_S09-v1/0025/C4E7A7EB-1A47-DF11-ABF8-001A4BA94900.root',
+       '/store/mc/Spring10/W4Jets_Pt0to100-alpgen/GEN-SIM-RECO/START3X_V26_S09-v1/0025/B4B6EE76-1B47-DF11-B853-0019BB3DF3BE.root',
+       '/store/mc/Spring10/W4Jets_Pt0to100-alpgen/GEN-SIM-RECO/START3X_V26_S09-v1/0025/92F74D30-1B47-DF11-85A4-90E6BA0D0994.root',
+       '/store/mc/Spring10/W4Jets_Pt0to100-alpgen/GEN-SIM-RECO/START3X_V26_S09-v1/0025/7C8CDA00-2147-DF11-A542-001A4BA98410.root',
+       '/store/mc/Spring10/W4Jets_Pt0to100-alpgen/GEN-SIM-RECO/START3X_V26_S09-v1/0025/6C95F1B0-1A47-DF11-97CE-001A4BA939F2.root',
+       '/store/mc/Spring10/W4Jets_Pt0to100-alpgen/GEN-SIM-RECO/START3X_V26_S09-v1/0025/4C4BF976-1B47-DF11-A6B7-001A4BA83FA4.root',
+       '/store/mc/Spring10/W4Jets_Pt0to100-alpgen/GEN-SIM-RECO/START3X_V26_S09-v1/0025/449A399A-1B47-DF11-B6F0-001A4BA8B3F4.root',
+       '/store/mc/Spring10/W4Jets_Pt0to100-alpgen/GEN-SIM-RECO/START3X_V26_S09-v1/0025/42A52776-1B47-DF11-94CC-0019BB3FF3A6.root',
+       '/store/mc/Spring10/W4Jets_Pt0to100-alpgen/GEN-SIM-RECO/START3X_V26_S09-v1/0025/382F4FED-1A47-DF11-9756-001A4BA80F36.root',
+       '/store/mc/Spring10/W4Jets_Pt0to100-alpgen/GEN-SIM-RECO/START3X_V26_S09-v1/0024/BE8816CF-1947-DF11-AE88-90E6BA19A226.root',
+       '/store/mc/Spring10/W4Jets_Pt0to100-alpgen/GEN-SIM-RECO/START3X_V26_S09-v1/0024/8A069371-1A47-DF11-9490-90E6BA19A22B.root',
+       '/store/mc/Spring10/W4Jets_Pt0to100-alpgen/GEN-SIM-RECO/START3X_V26_S09-v1/0024/80CA68CE-1947-DF11-93F2-90E6BA442EEE.root' ] );
+
+
+secFiles.extend( [
+               ] )
+

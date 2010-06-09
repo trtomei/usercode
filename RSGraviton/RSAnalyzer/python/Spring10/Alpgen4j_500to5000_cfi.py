@@ -1,0 +1,32 @@
+import FWCore.ParameterSet.Config as cms
+
+maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
+readFiles = cms.untracked.vstring()
+secFiles = cms.untracked.vstring() 
+source = cms.Source ("PoolSource",fileNames = readFiles, secondaryFileNames = secFiles)
+readFiles.extend( [
+       '/store/mc/Spring10/QCD4Jets_Pt500to5000-alpgen/GEN-SIM-RECO/START3X_V26_S09-v1/0013/76BD1944-B848-DF11-8CD2-00151796D67C.root',
+       '/store/mc/Spring10/QCD4Jets_Pt500to5000-alpgen/GEN-SIM-RECO/START3X_V26_S09-v1/0008/44338E84-FC47-DF11-AAE4-0015178C4C44.root',
+       '/store/mc/Spring10/QCD4Jets_Pt500to5000-alpgen/GEN-SIM-RECO/START3X_V26_S09-v1/0007/FAD3DD11-DD47-DF11-B643-0024E8768867.root',
+       '/store/mc/Spring10/QCD4Jets_Pt500to5000-alpgen/GEN-SIM-RECO/START3X_V26_S09-v1/0007/FA78A845-DF47-DF11-A076-0024E8769B46.root',
+       '/store/mc/Spring10/QCD4Jets_Pt500to5000-alpgen/GEN-SIM-RECO/START3X_V26_S09-v1/0007/F8AC719B-E847-DF11-B3AA-00151796C1B4.root',
+       '/store/mc/Spring10/QCD4Jets_Pt500to5000-alpgen/GEN-SIM-RECO/START3X_V26_S09-v1/0007/ECB8F9E6-DD47-DF11-AE46-0024E876A7D3.root',
+       '/store/mc/Spring10/QCD4Jets_Pt500to5000-alpgen/GEN-SIM-RECO/START3X_V26_S09-v1/0007/E8D4015B-D147-DF11-97A8-0024E87699C0.root',
+       '/store/mc/Spring10/QCD4Jets_Pt500to5000-alpgen/GEN-SIM-RECO/START3X_V26_S09-v1/0007/C4A1A0F0-D047-DF11-90BC-00151796D6A8.root',
+       '/store/mc/Spring10/QCD4Jets_Pt500to5000-alpgen/GEN-SIM-RECO/START3X_V26_S09-v1/0007/B69FB253-DF47-DF11-A938-0024E87680E7.root',
+       '/store/mc/Spring10/QCD4Jets_Pt500to5000-alpgen/GEN-SIM-RECO/START3X_V26_S09-v1/0007/B07C13A1-D247-DF11-B17A-00151796C050.root',
+       '/store/mc/Spring10/QCD4Jets_Pt500to5000-alpgen/GEN-SIM-RECO/START3X_V26_S09-v1/0007/AE848EAA-E347-DF11-AE00-001D0967DEEF.root',
+       '/store/mc/Spring10/QCD4Jets_Pt500to5000-alpgen/GEN-SIM-RECO/START3X_V26_S09-v1/0007/A011AEFD-E247-DF11-AB32-0024E8768272.root',
+       '/store/mc/Spring10/QCD4Jets_Pt500to5000-alpgen/GEN-SIM-RECO/START3X_V26_S09-v1/0007/9AA3D112-DD47-DF11-A066-0024E87680B3.root',
+       '/store/mc/Spring10/QCD4Jets_Pt500to5000-alpgen/GEN-SIM-RECO/START3X_V26_S09-v1/0007/529D0905-E347-DF11-86C7-0024E8768D0D.root',
+       '/store/mc/Spring10/QCD4Jets_Pt500to5000-alpgen/GEN-SIM-RECO/START3X_V26_S09-v1/0007/523A194A-E247-DF11-B73B-0024E87681FD.root',
+       '/store/mc/Spring10/QCD4Jets_Pt500to5000-alpgen/GEN-SIM-RECO/START3X_V26_S09-v1/0007/3AF08307-D147-DF11-AEA8-001D09675C2E.root',
+       '/store/mc/Spring10/QCD4Jets_Pt500to5000-alpgen/GEN-SIM-RECO/START3X_V26_S09-v1/0007/341E920B-DD47-DF11-98F3-0024E8766415.root',
+       '/store/mc/Spring10/QCD4Jets_Pt500to5000-alpgen/GEN-SIM-RECO/START3X_V26_S09-v1/0007/30904A9F-D247-DF11-8D63-0015178C4C14.root',
+       '/store/mc/Spring10/QCD4Jets_Pt500to5000-alpgen/GEN-SIM-RECO/START3X_V26_S09-v1/0007/20781A14-DE47-DF11-B84B-0024E87681F0.root',
+       '/store/mc/Spring10/QCD4Jets_Pt500to5000-alpgen/GEN-SIM-RECO/START3X_V26_S09-v1/0007/0EFA150E-DD47-DF11-9607-0024E87683DE.root' ] );
+
+
+secFiles.extend( [
+               ] )
+
