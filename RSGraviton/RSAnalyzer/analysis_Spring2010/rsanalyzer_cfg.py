@@ -13,28 +13,59 @@ process = cms.Process("USER")
 ###########################
 # Dictionaries
 #####
-myWeightDict =      dict({'signal':6.49E-004,
-                          '2j_120to280':1.91E+001,
-                          '2j_280to500':2.29E-001,
-                          '2j_40to120':3.60E+003,
-                          '2j_500to5000':1.08E-002,
-                          '3j_120to280':2.86E+001,
-                          '3j_280to500':8.89E-001,
-                          '3j_40to120':5.85E+002,
-                          '3j_500to5000':3.30E-002,
-                          '4j_120to280':1.63E+001,
-                          '4j_280to500':5.34E-001,
-                          '4j_40to120':7.80E+001,
-                          '4j_500to5000':1.92E-002,
-                          '5j_120to280':1.16E+001,
-                          '5j_280to500':2.70E-001,
-                          '5j_40to120':3.22E+001,
-                          '5j_500to5000':2.04E-002,
-                          '6j_120to280':1.48E+000,
-                          '6j_280to500':9.19E-002,
-                          '6j_40to120':1.79E+000,
-                          '6j_500to5000':2.28E-002
+### Weights for 300/pb
+myWeightDict =      dict({'signal':1.95E-03,
+                          '2j_120to280':5.73E+01,
+                          '2j_280to500':6.87E-01,
+                          '2j_40to120':1.08E+04,
+                          '2j_500to5000':3.24E-02,
+                          '3j_120to280':8.58E+01,
+                          '3j_280to500':2.67E+00,
+                          '3j_40to120':1.76E+03,
+                          '3j_500to5000':9.90E-02,
+                          '4j_120to280':4.89E+01,
+                          '4j_280to500':1.60E+00,
+                          '4j_40to120':2.34E+02,
+                          '4j_500to5000':5.76E-02,
+                          '5j_120to280':3.48E+01,
+                          '5j_280to500':8.10E-01,
+                          '5j_40to120':9.66E+01,
+                          '5j_500to5000':6.12E-02,
+                          '6j_120to280':4.44E+00,
+                          '6j_280to500':2.76E-01,
+                          '6j_40to120':5.37E+00,
+                          '6j_500to5000':6.84E-02,
+                          'W0j_0to100':1.73E+00,
+                          'W1j_0to100':1.53E+00,
+                          'W2j_0to100':4.23E-01,
+                          'W3j_0to100':1.64E-01,
+                          'W4j_0to100':1.46E-01,
+                          'W5j_0to100':3.06E-01,
+                          'W1j_100to300':1.47E-01,
+                          'W2j_100to300':1.52E-01,
+                          'W3j_100to300':1.58E-01,
+                          'W4j_100to300':2.94E-01,
+                          'W5j_100to300':1.03E-01,
+                          'W1j_300to800':2.06E-03,
+                          'W2j_300to800':4.44E-03,
+                          'W3j_300to800':5.49E-03,
+                          'W4j_300to800':8.10E-03,
+                          'W5j_300to800':3.96E-03,
+                          'W1j_800to1600':3.99E-06,
+                          'W2j_800to1600':3.03E-05,
+                          'W3j_800to1600':4.98E-05,
+                          'W4j_800to1600':2.44E-05,
+                          'W5j_800to1600':1.86E-05,
+                          'TTbar0j_40GeV':1.40E-02,
+                          'TTbar1j_40GeV':3.15E-02,
+                          'TTbar2j_40GeV':1.09E-01,
+                          'TTbar3j_40GeV':5.22E-02,
+                          'TTbar4j_40GeV':2.50E-02,
+                          'RSZZ_mass600_coupling005':5.10E-03,
+                          'RSZZ_mass800_coupling005':1.98E-03,
+                          'RSZZ_mass1000_coupling005':3.15E-04
                           })
+
 ##################
 # Basic services #
 ##################
@@ -95,9 +126,6 @@ options.parseArguments()
 outputFileName = 'results_'+options.fileLabel+'_'+today+'.root'
 myWeight = myWeightDict[options.fileLabel]
 options.tenEtaCut = 10*options.etaCut
-process.maxEvents = cms.untracked.PSet(
-    input = cms.untracked.int32(-1)
-    )
 
 ### The input
 if options.fileLabel != "signal":
@@ -105,6 +133,9 @@ if options.fileLabel != "signal":
 else:
     myInput = "RSGraviton.RSAnalyzer.Spring10."+options.fileLabel+"_cfi"
 process.load(myInput)
+process.maxEvents = cms.untracked.PSet(
+    input = cms.untracked.int32(options.maxEvents)
+    )
 
 ### The output
 options.output=outputFileName
@@ -121,20 +152,28 @@ from RSGraviton.RSAnalyzer.jethistos_cff import histograms as jethistos
 # Mandatory cuts #
 ##################
 
-# These will probably be around in the skim, but I add them here just in case.
-
-#
+# The "select collisions" trigger ...
 process.load('L1TriggerConfig.L1GtConfigProducers.L1GtTriggerMaskAlgoTrigConfig_cff')
 process.load('L1TriggerConfig.L1GtConfigProducers.L1GtTriggerMaskTechTrigConfig_cff')
 process.load('HLTrigger/HLTfilters/hltLevel1GTSeed_cfi')
 
 process.L1T1coll=process.hltLevel1GTSeed.clone()
 process.L1T1coll.L1TechTriggerSeeding = cms.bool(True)
-process.L1T1coll.L1SeedsLogicalExpression = cms.string('0 AND (40 OR 41) AND NOT (36 OR 37 OR 38 OR 39) AND NOT ((42 AND NOT 43) OR (43 AND NOT 42))')
-# Should we put the 0 in here in the MC?
+#process.L1T1coll.L1SeedsLogicalExpression = cms.string('0 AND (40 OR 41) AND NOT (36 OR 37 OR 38 OR 39)')
+process.L1T1coll.L1SeedsLogicalExpression = cms.string('(40 OR 41) AND NOT (36 OR 37 OR 38 OR 39)')
+# Don't ask for bit 0 in the MC.
+#process.l1tcollpath = cms.Path(process.L1T1coll)
 
-# process.l1tcollpath = cms.Path(process.L1T1coll)
+# The PhysicsDeclared HLT
+process.hltHighLevel = cms.EDFilter("HLTHighLevel",
+                                    TriggerResultsTag = cms.InputTag("TriggerResults","","HLT"),
+                                    HLTPaths = cms.vstring('HLT_PhysicsDeclared'),# provide list of HLT paths (or patterns) you want
+                                    eventSetupPathsKey = cms.string(''), # not empty => use read paths from AlCaRecoTriggerBitsRcd via this key
+                                    andOr = cms.bool(True), # how to deal with multiple triggers: True: accept if ANY is true, False:accept if ALL are true
+                                    throw = cms.bool(True)  # throw exception on unknown path names
+                                    )
 
+# Good vertices, no scraping
 process.primaryVertexFilter = cms.EDFilter("VertexSelector",
                                            src = cms.InputTag("offlinePrimaryVertices"),
                                            cut = cms.string("!isFake && ndof > 4 && abs(z) <= 15 && position.Rho <= 2"),
@@ -148,8 +187,9 @@ process.noscraping = cms.EDFilter("FilterOutScraping",
                                   thresh = cms.untracked.double(0.25)
                                   )
 
-# process.goodvertex=cms.Path(process.primaryVertexFilter+process.noscraping)
+#process.goodvertex=cms.Path(process.primaryVertexFilter+process.noscraping)
 
+# This is for skimming
 # process.collout = cms.OutputModule("PoolOutputModule",
 #                                   fileName = cms.untracked.string('/tmp/good_coll.root'),
 #                                   outputCommands = process.FEVTEventContent.outputCommands,
@@ -161,17 +201,6 @@ process.noscraping = cms.EDFilter("FilterOutScraping",
 #                                       )
 #                                   )
 
-# Require PhysicsDeclared HLT
-process.hltHighLevel = cms.EDFilter("HLTHighLevel",
-                                    TriggerResultsTag = cms.InputTag("TriggerResults","","HLT"),
-                                    HLTPaths = cms.vstring('HLT_PhysicsDeclared'),# provide list of HLT paths (or patterns) you want
-                                    eventSetupPathsKey = cms.string(''), # not empty => use read paths from AlCaRecoTriggerBitsRcd via this key
-                                    andOr = cms.bool(True),             # how to deal with multiple triggers: True (OR) accept if ANY is true, False (AND) accept if ALL are true
-                                    throw = cms.bool(True)    # throw exception on unknown path names
-                                    )
-
-# The noise cut.
-process.noiseCut = cms.EDFilter("HcalNoiseFilter")
 
 ##########
 # Jet ID #
@@ -196,7 +225,6 @@ process.myCorrections = cms.Sequence(process.myL2L3CorJetAK7Calo)
 ##################
 
 ### For Path 1 - FAT jet from Z.
-
 process.oneJetAboveZero = cms.EDFilter("JetConfigurableSelector",
                                        src = cms.InputTag("myL2L3CorJetAK7Calo"),
                                        theCut = cms.string("pt > -1.0"),
@@ -214,9 +242,11 @@ process.ptCut = cms.EDFilter("JetConfigurableSelector",
                              minNumber = cms.int32(1),
                              )
 
+### This is the point where the trees should be dropped.
+
 process.differentPtCut = cms.EDFilter("JetConfigurableSelector",
                                       src = cms.InputTag("myL2L3CorJetAK7Calo"),
-                                      theCut = cms.string("pt > 15.0"),
+                                      theCut = cms.string("(pt > 25.0) && (abs(eta) < 5.0)"),
                                       minNumber = cms.int32(1)                                       
                                       )
 
@@ -274,33 +304,26 @@ process.deltaPhiFilter = cms.EDFilter("RSEventDeltaPhiFilter",
                                       maxDeltaPhi = cms.double(2.8)
                                       )
 
+process.trackerIndirectVeto = cms.EDFilter("RSTrackerIndirectVetoFilter",
+                                           src = cms.InputTag("generalTracks"),
+                                           trackMinPt = cms.double(1.0),
+                                           seedTrackMinPt = cms.double(10.0),
+                                           trackMaxEta = cms.double(2.4),
+                                           minCone = cms.double(0.02),
+                                           maxCone = cms.double(0.3),
+                                           minAcceptableTIV = cms.double(0.1), # 10%, has no effect if filter is False
+                                           pixelHits = cms.int32(1),
+                                           trackerHits = cms.int32(5),
+                                           highPurityRequired = cms.bool(True),
+                                           filter = cms.bool(False) #DON'T make the cut, just store the largest TIV
+                                           )
+
 process.eventAnalyzer = cms.EDAnalyzer("RSEventAnalyzer",
                                        jets = cms.InputTag("getHardJets"),
                                        met = cms.InputTag("corMetGlobalMuons"),
+                                       TIV = cms.InputTag("trackerIndirectVeto"),
                                        weight = cms.double(myWeight)
                                        )
-# List of ALPGEN event weights
-# 3.60E+03
-# 1.94E+01
-# 2.27E-01
-# 1.12E-02
-# 5.85E+02
-# 2.86E+01
-# 8.89E-01
-# 3.30E-02
-# 7.85E+01
-# 1.74E+01
-# 5.34E-01
-# 1.92E-02
-# 3.14E+01
-# 1.16E+01
-# 2.62E-01
-# 2.04E-02
-# 1.79E+00
-# 1.48E+00
-# 9.19E-02
-# 2.28E-02
-
 
 #process.jetAnalyzer = cms.EDAnalyzer("RSJetAnalyzerV2",
 #                                     jets = cms.InputTag("getLargestJet"),
@@ -321,14 +344,14 @@ process.getPtHat = cms.EDAnalyzer("GenEventAnalyzer",
 process.plotMET = cms.EDAnalyzer("CandViewHistoAnalyzer",
                                  src = cms.InputTag("corMetGlobalMuons"),
                                  histograms = cms.VPSet(
-                                     cms.PSet(nbins = cms.untracked.int32(200),
+                                     cms.PSet(nbins = cms.untracked.int32(500),
                                               description = cms.untracked.string('MET'),
                                               plotquantity = cms.untracked.string('et'),
                                               min = cms.untracked.double(0.0),
                                               max = cms.untracked.double(1000.0),
                                               name = cms.untracked.string('MET')
                                               ),
-                                     cms.PSet(nbins = cms.untracked.int32(200),
+                                     cms.PSet(nbins = cms.untracked.int32(500),
                                               description = cms.untracked.string('METpt'),
                                               plotquantity = cms.untracked.string('pt'),
                                               min = cms.untracked.double(0.0),
@@ -360,7 +383,8 @@ process.plotJetsGeneral = cms.EDAnalyzer("CaloJetHistoAnalyzer",
 # Paths #
 #########
 
-# Paths after cuts.
+# Summary of cuts.
+process.goodVertexSequence = cms.Sequence(process.primaryVertexFilter+process.noscraping)
 process.jetId  = cms.Sequence(process.jetIdCut + process.myCorrections)
 process.cuts0  = cms.Sequence(process.oneJetAboveZero)
 process.cuts1  = cms.Sequence(process.ptCut)
@@ -369,15 +393,20 @@ process.cuts3  = cms.Sequence(process.massCut)
 process.cuts4  = cms.Sequence(process.METCut)
 process.doMultiJets = cms.Sequence(process.differentPtCut + process.getHardJets)# + process.deltaPhiFilter + process.plotJetsGeneral)
 process.cuts5 = cms.Sequence(process.deltaPhiFilter)
+process.cuts6 = cms.Sequence(process.trackerIndirectVeto)
 
-process.pathCutByCut = cms.Path(process.eventCounter + process.jetId + process.cuts0 +
-                                process.eventCounterTwo + process.getLargestJet +
-                                process.eventCounterThree + process.cuts1 +
-                                process.eventCounterFour + process.cuts2 +
-                                process.eventCounterFive + process.cuts3 +
-                                process.eventCounterSix + process.cuts4 +
-                                process.eventCounterSeven +
-                                process.doMultiJets + process.plotMET + process.plotJetsGeneral + process.eventAnalyzer
+# I want only want Primary Vertex + LOOSE Jet ID + at least one jet + at leat one jet above pT cut.
+process.pathCutByCut = cms.Path(process.eventCounter + process.goodVertexSequence +
+                                process.eventCounterTwo + process.jetId + process.cuts0 +
+                                process.eventCounterThree + process.getLargestJet +
+                                process.eventCounterFour + process.cuts1 +
+                                process.eventCounterFive +
+                                process.doMultiJets +
+                                process.plotMET +
+                                process.plotJetsGeneral +
+                                process.cuts6 + 
+                                process.eventCounterSix + 
+                                process.eventAnalyzer
                                 )
 
 

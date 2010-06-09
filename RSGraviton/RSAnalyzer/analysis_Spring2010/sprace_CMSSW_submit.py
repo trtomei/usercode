@@ -73,32 +73,23 @@ shellfile.write('cd '+workingdir+'\n')
 shellfile.write('eval `scramv1 runtime -sh`\n')
 # cmsRun rsanalyzer_cfg.py ptCut=70.0 etaCut=1.2 massCut=20.0 metCut=30.0 fileLabel=QCDStandardCuts print
 shellfile.write('cmsRun '+configname+' ptCut='+str(sys.argv[3])+
-		' etaCut='+str(sys.argv[4])+
-		' massCut='+str(sys.argv[5])+
-		' metCut='+str(sys.argv[6])+
-		' fileLabel='+str(sys.argv[7])+
+#		' etaCut='+str(sys.argv[4])+
+#		' massCut='+str(sys.argv[5])+
+#		' metCut='+str(sys.argv[6])+
+		' fileLabel='+str(sys.argv[4])+
 		' print\n')
 #shellfile.write('myfilename=`cat weAreCreatingTheFile.txt`\n')
 #shellfile.write('cp $myfilename '+workingdir+'\n')
 shellfile.close()
 
-# Fix random seeds in the Alpgen config file.
+# The config file
 oldconfigfile = open(configargname,"r")
 newconfigfile = open(configname, "w")
 for line in oldconfigfile:
-	if line.find("iseed1") >= 0:
-		newline = "iseed1 "+str(random.randint(10000,99999))+"\n"
-	elif line.find("iseed2") >= 0:
-		newline = "iseed2 "+str(random.randint(10000,99999))+"\n"
-	elif line.find("iseed3") >= 0:
-		newline = "iseed3 "+str(random.randint(10000,99999))+"\n"
-	elif line.find("iseed4") >= 0:
-		newline = "iseed4 "+str(random.randint(10000,99999))+"\n"
-	else:     
-		newline = line
+	newline = line
 	newconfigfile.write(newline)
 	continue
-
+	
 # Create and submit the task.
 ################################################   
 if dryrun != 0:

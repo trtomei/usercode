@@ -13,7 +13,7 @@
 //
 // Original Author:  Thiago Tomei
 //         Created:  Thu Mar  4 16:26:36 BRT 2010
-// $Id: RSTrackerIndirectVetoFilter.cc,v 1.3 2010/05/17 11:27:46 tomei Exp $
+// $Id: RSTrackerIndirectVetoFilter.cc,v 1.1 2010/06/02 16:30:44 tomei Exp $
 //
 //
 
@@ -34,6 +34,7 @@
 #include "DataFormats/TrackReco/interface/Track.h"
 #include "DataFormats/TrackReco/interface/TrackFwd.h"
 #include "DataFormats/Math/interface/deltaR.h"
+#include "DataFormats/Math/interface/Vector3D.h"
 //#include "CommonTools/UtilAlgos/interface/StringCutObjectSelector.h"
 
 //
@@ -53,9 +54,11 @@ class RSTrackerIndirectVetoFilter : public edm::EDFilter {
       // ----------member data ---------------------------
   edm::InputTag src_;
   double trackMinPt_;
+  double seedTrackMinPt_;
+  double trackMaxEta_;
   double minCone_;
   double maxCone_;
-  double maxAcceptableTIV_;
+  double minAcceptableTIV_;
   int pixelHits_;
   int trackerHits_;
   bool highPurityRequired_;
@@ -75,9 +78,12 @@ class RSTrackerIndirectVetoFilter : public edm::EDFilter {
 //
 RSTrackerIndirectVetoFilter::RSTrackerIndirectVetoFilter(const edm::ParameterSet& iConfig) :
   src_(iConfig.getParameter<edm::InputTag>("src")),
+  trackMinPt_(iConfig.getParameter<double>("trackMinPt")),
+  seedTrackMinPt_(iConfig.getParameter<double>("seedTrackMinPt")),
+  trackMaxEta_(iConfig.getParameter<double>("trackMaxEta")),
   minCone_(iConfig.getParameter<double>("minCone")),
   maxCone_(iConfig.getParameter<double>("maxCone")),
-  maxAcceptableTIV_(iConfig.getParameter<double>("maxAcceptableTIV")),
+  minAcceptableTIV_(iConfig.getParameter<double>("minAcceptableTIV")),
   pixelHits_(iConfig.getParameter<int>("pixelHits")),
   trackerHits_(iConfig.getParameter<int>("trackerHits")),
   highPurityRequired_(iConfig.getParameter<bool>("highPurityRequired")),
@@ -108,84 +114,117 @@ RSTrackerIndirectVetoFilter::filter(edm::Event& iEvent, const edm::EventSetup& i
   iEvent.getByLabel(src_,tracksHandle);
   
   // Transient only!!!
-  reco::TrackCollection passingTracks;
+  std::vector<math::XYZVector> passingTracks;
+  
   //const int size = tracksHandle->size();
   //std::cout << "Starting from " << size << " tracks" << std::endl;
-   
+  
   for(reco::TrackCollection::const_iterator itrack = tracksHandle->begin();
       itrack != tracksHandle->end();
       ++itrack)  {    
-    //std::cout << "I am in here!" << std::endl;
+
     bool highPurityCut = true;
     bool trackerHitsCut = true;
     bool pixelHitsCut = true;
     bool trackPtCut = true;
-    // We want high purity tracks, if asked.
-    if(highPurityRequired_ && !(itrack->quality(reco::Track::highPurity)))
+    bool trackEtaCut= true;
+
+    // We want high purity tracks, if asked for in the configuration.
+    if(highPurityRequired_ && !(itrack->quality(reco::Track::highPurity))) {
       highPurityCut = false;
+    }
     
     // We want at least some hits, as defined in the configuration.
     // Default would be: at least >= 8 total hits, >=0 pixel hits.
     const reco::HitPattern hpattern = itrack->hitPattern();
-    if(!(hpattern.numberOfValidTrackerHits() >= trackerHits_))
+    if(!(hpattern.numberOfValidTrackerHits() >= trackerHits_)) {
       trackerHitsCut = false;
-    if(!(hpattern.numberOfValidPixelHits() >= pixelHits_))
+    }
+    if(!(hpattern.numberOfValidPixelHits() >= pixelHits_)) {
       pixelHitsCut = false;
-    
-    // And only those tracks above what is defined in the configuration.
-    if(itrack->pt() < trackMinPt_)
-      trackPtCut = false;
+    }
 
-    bool fullTrackCut = (highPurityCut && trackerHitsCut && pixelHitsCut && trackPtCut);
+    // And only those tracks with kinematics defined in the configuration.
+    if(itrack->pt() < trackMinPt_) {
+      trackPtCut = false;
+    }
+    if(std::abs(itrack->eta()) > trackMaxEta_) {
+      trackEtaCut = false;
+    }
+
+    bool fullTrackCut = (highPurityCut && trackerHitsCut && pixelHitsCut && trackPtCut && trackEtaCut);
     // If track is good, select it in.
     if(fullTrackCut) {
-      reco::Track selectedTrack = *itrack;
-      passingTracks.push_back(selectedTrack);
+      math::XYZVector theSelectedTrack;
+      theSelectedTrack.SetX(itrack->px());
+      theSelectedTrack.SetY(itrack->py());
+      theSelectedTrack.SetZ(itrack->pz());
+      passingTracks.push_back(theSelectedTrack);
     }
   }
-  std::cout << "We have number of tracks: " << passingTracks.size() << std::endl;
+  //std::cout << "We have number of tracks: " << passingTracks.size() << std::endl;
 
-  // Now calculate all the TIV quantities.
+  // Now calculate all the TIV quantities, for all tracks which are high pT enough to be seeds.;
   std::vector<double> allTIVs;
-  for(reco::TrackCollection::const_iterator itrack = passingTracks.begin();
+  for(std::vector<math::XYZVector>::const_iterator itrack = passingTracks.begin();
       itrack != passingTracks.end();
       ++itrack) {
-    size_t iThisTrack = 0;
-    size_t iMaxTrack = 0;
-    double maxPt = -1.0;
-    double sumPt = 0;
+    
+    // Only make cones around tracks above seedTrackPt
+    double seedTrackPt = std::sqrt(itrack->Perp2());
+    if(seedTrackPt < seedTrackMinPt_) continue;
 
-    for(reco::TrackCollection::const_iterator jtrack = passingTracks.begin();
+    double maxPt = -1.0;
+    double sumPt = 0.0;
+    for(std::vector<math::XYZVector>::const_iterator jtrack = passingTracks.begin();
 	jtrack != passingTracks.end();
 	++jtrack) {
-      ++iThisTrack;
-      double dR = deltaR(itrack->eta(),itrack->phi(),jtrack->eta(),jtrack->phi());
+
       // Must be in hollow cone, as defined in the configuration.
+      double dR = deltaR(itrack->eta(),itrack->phi(),jtrack->eta(),jtrack->phi());
       if(dR < minCone_ || dR > maxCone_) continue;
+      
       // Save if this is the leading track
-      if(jtrack->pt()>maxPt) {maxPt = jtrack->pt(); iMaxTrack = iThisTrack;}
-      sumPt += jtrack->pt();
+      double jtrackPt = std::sqrt(jtrack->Perp2());
+      if(jtrackPt > maxPt) maxPt = jtrackPt;
+      sumPt += jtrackPt;
     }
-    // Now we have both sumPt and maxPt in the hollow cone, for each track
-    double TIV = sumPt/maxPt;
+
+    // Now we have both sumPt and maxPt in the hollow cone, for this track.
+    // We have some choices on WHAT we put in the denominator:
+    // a) max pT in the hollow cone? That is, maxPt?
+    // b) max pT in the FULL cone? That is, the largest in between maxPt and seedTrackPt?
+    // c) the seeding track pT? That is, seedTrackPt?
+    // For now we choose option B.
+    double theThingThatWePutInTheDenominator;
+    if(maxPt > seedTrackPt)
+      theThingThatWePutInTheDenominator = maxPt;
+    else
+      theThingThatWePutInTheDenominator = seedTrackPt;
+    
+    double TIV = sumPt/theThingThatWePutInTheDenominator;
     allTIVs.push_back(TIV);
   }
+
   // Now we have the TIVs for all tracks.
-  // Get the largest TIV, and put it into the event.
-  std::auto_ptr<double> maxTIV(new double);
-  double maxTIVtmp = -1.0;
-  if(allTIVs.size()!=0)
-    maxTIVtmp = *(std::max_element(allTIVs.begin(),allTIVs.end()));
-  *maxTIV = maxTIVtmp;
-  iEvent.put(maxTIV);
+  // Get the smallest TIV, and put it into the event.
+  std::auto_ptr<double> minTIV(new double);
   
-  // Now, do we make a cut?
+  // If no TIVs were calculated, something is wrong. Put a negative number to signal it.
+  // This means that there are no tracks above seedTrackPtCut...
+  double minTIVtmp = -5.0;
+  if(allTIVs.size()!=0)
+    minTIVtmp = *(std::min_element(allTIVs.begin(),allTIVs.end()));
+  *minTIV = minTIVtmp;
+  iEvent.put(minTIV);
+
+  // Now, we make a cut if asked for in the configuration.
   if(!filter_) // Don't cut, accept the event.
     return true;
   else {
-    if(maxTIVtmp > maxAcceptableTIV_) // Max TIV above the cut, reject the event.
+    if(minTIVtmp < minAcceptableTIV_) // Min TIV below the cut, reject the event.
       return false;
-    else  // Max TIV below the cut, accept the event.
+    else  // Min TIV accept the cut, accept the event.
       return true;
   }
 }

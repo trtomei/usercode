@@ -17,11 +17,11 @@
 #include "DataFormats/METReco/interface/CaloMET.h"
 #include "DataFormats/METReco/interface/CaloMETFwd.h"
 #include "DataFormats/Math/interface/deltaPhi.h"
+#include "DataFormats/Math/interface/LorentzVectorFwd.h"
 #include "FWCore/ServiceRegistry/interface/Service.h"
 #include "CommonTools/UtilAlgos/interface/TFileService.h"
-#include "TH1F.h"
 #include "TTree.h"
-#include "TLorentzVector.h"
+
 //
 // class decleration
 //
@@ -39,25 +39,32 @@ private:
 
   edm::InputTag jets_;
   edm::InputTag met_;
-  TH1F* h_dPhi_jet_MET;
-  TH1F* h_dPhi_jets;
-  TH1F* h_gravTransMass;
-  TH1F* h_numJets;
-  TH1F* h_MET;
-  TH1F* h_alphaT;
+  edm::InputTag TIV_;
   double G_gravTransMass;
-  double G_alphaT;
   double G_weight;
   double G_jet1pt;
   double G_jet1eta;
   double G_jet1phi;
   double G_jet1mass;
+  double G_jet1EMF;
   double G_jet2pt;
   double G_jet2eta;
   double G_jet2phi;
   double G_jet2mass;
+  double G_jet2EMF;
+  double G_jet3pt;
+  double G_jet3eta;
+  double G_jet3phi;
+  double G_jet3mass;
+  double G_jet3EMF;
   double G_METpt;
   double G_METphi;
+  double G_MHTpt;
+  double G_MHTphi;
+  double G_smallestTIV;
+  double G_largestEMF;
+  int    G_numJets;
+  math::XYZTLorentzVectorCollection* G_allJets;
   TTree* mytree;
 };
 
@@ -75,31 +82,40 @@ private:
 RSEventAnalyzer::RSEventAnalyzer(const edm::ParameterSet& iConfig) :
   jets_(iConfig.getParameter<edm::InputTag>("jets") ),
   met_(iConfig.getParameter<edm::InputTag>("met") ),
+  TIV_(iConfig.getParameter<edm::InputTag>("TIV") ),
   G_gravTransMass(0),
   G_weight(iConfig.getParameter<double>("weight") )
 {
   //now do what ever initialization is needed
+  G_allJets = new math::XYZTLorentzVectorCollection;
+
   edm::Service<TFileService> fs;
-  h_dPhi_jet_MET  = fs->make<TH1F>( "dPhi_jet_MET", "dPhi jet and MET", 72, -M_PI, M_PI);
-  h_dPhi_jets = fs->make<TH1F>( "dPhi_jets", "dPhi 2 leading jets", 72, -M_PI, M_PI);
-  h_gravTransMass = fs->make<TH1F>( "gravTransMass", "Graviton transverse mass", 300, 0, 1500);
-  h_numJets = fs->make<TH1F>("numJets", "Number of jets", 10, -0.5, 9.5);
-  h_MET = fs->make<TH1F>("MET","MET",500,0,1000);
-  h_alphaT = fs->make<TH1F>("alphaT", "alphaT", 40, 0.0, 2.0);
   mytree = fs->make<TTree>("mytree","Analysis Tree");
   mytree->Branch("gravTransMass",&G_gravTransMass);
-  mytree->Branch("alphaT",&G_alphaT);
   mytree->Branch("weight",&G_weight);
   mytree->Branch("jet1pt",&G_jet1pt);
   mytree->Branch("jet1eta",&G_jet1eta);
   mytree->Branch("jet1phi",&G_jet1phi);
   mytree->Branch("jet1mass",&G_jet1mass);
+  mytree->Branch("jet1EMF",&G_jet1EMF);
   mytree->Branch("jet2pt",&G_jet2pt);
   mytree->Branch("jet2eta",&G_jet2eta);
   mytree->Branch("jet2phi",&G_jet2phi);
   mytree->Branch("jet2mass",&G_jet2mass);
+  mytree->Branch("jet2EMF",&G_jet2EMF);
+  mytree->Branch("jet3pt",&G_jet3pt);
+  mytree->Branch("jet3eta",&G_jet3eta);
+  mytree->Branch("jet3phi",&G_jet3phi);
+  mytree->Branch("jet3mass",&G_jet3mass);
+  mytree->Branch("jet3EMF",&G_jet3EMF);
   mytree->Branch("METpt",&G_METpt);
   mytree->Branch("METphi",&G_METphi);
+  mytree->Branch("MHTpt",&G_MHTpt);
+  mytree->Branch("MHTphi",&G_MHTphi);
+  mytree->Branch("smallestTIV",&G_smallestTIV);
+  mytree->Branch("largestEMF",&G_largestEMF);
+  mytree->Bronch("allJets", "std::vector<ROOT::Math::LorentzVector<ROOT::Math::PxPyPzE4D<double> > >", &G_allJets);
+  mytree->Branch("numJets",&G_numJets);
 }
 
 RSEventAnalyzer::~RSEventAnalyzer()
@@ -125,6 +141,9 @@ RSEventAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
   iEvent.getByLabel(jets_,jetsHandle);
   Handle<CaloMETCollection> metHandle;
   iEvent.getByLabel(met_, metHandle);
+  Handle<double> TIVHandle;
+  iEvent.getByLabel(TIV_,TIVHandle);
+
   const CaloMET& theMET = metHandle->front();
   const CaloJet& theJet = (*jetsHandle)[0];
   
@@ -132,56 +151,87 @@ RSEventAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
   double phiMET = theMET.phi();
   double diffPhi = deltaPhi(phiJet,phiMET);
 
-  // The lovely variables
+  // The lovely variable
   double theGravTransMass = sqrt(2*theMET.pt()*theJet.pt()*(1-cos(diffPhi)));
-  double largerEt = 0.0;
-  double smallerEt = 0.0;
-  if(theJet.pt() >= theMET.pt()) {
-    largerEt = theJet.pt();
-    smallerEt = theMET.pt();
+  
+  // Calculate MHT
+  double MHTx = 0.0;
+  double MHTy = 0.0;
+  for(size_t i = 0; i != jetsHandle->size(); ++i) {
+    MHTx += jetsHandle->at(i).px();
+    MHTy += jetsHandle->at(i).py();
   }
-  else {
-    largerEt = theMET.pt();
-    smallerEt = theJet.pt();
-  }
-  double theAlphaT = sqrt((largerEt/smallerEt)/(2*(1-cos(diffPhi))));
-
-  // Fill the histograms.
-  h_alphaT->Fill(theAlphaT);
-  h_MET->Fill(theMET.pt());
-  h_dPhi_jet_MET->Fill(diffPhi);
-  h_gravTransMass->Fill(theGravTransMass);
-  h_numJets->Fill(jetsHandle->size());
-
-  if(jetsHandle->size() > 1) {
-    const CaloJet& theSecondJet = (*jetsHandle)[1];
-    double phiSecondJet = theSecondJet.phi();
-    double jetsDPhi = deltaPhi(phiJet,phiSecondJet);
-    h_dPhi_jets->Fill(jetsDPhi);
+  MHTx = (-MHTx);
+  MHTy = (-MHTy);
+  double MHTpt = sqrt(MHTx*MHTx + MHTy*MHTy);
+  double MHTphi = (MHTx==0 && MHTy==0) ? 0 : atan2(MHTy,MHTx);
+ 
+  // Get the largest EMF in those jets.
+  double largestEMF = 0.0;
+  for(size_t i = 0; i != jetsHandle->size(); ++i) {
+    double theEMF = jetsHandle->at(i).emEnergyFraction();
+    if(theEMF > largestEMF) largestEMF = theEMF;
   }
   
   // Fill the Tree
   G_gravTransMass = theGravTransMass;
-  G_alphaT = theAlphaT;
   G_jet1pt = theJet.pt();
   G_jet1eta = theJet.eta();
   G_jet1phi = theJet.phi();
   G_jet1mass = theJet.mass();
+  G_jet1EMF = theJet.emEnergyFraction();
+
   if(jetsHandle->size() > 1) {
     const CaloJet& theSecondJet = (*jetsHandle)[1];
     G_jet2pt = theSecondJet.pt();
     G_jet2eta = theSecondJet.eta();
     G_jet2phi = theSecondJet.phi();
     G_jet2mass = theSecondJet.mass();
+    G_jet2EMF = theSecondJet.emEnergyFraction();
   }
   else {
     G_jet2pt = -9999.9;
     G_jet2eta = -9999.9;
     G_jet2phi = -9999.9;
     G_jet2mass = -9999.9;
+    G_jet2EMF = -9999.9;
   }
+  
+  if(jetsHandle->size() > 2) {
+    const CaloJet& theThirdJet = (*jetsHandle)[2];
+    G_jet3pt = theThirdJet.pt();
+    G_jet3eta = theThirdJet.eta();
+    G_jet3phi = theThirdJet.phi();
+    G_jet3mass = theThirdJet.mass();
+    G_jet3EMF = theThirdJet.emEnergyFraction();
+  }
+  else {
+    G_jet3pt = -9999.9;
+    G_jet3eta = -9999.9;
+    G_jet3phi = -9999.9;
+    G_jet3mass = -9999.9;
+    G_jet3EMF = -9999.9;
+  }
+
   G_METpt = theMET.pt();
   G_METphi = theMET.phi();
+  G_MHTpt = MHTpt;
+  G_MHTphi = MHTphi;
+  double theTIV = *TIVHandle;
+  G_smallestTIV = theTIV;
+  G_largestEMF = largestEMF;
+  G_numJets = jetsHandle->size();
+
+  // And the joys of serializing a ROOT Collection.
+  G_allJets->clear();
+  for(size_t i = 0; i != jetsHandle->size(); ++i) {
+    double jetPx = jetsHandle->at(i).px();
+    double jetPy = jetsHandle->at(i).py();
+    double jetPz = jetsHandle->at(i).pz();
+    double jetEnergy = jetsHandle->at(i).energy();
+    math::XYZTLorentzVector theJet; theJet.SetPxPyPzE(jetPx,jetPy,jetPz,jetEnergy);
+    G_allJets->push_back(theJet);
+  }
   
   mytree->Fill();
 }

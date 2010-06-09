@@ -9,6 +9,7 @@
   <use name=DataFormats/ParticleFlowCandidate>
   <use name=DataFormats/JetReco>
   <use name=DataFormats/METReco>
+  <use name=DataFormats/TrackReco>
   <use name=SimDataFormats/GeneratorProducts>
   <use name=PhysicsTools/RecoUtils>
   <use name=PhysicsTools/RecoAlgos>
