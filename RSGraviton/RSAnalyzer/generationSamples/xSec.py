@@ -8,15 +8,15 @@ process.load('Configuration.StandardSequences.Services_cff')
 process.load('FWCore.MessageService.MessageLogger_cfi')
 process.MessageLogger.cerr.threshold = 'WARNING'
 process.maxEvents = cms.untracked.PSet(
-    input = cms.untracked.int32(5000)
+    input = cms.untracked.int32(-1)
 )
 
 process.TFileService = cms.Service("TFileService",
-                                   fileName = cms.string('lala.root')
+                                   fileName = cms.string('tmp.root')
                                    )
 
 process.source = cms.Source("PoolSource",
-                            fileNames = cms.untracked.vstring('file:allData/Pythia_800GeV_kmpl005_RECO.root')
+                            fileNames = cms.untracked.vstring('file:/storage/trtomei/data/PythiaWjjlnu_800GeV_kmpl005_CMSSW358_RECO.root')
                             )
 
 process.getXSec = cms.EDAnalyzer("GenEventAnalyzer",

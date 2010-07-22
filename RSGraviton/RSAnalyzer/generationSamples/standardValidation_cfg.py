@@ -13,7 +13,8 @@ process.genParticles.excludeUnfragmentedClones = cms.bool(True)
 #                                                              "file:/storage/trtomei/data/Pythia_800GeV_kmpl005_RECO_03.root")
 #                            )
 myMass = '600'
-process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring("file:pythia"+myMass+".root"))
+#process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring("file:pythia"+myMass+".root"))
+process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring("file:/storage/trtomei/data/PythiaWjjlnu_800GeV_kmpl005_CMSSW358_RECO.root"))
 
 process.maxEvents = cms.untracked.PSet(
     input = cms.untracked.int32(25000)
@@ -109,9 +110,16 @@ process.printTree = cms.EDAnalyzer("ParticleTreeDrawer",
                                    printIndex = cms.untracked.bool(False),
                                    status = cms.untracked.vint32( 2,3 )
                                    )
+process.printDecay = cms.EDAnalyzer("ParticleDecayDrawer",
+                                    src = cms.InputTag("genParticles"),
+                                    printP4 = cms.untracked.bool(False),
+                                    printPtEtaPhi = cms.untracked.bool(False),
+                                    printVertex = cms.untracked.bool(False)
+                                    )
+
 ########
 
-process.goodDecays = cms.EDFilter("ZZDecayFilter",verbose=cms.bool(False))
+#process.goodDecays = cms.EDFilter("ZZDecayFilter",verbose=cms.bool(False))
 process.load("RecoJets.Configuration.GenJetParticles_cff")
 process.load("RecoJets.Configuration.RecoGenJets_cff")
 process.load("RecoMET.Configuration.GenMETParticles_cff")
@@ -120,12 +128,13 @@ process.doThings = cms.Sequence(process.genParticlesForJets + process.sisCone7Ge
                                 process.genParticlesForMETAllVisible + process.genMetTrue)
 #process.printer = cms.Path(process.genParticles + process.prunedGenParticles*process.printList)
 process.p = cms.Path(#process.goodDecays +
-                     process.genParticles +
-                     process.doThings +                  
-                     process.eventCounter +                 
-                     process.prunedGenParticles +
+#                     process.genParticles +
+#                     process.doThings +                  
+#                     process.eventCounter +                 
+#                     process.prunedGenParticles +
 #                     process.printList )#+ 
-    (process.gravitons + process.Zbosons + process.sortedJets) +
-    (process.plotGraviton + process.plotZBosons + process.plotJets) +
+                      process.printDecay )
+#    (process.gravitons + process.Zbosons + process.sortedJets) +
+#    (process.plotGraviton + process.plotZBosons + process.plotJets) +
 #    process.printList)
-    process.analyzer)
+#    process.analyzer)

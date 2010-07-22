@@ -1,0 +1,128 @@
+#!/bin/bash
+
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 0 W0j_0to100 100000
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 1 W0j_0to100 100000
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 2 W0j_0to100 100000
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 3 W0j_0to100 100000
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 4 W0j_0to100 100000
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 5 W0j_0to100 100000
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 6 W0j_0to100 100000
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 7 W0j_0to100 100000
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 8 W0j_0to100 100000
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 9 W0j_0to100 100000
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 10 W0j_0to100 100000
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 11 W0j_0to100 100000
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 12 W0j_0to100 100000
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 13 W0j_0to100 100000
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 14 W0j_0to100 100000
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 15 W0j_0to100 100000
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 16 W0j_0to100 100000
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 17 W0j_0to100 100000
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 18 W0j_0to100 100000
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 19 W0j_0to100 100000
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 20 W0j_0to100 100000
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 21 W0j_0to100 100000
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 22 W0j_0to100 100000
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 23 W0j_0to100 100000
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 24 W0j_0to100 100000
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 25 W0j_0to100 100000
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 26 W0j_0to100 100000
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 27 W0j_0to100 100000
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 28 W0j_0to100 100000
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 29 W0j_0to100 100000
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 30 W0j_0to100 100000
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 31 W0j_0to100 100000
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 32 W0j_0to100 100000
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 33 W0j_0to100 100000
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 34 W0j_0to100 100000
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 35 W0j_0to100 100000
+
+exit 
+
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 0 TTbar0j_40GeV 100000
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 1 TTbar0j_40GeV 100000
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 2 TTbar0j_40GeV 100000
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 3 TTbar0j_40GeV 100000
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 4 TTbar0j_40GeV 100000
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 5 TTbar0j_40GeV 100000
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 6 TTbar0j_40GeV 100000
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 7 TTbar0j_40GeV 100000
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 8 TTbar0j_40GeV 100000
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 9 TTbar0j_40GeV 100000
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 10 TTbar0j_40GeV 100000
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 11 TTbar0j_40GeV 100000
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 12 TTbar0j_40GeV 100000
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 13 TTbar0j_40GeV 100000
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 14 TTbar0j_40GeV 100000
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 15 TTbar0j_40GeV 100000
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 16 TTbar0j_40GeV 100000
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 17 TTbar0j_40GeV 100000
+
+exit
+
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 0 W1j_0to100 100000
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 1 W1j_0to100 100000
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 2 W1j_0to100 100000
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 3 W1j_0to100 100000
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 4 W1j_0to100 100000
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 5 W1j_0to100 100000
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 6 W1j_0to100 100000
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 7 W1j_0to100 100000
+
+exit
+
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 999 TTbar0j_40GeV
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 999 TTbar1j_40GeV
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 999 TTbar2j_40GeV
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 999 TTbar3j_40GeV
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 999 TTbar4j_40GeV
+
+exit
+
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 999 2j_120to280
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 999 2j_280to500
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 999 2j_40to120
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 999 2j_500to5000
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 999 3j_120to280
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 999 3j_280to500
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 999 3j_40to120
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 999 3j_500to5000
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 999 4j_120to280
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 999 4j_280to500
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 999 4j_40to120
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 999 4j_500to5000
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 999 5j_120to280
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 999 5j_280to500
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 999 5j_40to120
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 999 5j_500to5000
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 999 6j_120to280
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 999 6j_280to500
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 999 6j_40to120
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 999 6j_500to5000
+
+exit
+
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 999 RSWWjjlnu
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 999 W0j_0to100
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 999 W1j_0to100
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 999 W2j_0to100
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 999 W3j_0to100
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 999 W4j_0to100
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 999 W5j_0to100
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 999 W1j_100to300
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 999 W2j_100to300
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 999 W3j_100to300
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 999 W4j_100to300
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 999 W5j_100to300
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 999 W1j_300to800
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 999 W2j_300to800
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 999 W3j_300to800
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 999 W4j_300to800
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 999 W5j_300to800
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 999 W1j_800to1600
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 999 W2j_800to1600
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 999 W3j_800to1600
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 999 W4j_800to1600
+python sprace_CMSSW_submit.py rsanalyzer_JetMETElectron_cfg.py 999 W5j_800to1600
+
+exit
