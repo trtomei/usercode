@@ -1,8 +1,8 @@
 # Auto generated configuration file
 # using: 
-# Revision: 1.162.2.1 
+# Revision: 1.168.2.1 
 # Source: /cvs_server/repositories/CMSSW/CMSSW/Configuration/PyReleaseValidation/python/ConfigBuilder.py,v 
-# with command line options: RSGraviton/RSAnalyzer/python/Pythia_Zjjnunu_cfi.py -s GEN:ProductionFilterSequence,SIM,DIGI,L1,DIGI2RAW,HLT:1E31 --conditions FrontierConditions_GlobalTag,MC_3XY_V18::All --datatier GEN-SIM-RAW --eventcontent RAWSIM -n 10 --no_exec
+# with command line options: RSGraviton/RSAnalyzer/python/Pythia_Zjjnunu_cfi.py -s GEN:ProductionFilterSequence,SIM,DIGI,L1,DIGI2RAW,HLT --conditions START3X_V25::All --datatier GEN-SIM-RAW --eventcontent RAWSIM -n 10 --no_exec
 import FWCore.ParameterSet.Config as cms
 import uuid
 import random
@@ -12,6 +12,7 @@ process = cms.Process('HLT')
 
 # import of standard configurations
 process.load('Configuration.StandardSequences.Services_cff')
+process.load('SimGeneral.HepPDTESSource.pythiapdt_cfi')
 process.load('FWCore.MessageService.MessageLogger_cfi')
 process.load('Configuration.StandardSequences.MixingNoPileUp_cff')
 process.load('Configuration.StandardSequences.GeometryExtended_cff')
@@ -22,7 +23,7 @@ process.load('Configuration.StandardSequences.Sim_cff')
 process.load('Configuration.StandardSequences.Digi_cff')
 process.load('Configuration.StandardSequences.SimL1Emulator_cff')
 process.load('Configuration.StandardSequences.DigiToRaw_cff')
-process.load('HLTrigger.Configuration.HLT_1E31_cff')
+process.load('HLTrigger.Configuration.HLT_8E29_cff')
 process.load('Configuration.StandardSequences.EndOfProcess_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 process.load('Configuration.EventContent.EventContent_cff')
@@ -50,42 +51,16 @@ process.RandomNumberGeneratorService.simSiPixelDigis.initialSeed =random.randint
 process.RandomNumberGeneratorService.hiSignalLHCTransport.initialSeed = random.randint(10000,9999999)
 
 process.configurationMetadata = cms.untracked.PSet(
-    version = cms.untracked.string('$Revision: 1.162.2.1 $'),
+    version = cms.untracked.string('$Revision: 1.168.2.1 $'),
     annotation = cms.untracked.string('RSGraviton/RSAnalyzer/python/Pythia_Zjjnunu_cfi.py nevts:10'),
     name = cms.untracked.string('PyReleaseValidation')
 )
 process.maxEvents = cms.untracked.PSet(
-    input = cms.untracked.int32(50)
+    input = cms.untracked.int32(100)
 )
 process.options = cms.untracked.PSet(
-    Rethrow = cms.untracked.vstring('OtherCMS', 
-        'StdException', 
-        'Unknown', 
-        'BadAlloc', 
-        'BadExceptionType', 
-        'ProductNotFound', 
-        'DictionaryNotFound', 
-        'InsertFailure', 
-        'Configuration', 
-        'LogicError', 
-        'UnimplementedFeature', 
-        'InvalidReference', 
-        'NullPointerError', 
-        'NoProductSpecified', 
-        'EventTimeout', 
-        'EventCorruption', 
-        'ScheduleExecutionFailure', 
-        'EventProcessorFailure', 
-        'FileInPathError', 
-        'FileOpenError', 
-        'FileReadError', 
-        'FatalRootError', 
-        'MismatchedInputFiles', 
-        'ProductDoesNotSupportViews', 
-        'ProductDoesNotSupportPtr', 
-        'NotFound')
-)
 
+)
 # Input source
 myOptions = sys.argv
 if 'runNumber' in myOptions:
@@ -97,7 +72,7 @@ process.source = cms.Source("EmptySource",
                             firstRun = cms.untracked.uint32(myRunNumber)
                             )
 
-# Output
+# Output definition
 myOutputFileLabel = str(myUUID.hex)
 myOutputFileString = '/tmp/Pythia_Zjjnunu_'+myOutputFileLabel+'.root'
 myFile = open("weAreCreatingTheFile.txt",'w')
@@ -117,12 +92,14 @@ process.output = cms.OutputModule("PoolOutputModule",
     )
 )
 
+# Additional output definition
+
 # Other statements
-process.GlobalTag.globaltag = 'MC_3XY_V18::All'
-process.ZZGenFilter = cms.EDFilter("ZZDecayFilter", verbose=cms.bool(False))
+process.GlobalTag.globaltag = 'START3X_V25::All'
+process.ZZGenFilter = cms.EDFilter("ZZDecayFilter",verbose=cms.bool(False))
 process.generator = cms.EDFilter("Pythia6GeneratorFilter",
     pythiaPylistVerbosity = cms.untracked.int32(1),
-    filterEfficiency = cms.untracked.double(0.3537),
+    filterEfficiency = cms.untracked.double(1.0),
     pythiaHepMCVerbosity = cms.untracked.bool(False),
     comEnergy = cms.double(7000.0),
     maxEventsToPrint = cms.untracked.int32(0),
@@ -153,7 +130,7 @@ process.generator = cms.EDFilter("Pythia6GeneratorFilter",
         processParameters = cms.vstring('PMAS(5,1)=4.8 ! b quark mass', 
             'PMAS(6,1)=175.0 ! t quark mass', 
             'PMAS(347,1)=800.0 ! mass of RS Graviton', 
-            'PARP(50)=0.54           ! 0.54 == c=0.1 (k/M_PL=0.1)', 
+            'PARP(50)=0.2708           ! 0.54 == c=0.1 (k/M_PL=0.1)', 
             'MSEL=0                    ! (D=1) to select between full user control', 
             'MSUB(391)=1               ! q qbar -> G* ', 
             'MSUB(392)=1               ! g g -> G*', 
