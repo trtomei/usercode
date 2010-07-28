@@ -13,7 +13,7 @@
 //
 // Original Author:  
 //         Created:  Thu Jan 15 18:14:18 BRST 2009
-// $Id: RSJetParticlesBooster.cc,v 1.1 2009/05/13 15:38:08 tomei Exp $
+// $Id: RSJetParticlesBooster.cc,v 1.2 2009/05/22 11:48:11 tomei Exp $
 //
 //
 
@@ -30,7 +30,7 @@
 #include "FWCore/Framework/interface/MakerMacros.h"
 
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
-#include "FWCore/ParameterSet/interface/InputTag.h"
+#include "FWCore/Utilities/interface/InputTag.h"
 #include "DataFormats/Candidate/interface/Candidate.h"
 #include "DataFormats/ParticleFlowCandidate/interface/PFCandidate.h"
 #include "DataFormats/ParticleFlowCandidate/interface/PFCandidateFwd.h"
