@@ -1,10 +1,7 @@
 #####################################
 # CMSSW configuration file - Python #
 #####################################
-
 import FWCore.ParameterSet.Config as cms
-import datetime
-today = str(datetime.date.today())
 
 process = cms.Process("USER")
 
@@ -19,75 +16,17 @@ process = cms.Process("USER")
 process.load('Configuration.StandardSequences.Services_cff')
 process.load('FWCore.MessageService.MessageLogger_cfi')
 
-# Command-line options
-import FWCore.ParameterSet.VarParsing as VarParsing
-options = VarParsing.VarParsing()
-# setup my own options
-options.register ('maxEvents',
-                  -1,
-                  VarParsing.VarParsing.multiplicity.singleton,
-                  VarParsing.VarParsing.varType.int,
-                  "Number of events to process (-1 for all)")
-options.register ('skipEvents',
-                  0,
-                  VarParsing.VarParsing.multiplicity.singleton,
-                  VarParsing.VarParsing.varType.int,
-                  "Number of events to skip initially")
-options.register ('jetPtCut',
-                  -1.0, # default value
-                  VarParsing.VarParsing.multiplicity.singleton, # singleton or list
-                  VarParsing.VarParsing.varType.float,          # string, int, or float
-                  "Transverse momentum cut on leading jet")
-options.register ('jetEtaCut',
-                  9999.9, # default value
-                  VarParsing.VarParsing.multiplicity.singleton, # singleton or list
-                  VarParsing.VarParsing.varType.float,          # string, int, or float
-                  "Pseudorapidity cut on leading jet")
-options.register ('jetMassCut',
-                  -1.0, # default value
-                  VarParsing.VarParsing.multiplicity.singleton, # singleton or list
-                  VarParsing.VarParsing.varType.float,          # string, int, or float
-                  "Invariant mass cut on leading jet")
-options.register ('metCut',
-                  -1.0, # default value
-                  VarParsing.VarParsing.multiplicity.singleton, # singleton or list
-                  VarParsing.VarParsing.varType.float,          # string, int, or float
-                  "Transverse missing energy cut")
-options.register ('fileLabel',
-                  '',
-                  VarParsing.VarParsing.multiplicity.singleton,
-                  VarParsing.VarParsing.varType.string,
-                  "Label for the output file")
+process.source = cms.Source("PoolSource",
+                            fileNames = cms.untracked.vstring("file:Pythia_Zjjnunu_cfi_py_GEN_FASTSIM.root")
+                            )
 
-options.setupTags (tag = 'jetPtCut%d',
-                  ifCond = 'jetPtCut > 0',
-                  tagArg = 'jetPtCut')
-options.setupTags (tag = 'jetEtaCut%d',
-                  ifCond = 'jetEtaCut > 0',
-                  tagArg = 'jetEtaCut')
-options.setupTags (tag = 'jetMassCut%d',
-                  ifCond = 'massCut > 0',
-                  tagArg = 'massCut')
-options.setupTags (tag = 'metCut%d',
-                  ifCond = 'metCut > 0',
-                  tagArg = 'metCut')
-
-# setup any defaults you want, and fix some of the options
-options.parseArguments()
-outputFileName = 'result.root'
-myWeight = 1.0
-
-### The input
-myInput = "RSGraviton.RSAnalyzer.Spring10.signal_cfi"
-process.load(myInput)
-process.source.skipEvents = cms.untracked.uint32(options.skipEvents)
 process.maxEvents = cms.untracked.PSet(
-    input = cms.untracked.int32(options.maxEvents)
+    input = cms.untracked.int32(-1)
     )
 
 ### The output
 process.TFileService = cms.Service("TFileService",
-                                   fileName = cms.string(outputFileName)
+                                   fileName = cms.string('output.root')
                                    )
 #process.Tracer = cms.Service("Tracer")
 
@@ -98,7 +37,7 @@ from RSGraviton.RSAnalyzer.jethistos_cff import histograms as jethistos
 # Global tag
 process.load('Configuration.StandardSequences.GeometryExtended_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
-process.GlobalTag.globaltag = 'GR_R_37X_V6D::All'
+process.GlobalTag.globaltag = 'START3X_V25::All'
 
 ##################
 # Mandatory cuts #
@@ -111,12 +50,12 @@ process.load('HLTrigger/HLTfilters/hltLevel1GTSeed_cfi')
 
 process.L1T1coll=process.hltLevel1GTSeed.clone()
 process.L1T1coll.L1TechTriggerSeeding = cms.bool(True)
-process.L1T1coll.L1SeedsLogicalExpression = cms.string('0 AND (40 OR 41) AND NOT (36 OR 37 OR 38 OR 39)')
-#process.L1T1coll.L1SeedsLogicalExpression = cms.string('(40 OR 41) AND NOT (36 OR 37 OR 38 OR 39)')
+#process.L1T1coll.L1SeedsLogicalExpression = cms.string('0 AND (40 OR 41) AND NOT (36 OR 37 OR 38 OR 39)')
+process.L1T1coll.L1SeedsLogicalExpression = cms.string('(40 OR 41) AND NOT (36 OR 37 OR 38 OR 39)')
 # Don't ask for bit 0 in the MC.
+#process.l1tcollpath = cms.Path(process.L1T1coll)
 
 # The PhysicsDeclared HLT
-# Deprecated???
 process.hltHighLevel = cms.EDFilter("HLTHighLevel",
                                     TriggerResultsTag = cms.InputTag("TriggerResults","","HLT"),
                                     HLTPaths = cms.vstring('HLT_PhysicsDeclared'),# provide list of HLT paths (or patterns) you want
@@ -139,8 +78,7 @@ process.noscraping = cms.EDFilter("FilterOutScraping",
                                   thresh = cms.untracked.double(0.25)
                                   )
 
-process.selectCollisions = cms.Sequence(process.L1T1coll) 
-process.goodVertexSequence = cms.Sequence(process.primaryVertexFilter+process.noscraping)
+#process.goodvertex=cms.Path(process.primaryVertexFilter+process.noscraping)
 
 # This is for skimming
 # process.collout = cms.OutputModule("PoolOutputModule",
@@ -166,12 +104,18 @@ process.jetIdCut = cms.EDAnalyzer("RSJetIdSelector",
 ###############
 # Corrections #
 ###############
-from JetMETCorrections.Configuration.JetCorrectionServicesAllAlgos_cff import *
-process.myak7CaloJetsL2L3 = cms.EDProducer('CaloJetCorrectionProducer',
+process.load("JetMETCorrections.Configuration.L2L3Corrections_Summer09_7TeV_ReReco332_cff")
+# For Calo jets
+process.myL2L3CorJetAK7Calo = cms.EDProducer('CaloJetCorrectionProducer',
                                              src        = cms.InputTag('jetIdCut'),
-                                             correctors = cms.vstring('ak7CaloL2L3')
+                                             correctors = cms.vstring('L2L3JetCorrectorAK7Calo')
                                              )
-process.myCorrections = cms.Sequence(process.myak7CaloJetsL2L3)
+# For PF jets
+process.myL2L3CorJetAK7PF = cms.EDProducer('PFJetCorrectionProducer',
+                                             src        = cms.InputTag('ak7PFJets'),
+                                             correctors = cms.vstring('L2L3JetCorrectorAK7PF')
+                                             )
+process.myCorrections = cms.Sequence(process.myL2L3CorJetAK7Calo)
 
 ##################
 # Kinematic cuts #
@@ -179,7 +123,7 @@ process.myCorrections = cms.Sequence(process.myak7CaloJetsL2L3)
 
 ### For Path 1 - FAT jet from Z.
 process.oneJetAboveZero = cms.EDFilter("JetConfigurableSelector",
-                                       src = cms.InputTag("myak7CaloJetsL2L3"),
+                                       src = cms.InputTag("myL2L3CorJetAK7Calo"),
                                        theCut = cms.string("pt > -1.0"),
                                        minNumber = cms.int32(1)                                       
                                        )
@@ -191,15 +135,15 @@ process.getLargestJet = cms.EDProducer("LargestPtCaloJetSelector",
 
 process.ptCut = cms.EDFilter("JetConfigurableSelector",
                              src = cms.InputTag("getLargestJet"),
-                             theCut = cms.string("pt > "+str(options.jetPtCut)),
+                             theCut = cms.string("pt > "+str(150.0)),
                              minNumber = cms.int32(1),
                              )
 
 ### This is the point where the trees should be dropped.
 
 process.differentPtCut = cms.EDFilter("JetConfigurableSelector",
-                                      src = cms.InputTag("myak7CaloJetsL2L3"),
-                                      theCut = cms.string("(pt > 25.0) && (abs(eta) < 3.0)"),
+                                      src = cms.InputTag("myL2L3CorJetAK7Calo"),
+                                      theCut = cms.string("(pt > 25.0) && (abs(eta) < 5.0)"),
                                       minNumber = cms.int32(1)                                       
                                       )
 
@@ -210,13 +154,13 @@ process.getHardJets = cms.EDProducer("LargestPtCaloJetSelector",
 
 process.etaCut = cms.EDFilter("JetConfigurableSelector",
                               src = cms.InputTag("getLargestJet"),
-                              theCut = cms.string("abs(eta) < "+str(options.jetEtaCut)),
+                              theCut = cms.string("abs(eta) < "+str(9999.9)),
                               minNumber = cms.int32(1),
                               )
 
 process.massCut = cms.EDFilter("JetConfigurableSelector",
                                src = cms.InputTag("getLargestJet"),
-                               theCut = cms.string("mass > "+str(options.jetMassCut)),
+                               theCut = cms.string("mass > "+str(-1.0)),
                                minNumber = cms.int32(1)
                                )
 
@@ -251,7 +195,7 @@ process.CACaloSubjets.nSubjets = 2
 ### Common for both paths.
 process.METCut = cms.EDFilter("PtMinCandViewSelector",
                               src = cms.InputTag("corMetGlobalMuons"),
-                              ptMin = cms.double(options.metCut),
+                              ptMin = cms.double(-1.0),
                               minNumber = cms.uint32(1),
                               filter = cms.bool(True)
                               )
@@ -293,9 +237,10 @@ process.trackerIndirectVeto = cms.EDFilter("RSTrackerIndirectVetoFilter",
 
 process.eventAnalyzer = cms.EDAnalyzer("RSEventAnalyzer",
                                        jets = cms.InputTag("getHardJets"),
+                                       compoundJets = cms.InputTag("CACaloSubjets"),
                                        met = cms.InputTag("corMetGlobalMuons"),
                                        TIV = cms.InputTag("trackerIndirectVeto"),
-                                       weight = cms.double(myWeight)
+                                       weight = cms.double(1.0)
                                        )
 
 process.compoundJetAnalyzer = cms.EDAnalyzer("CompoundJetAnalyzer",
@@ -351,6 +296,52 @@ process.plotJetsGeneral = cms.EDAnalyzer("CaloJetHistoAnalyzer",
                                          histograms = jethistos
                                          )
 
+
+# This is for the PF analysis.
+process.onePFJetAboveZero = cms.EDFilter("EtMinPFJetCountFilter",
+                                         src = cms.InputTag("myL2L3CorJetAK7PF"),
+                                         etMin = cms.double(-1.0),
+                                         minNumber = cms.uint32(1)
+                                         )
+
+process.getLargestPFJet = cms.EDProducer("LargestPtPFJetSelector",
+                                         src = cms.InputTag("myL2L3CorJetAK7PF"),
+                                         maxNumber = cms.uint32(1)
+                                         )
+
+process.plotThisPFJet = cms.EDAnalyzer("CandViewHistoAnalyzer",
+                                       src = cms.InputTag("getLargestPFJet"),
+                                       histograms = cms.VPSet(cms.PSet(nbins = cms.untracked.int32(500),
+                                                                       description = cms.untracked.string('jet_et'),
+                                                                       plotquantity = cms.untracked.string('et'),
+                                                                       min = cms.untracked.double(0.0),
+                                                                       max = cms.untracked.double(1000.0),
+                                                                       name = cms.untracked.string('jet_et')
+                                                                       ),
+                                                              cms.PSet(nbins = cms.untracked.int32(100),
+                                                                       description = cms.untracked.string('jet_eta'),
+                                                                       plotquantity = cms.untracked.string('eta'),
+                                                                       min = cms.untracked.double(-5.0),
+                                                                       max = cms.untracked.double(5.0),
+                                                                       name = cms.untracked.string('jet_eta')
+                                                                       ),
+                                                              cms.PSet(nbins = cms.untracked.int32(72),
+                                                                       description = cms.untracked.string('jet_phi'),
+                                                                       plotquantity = cms.untracked.string('phi'),
+                                                                       min = cms.untracked.double(-3.141592),
+                                                                       max = cms.untracked.double(3.141592),
+                                                                       name = cms.untracked.string('jet_phi')
+                                                                       ),
+                                                              cms.PSet(nbins = cms.untracked.int32(80),
+                                                                       description = cms.untracked.string('jet_mass'),
+                                                                       plotquantity = cms.untracked.string('mass'),
+                                                                       min = cms.untracked.double(0.0),
+                                                                       max = cms.untracked.double(200.0),
+                                                                       name = cms.untracked.string('jet_mass')
+                                                                       )
+                                                              )
+                                       )
+
 #process.trackAnalysis = cms.EDAnalyzer("RSTrackAnalyzer",
 #                                       tracks = cms.InputTag("generalTracks"),
 #                                       jets = cms.InputTag("getLargestJet"),
@@ -362,6 +353,7 @@ process.plotJetsGeneral = cms.EDAnalyzer("CaloJetHistoAnalyzer",
 #########
 
 # Summary of cuts.
+process.goodVertexSequence = cms.Sequence(process.primaryVertexFilter+process.noscraping)
 process.jetId  = cms.Sequence(process.jetIdCut + process.myCorrections)
 process.cuts0  = cms.Sequence(process.oneJetAboveZero)
 process.cuts1  = cms.Sequence(process.ptCut)
@@ -372,25 +364,16 @@ process.doMultiJets = cms.Sequence(process.differentPtCut + process.getHardJets)
 process.cuts5 = cms.Sequence(process.deltaPhiFilter)
 process.cuts6 = cms.Sequence(process.trackerIndirectVeto)
 process.jetPruning = cms.Sequence(process.CACaloSubjets + process.compoundJetAnalyzer)
-# I want only want Primary Vertex + LOOSE Jet ID + at least one jet + at leat one jet above pT cut.
-process.pathCutByCut = cms.Path(process.eventCounter + process.selectCollisions + process.goodVertexSequence +
+
+# I want only want Primary Vertex + LOOSE Jet ID + at least one jet + at least one jet above pT cut.
+process.pathCutByCut = cms.Path(process.eventCounter + process.goodVertexSequence +
                                 process.eventCounterTwo + process.jetId + process.cuts0 +
                                 process.eventCounterThree + process.getLargestJet +
                                 process.eventCounterFour + process.cuts1 +
                                 process.eventCounterFive +
                                 process.doMultiJets +
-                                process.plotMET +
-                                process.plotJetsGeneral +
-                                process.jetPruning
-#                                process.cuts6 + 
-#                                process.eventCounterSix + 
-#                                process.eventAnalyzer
+                                process.jetPruning +
+                                process.cuts6 + # This one is not cutting!
+                                process.eventCounterSix + 
+                                process.eventAnalyzer
                                 )
-
-
-#process.p = cms.Path(process.cuts0 + process.getLargestJet + process.cuts0b + process.cuts1 + process.cuts3 + process.cuts4 +
-#                     process.eventCounter +
-#                     process.doMultiJets +
-#                     process.deltaPhiFilter +
-#                     process.plotMET + 
-#                     process.plotJetsGeneral + process.eventAnalyzer)

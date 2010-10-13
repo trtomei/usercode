@@ -225,9 +225,15 @@ process.jetIdCut = cms.EDAnalyzer("RSJetIdSelector",
 # Corrections #
 ###############
 process.load("JetMETCorrections.Configuration.L2L3Corrections_Summer09_7TeV_ReReco332_cff")
+# For Calo jets
 process.myL2L3CorJetAK7Calo = cms.EDProducer('CaloJetCorrectionProducer',
                                              src        = cms.InputTag('jetIdCut'),
                                              correctors = cms.vstring('L2L3JetCorrectorAK7Calo')
+                                             )
+# For PF jets
+process.myL2L3CorJetAK7PF = cms.EDProducer('PFJetCorrectionProducer',
+                                             src        = cms.InputTag('ak7PFJets'),
+                                             correctors = cms.vstring('L2L3JetCorrectorAK7PF')
                                              )
 process.myCorrections = cms.Sequence(process.myL2L3CorJetAK7Calo)
 
@@ -351,6 +357,7 @@ process.trackerIndirectVeto = cms.EDFilter("RSTrackerIndirectVetoFilter",
 
 process.eventAnalyzer = cms.EDAnalyzer("RSEventAnalyzer",
                                        jets = cms.InputTag("getHardJets"),
+                                       compoundJets = cms.InputTag("CACaloSubjets"),
                                        met = cms.InputTag("corMetGlobalMuons"),
                                        TIV = cms.InputTag("trackerIndirectVeto"),
                                        weight = cms.double(myWeight)
@@ -409,6 +416,52 @@ process.plotJetsGeneral = cms.EDAnalyzer("CaloJetHistoAnalyzer",
                                          histograms = jethistos
                                          )
 
+
+# This is for the PF analysis.
+process.onePFJetAboveZero = cms.EDFilter("EtMinPFJetCountFilter",
+                                         src = cms.InputTag("myL2L3CorJetAK7PF"),
+                                         etMin = cms.double(-1.0),
+                                         minNumber = cms.uint32(1)
+                                         )
+
+process.getLargestPFJet = cms.EDProducer("LargestPtPFJetSelector",
+                                         src = cms.InputTag("myL2L3CorJetAK7PF"),
+                                         maxNumber = cms.uint32(1)
+                                         )
+
+process.plotThisPFJet = cms.EDAnalyzer("CandViewHistoAnalyzer",
+                                       src = cms.InputTag("getLargestPFJet"),
+                                       histograms = cms.VPSet(cms.PSet(nbins = cms.untracked.int32(500),
+                                                                       description = cms.untracked.string('jet_et'),
+                                                                       plotquantity = cms.untracked.string('et'),
+                                                                       min = cms.untracked.double(0.0),
+                                                                       max = cms.untracked.double(1000.0),
+                                                                       name = cms.untracked.string('jet_et')
+                                                                       ),
+                                                              cms.PSet(nbins = cms.untracked.int32(100),
+                                                                       description = cms.untracked.string('jet_eta'),
+                                                                       plotquantity = cms.untracked.string('eta'),
+                                                                       min = cms.untracked.double(-5.0),
+                                                                       max = cms.untracked.double(5.0),
+                                                                       name = cms.untracked.string('jet_eta')
+                                                                       ),
+                                                              cms.PSet(nbins = cms.untracked.int32(72),
+                                                                       description = cms.untracked.string('jet_phi'),
+                                                                       plotquantity = cms.untracked.string('phi'),
+                                                                       min = cms.untracked.double(-3.141592),
+                                                                       max = cms.untracked.double(3.141592),
+                                                                       name = cms.untracked.string('jet_phi')
+                                                                       ),
+                                                              cms.PSet(nbins = cms.untracked.int32(80),
+                                                                       description = cms.untracked.string('jet_mass'),
+                                                                       plotquantity = cms.untracked.string('mass'),
+                                                                       min = cms.untracked.double(0.0),
+                                                                       max = cms.untracked.double(200.0),
+                                                                       name = cms.untracked.string('jet_mass')
+                                                                       )
+                                                              )
+                                       )
+
 #process.trackAnalysis = cms.EDAnalyzer("RSTrackAnalyzer",
 #                                       tracks = cms.InputTag("generalTracks"),
 #                                       jets = cms.InputTag("getLargestJet"),
@@ -431,22 +484,28 @@ process.doMultiJets = cms.Sequence(process.differentPtCut + process.getHardJets)
 process.cuts5 = cms.Sequence(process.deltaPhiFilter)
 process.cuts6 = cms.Sequence(process.trackerIndirectVeto)
 process.jetPruning = cms.Sequence(process.CACaloSubjets + process.compoundJetAnalyzer)
-# I want only want Primary Vertex + LOOSE Jet ID + at least one jet + at leat one jet above pT cut.
-process.pathCutByCut = cms.Path(process.eventCounter + process.goodVertexSequence +
-                                process.eventCounterTwo + process.jetId + process.cuts0 +
-                                process.eventCounterThree + process.getLargestJet +
-                                process.eventCounterFour + process.cuts1 +
-                                process.eventCounterFive +
-                                process.doMultiJets +
-                                process.plotMET +
-                                process.plotJetsGeneral +
-                                process.jetPruning
-#                                process.cuts6 + 
-#                                process.eventCounterSix + 
-#                                process.eventAnalyzer
-                                )
+# I want only want Primary Vertex + LOOSE Jet ID + at least one jet + at least one jet above pT cut.
+#process.pathCutByCut = cms.Path(process.eventCounter + process.goodVertexSequence +
+ #                               process.eventCounterTwo + process.jetId + process.cuts0 +
+  #                              process.eventCounterThree + process.getLargestJet +
+   #                             process.eventCounterFour + process.cuts1 +
+    #                            process.eventCounterFive +
+     #                           process.doMultiJets +
+      #                          process.plotMET +
+       #                         process.plotJetsGeneral +
+        #                        process.jetPruning +
+         #                       process.cuts6 + 
+          #                      process.eventCounterSix + 
+           #                     process.eventAnalyzer
+            #                    )
 
-
+# This is a small path just to
+process.pathForSimpleJetAnalysis = cms.Path(process.goodVertexSequence +
+                                            process.myL2L3CorJetAK7PF +
+                                            process.onePFJetAboveZero +
+                                            process.getLargestPFJet +
+                                            process.plotThisPFJet )
+                                            
 #process.p = cms.Path(process.cuts0 + process.getLargestJet + process.cuts0b + process.cuts1 + process.cuts3 + process.cuts4 +
 #                     process.eventCounter +
 #                     process.doMultiJets +
