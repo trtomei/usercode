@@ -27,7 +27,7 @@ private:
   virtual void endJob() ;
       // ----------Member data ---------------------------
   edm::InputTag jets_;
-  double maxDeltaPhi_;
+  double maxValue_;
 };
 
 //
@@ -43,7 +43,7 @@ private:
 //
 RSEventDeltaPhiFilter::RSEventDeltaPhiFilter(const edm::ParameterSet& iConfig) :
   jets_(iConfig.getParameter<edm::InputTag>("jets")),
-  maxDeltaPhi_(iConfig.getParameter<double>("maxDeltaPhi"))
+  maxValue_(iConfig.getParameter<double>("maxValue"))
 {
    //now do what ever initialization is needed
 
@@ -83,8 +83,10 @@ RSEventDeltaPhiFilter::filter(edm::Event& iEvent, const edm::EventSetup& iSetup)
   if(jetsHandle->size() == 2) {
     double phiJet1 = ((*jetsHandle)[0]).phi();
     double phiJet2 = ((*jetsHandle)[1]).phi();
-    double diffPhi = std::abs(deltaPhi(phiJet1,phiJet2));
-    if(diffPhi < maxDeltaPhi_)
+    double diffPhi = deltaPhi(phiJet1,phiJet2);
+    double absCos = std::abs(cos(diffPhi));
+
+    if(absCos < maxValue_)
       accepted = true;
   }
   
