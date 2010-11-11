@@ -11,11 +11,11 @@
   <use name=DataFormats/METReco>
   <use name=DataFormats/TrackReco>
   <use name=DataFormats/EgammaCandidates>
+  <use name=DataFormats/MuonReco>
   <use name=SimDataFormats/GeneratorProducts>
   <use name=PhysicsTools/RecoUtils>
   <use name=PhysicsTools/RecoAlgos>
   <use name=PhysicsTools/UtilAlgos>
   <use name=CommonTools/UtilAlgos>
   <use name=CommonTools/CandUtils>
-  <use name=SHarper/HEEPAnalyzer>
 </library>
