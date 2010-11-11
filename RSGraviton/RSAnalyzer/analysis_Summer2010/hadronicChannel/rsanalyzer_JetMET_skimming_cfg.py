@@ -3,7 +3,7 @@
 #####################################
 import FWCore.ParameterSet.Config as cms
 
-process = cms.Process("USER")
+process = cms.Process("SKIM")
 
 ###########################
 # Basic process controls. #
@@ -14,11 +14,17 @@ process = cms.Process("USER")
 ##################
 # import of standard configurations
 process.load('Configuration.EventContent.EventContent_cff')
+process.load("Configuration.StandardSequences.Geometry_cff")
+process.load("Configuration.StandardSequences.MagneticField_cff")
 process.load('Configuration.StandardSequences.Services_cff')
 process.load('FWCore.MessageService.MessageLogger_cfi')
 
+# Summary
+process.options = cms.untracked.PSet( wantSummary = cms.untracked.bool(True) )
+
 process.source = cms.Source("PoolSource",
-                            fileNames = cms.untracked.vstring("file:/home/trtomei/storage/data/Pythia_800GeV_kmpl005_CMSSW358_RECO.root")
+#                            fileNames = cms.untracked.vstring("file:/home/trtomei/storage/data/Pythia_GZZjjmumu_700GeV_kmpl005_CMSSW358_RECO.root")
+                            fileNames = cms.untracked.vstring("file:/home/trtomei/hdacs/CMSSW_3_6_3_patch2/src/RSGraviton/RSAnalyzer/analysis_Summer2010/hadronicChannel/test/W1Jets_pt300to800-alpgen.root")
                             )
 
 ### The output
@@ -82,17 +88,14 @@ process.jetIdCut = cms.EDAnalyzer("RSJetIdSelector",
 ###############
 # Corrections #
 ###############
-process.load("JetMETCorrections.Configuration.L2L3Corrections_Summer09_7TeV_ReReco332_cff")
+process.load('JetMETCorrections.Configuration.JetCorrectionServicesAllAlgos_cff')
+
 # For Calo jets
 process.myL2L3CorJetAK7Calo = cms.EDProducer('CaloJetCorrectionProducer',
                                              src        = cms.InputTag('jetIdCut'),
-                                             correctors = cms.vstring('L2L3JetCorrectorAK7Calo')
+                                             correctors = cms.vstring('ak7CaloL2L3')
                                              )
-# For PF jets
-process.myL2L3CorJetAK7PF = cms.EDProducer('PFJetCorrectionProducer',
-                                             src        = cms.InputTag('ak7PFJets'),
-                                             correctors = cms.vstring('L2L3JetCorrectorAK7PF')
-                                             )
+
 process.myCorrections = cms.Sequence(process.myL2L3CorJetAK7Calo)
 
 ##################
@@ -158,24 +161,42 @@ process.deltaPhiFilter = cms.EDFilter("RSEventDeltaPhiFilter",
                                       maxValue = cms.double(0.94)
                                       )
 
-process.trackerIndirectVeto = cms.EDFilter("RSTrackerIndirectVetoFilter",
-                                           src = cms.InputTag("generalTracks"),
-                                           trackMinPt = cms.double(1.0),
-                                           seedTrackMinPt = cms.double(10.0),
-                                           trackMaxEta = cms.double(2.4),
-                                           minCone = cms.double(0.02),
-                                           maxCone = cms.double(0.3),
-                                           minAcceptableTIV = cms.double(0.1), # 10%, has no effect if filter is False
-                                           pixelHits = cms.int32(1),
-                                           trackerHits = cms.int32(5),
-                                           highPurityRequired = cms.bool(True),
-                                           filter = cms.bool(True)
-                                           )
+#################
+# VBTF electron #
+#################
+process.load("RSGraviton.RSAnalyzer.simpleEleIdSequence_cff")
+process.seqEleId = cms.Sequence(process.simpleEleId80relIso)
 
-process.largeEMFVeto = cms.EDFilter("RSEMFFilter",
-                                    jets = cms.InputTag("getHardJets"),
-                                    maxAcceptableEMF = cms.double(0.9)
-                                    )
+process.electronVBTFFilter = cms.EDFilter('RSElectronVBTFFilter',
+                                          # cuts
+                                          ETCut = cms.untracked.double(20.),
+                                          vetoSecondElectronEvents = cms.untracked.bool(True),
+                                          ETCut2ndEle = cms.untracked.double(20.),
+                                          # trigger here
+                                          triggerCollectionTag = cms.untracked.InputTag("TriggerResults","","HLT"),
+                                          triggerEventTag = cms.untracked.InputTag("hltTriggerSummaryAOD","","HLT"),
+                                          hltpath = cms.untracked.string("HLT_Ele15_SW_L1R"),
+                                          hltpathFilter = cms.untracked.InputTag("hltL1NonIsoHLTNonIsoSingleElectronEt15PixelMatchFilter"),
+                                          electronMatched2HLT = cms.untracked.bool(False),
+                                          electronMatched2HLT_DR = cms.untracked.double(0.1),
+                                          # electrons
+                                          electronCollectionTag = cms.untracked.InputTag("gsfElectrons"),   # Electron collection name
+                                          # electron ID
+                                          electronIdTag = cms.untracked.InputTag("simpleEleId80relIso"),    # Eletron ID map name
+                                          electronIdMin = cms.untracked.int32(7), # Must pass ALL selections
+                                          # fiducial definition
+                                          BarrelMaxEta = cms.untracked.double(1.4442),
+                                          EndCapMinEta = cms.untracked.double(1.566),
+                                          EndCapMaxEta = cms.untracked.double(2.5),
+                                          )
+
+#############
+# VBTF muon #
+#############
+process.load("ElectroWeakAnalysis.WMuNu.WMuNuSelection_cff")
+process.selcorMet.MtMin = cms.untracked.double(-999999.9)
+process.selcorMet.plotHistograms = cms.untracked.bool(True)
+process.selcorMet.JetTag = cms.untracked.InputTag("ak5CaloJets")
 
 ############
 # Counting #
@@ -190,6 +211,7 @@ process.eventCounterSix = process.eventCounter.clone()
 process.eventCounterSeven = process.eventCounter.clone()
 process.eventCounterEight = process.eventCounter.clone()
 process.eventCounterNine = process.eventCounter.clone()
+process.eventCounterTen = process.eventCounter.clone()
 
 #########
 # Paths #
@@ -205,27 +227,32 @@ process.cuts3  = cms.Sequence(process.massCut)
 process.cuts4  = cms.Sequence(process.METCut)
 process.doMultiJets = cms.Sequence(process.differentPtCut + process.getHardJets)
 process.multiJetVeto = cms.Sequence(process.deltaPhiFilter)
-process.leptonVeto = cms.Sequence(process.trackerIndirectVeto+process.largeEMFVeto)
+process.VBTFelectron = cms.Sequence(process.simpleEleId80relIso + process.electronVBTFFilter);
+process.VBTFmuon = cms.Sequence(process.corMetWMuNus + process.selcorMet)
+process.noMuonAndNoElectron = cms.Sequence(process.simpleEleId80relIso + ~process.electronVBTFFilter +
+                                           process.corMetWMuNus + ~process.selcorMet)
 
-# I want only want Primary Vertex + LOOSE Jet ID + at least one jet + at least one jet above pT cut.
+process.thiagoSelection = cms.Sequence(
+    process.eventCounter + process.goodVertexSequence + # Good vertex
+    process.eventCounterTwo + process.jetId + process.cuts0 + process.getLargestJet + process.cuts2 + # One jet in eta region
+    process.eventCounterThree + process.cuts1 + # Jet must be above 150 GeV
+    process.eventCounterFour + process.cuts3 + # Jet must have mass above 70 GeV
+    process.eventCounterFive + process.cuts4 + # MET must be above 150 GeV
+    process.eventCounterSix + process.doMultiJets + process.multiJetVeto + # The two-jet // multijet veto
+    process.eventCounterSeven
+    )
 
-process.pathCutByCut = cms.Path(process.eventCounter + process.goodVertexSequence +
-                                process.eventCounterTwo + process.jetId + process.cuts0 + process.getLargestJet + process.cuts2 +
-                                process.eventCounterThree + process.cuts1 +
-                                process.eventCounterFour + process.cuts1 +
-                                process.eventCounterFive + process.cuts4 +
-                                process.eventCounterSix + process.doMultiJets + process.multiJetVeto +
-                                process.eventCounterSeven + process.leptonVeto +
-                                process.eventCounterEight + process.cuts3 +
-                                process.eventCounterNine
-                                )
+process.pathSelection = cms.Path(process.thiagoSelection)
+process.pathElectron = cms.Path(process.thiagoSelection + process.VBTFelectron + process.eventCounterEight)
+process.pathMuon = cms.Path(process.thiagoSelection + process.VBTFmuon + process.eventCounterNine)
+process.pathNoMuonAndNoElectron = cms.Path(process.thiagoSelection + process.noMuonAndNoElectron + process.eventCounterTen)
 
 process.skimOut = cms.OutputModule("PoolOutputModule",
                                    fileName = cms.untracked.string('skim.root'),
                                    outputCommands = process.AODSIMEventContent.outputCommands,
                                    dataset = cms.untracked.PSet(dataTier = cms.untracked.string('AOD-SIM'),
                                                                 filterName = cms.untracked.string('SKIMMING')),
-                                   SelectEvents = cms.untracked.PSet(SelectEvents = cms.vstring('pathCutByCut')
+                                   SelectEvents = cms.untracked.PSet(SelectEvents = cms.vstring('pathSelection')
                                                                      )
                                    )
 
