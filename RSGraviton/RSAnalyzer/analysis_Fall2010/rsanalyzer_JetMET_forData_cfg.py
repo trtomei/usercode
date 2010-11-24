@@ -20,15 +20,93 @@ process.load('Configuration.StandardSequences.Services_cff')
 process.load('SimGeneral.HepPDTESSource.pythiapdt_cfi')
 
 process.source = cms.Source("PoolSource",
-                            fileNames = cms.untracked.vstring("file:/home/trtomei/storage/data/Pythia_GZZjjnunu_1000GeV_kmpl005_CMSSW_358_RECO.root")
-#                            fileNames = cms.untracked.vstring(
-#    'file:W1j_800pt1600_1_1_nRJ.root',
-#    'file:W1j_800pt1600_2_1_omh.root',
-#    'file:W1j_800pt1600_3_1_akt.root',
-#    'file:EDMfilesForTesting/exception.root')
-#    ),
-#                            skipEvents = cms.untracked.uint32(1171)
-#
+                            fileNames = cms.untracked.vstring(
+    'file:skimmedFiles/skim_11_1_aFn.root',
+    'file:skimmedFiles/skim_12_2_mq8.root',
+    'file:skimmedFiles/skim_13_2_b4b.root',
+    'file:skimmedFiles/skim_14_2_fqv.root',
+    'file:skimmedFiles/skim_15_2_beN.root',
+    'file:skimmedFiles/skim_16_2_gSy.root',
+    'file:skimmedFiles/skim_17_2_xsM.root',
+    'file:skimmedFiles/skim_18_2_FbO.root',
+    'file:skimmedFiles/skim_19_1_Xkc.root',
+    'file:skimmedFiles/skim_1_1_nKs.root',
+    'file:skimmedFiles/skim_20_2_YfY.root',
+    'file:skimmedFiles/skim_21_1_3zL.root',
+    'file:skimmedFiles/skim_22_1_tKH.root',
+    'file:skimmedFiles/skim_23_2_Tvs.root',
+    'file:skimmedFiles/skim_24_2_16Q.root',
+    'file:skimmedFiles/skim_26_1_Ici.root',
+    'file:skimmedFiles/skim_27_2_m9b.root',
+    'file:skimmedFiles/skim_28_2_Pgl.root',
+    'file:skimmedFiles/skim_29_2_Jqf.root',
+    'file:skimmedFiles/skim_2_1_2Jz.root',
+    'file:skimmedFiles/skim_30_2_GpX.root',
+    'file:skimmedFiles/skim_31_2_dyf.root',
+    'file:skimmedFiles/skim_32_1_msv.root',
+    'file:skimmedFiles/skim_33_2_3nm.root',
+    'file:skimmedFiles/skim_34_2_rrj.root',
+    'file:skimmedFiles/skim_36_2_tVQ.root',
+    'file:skimmedFiles/skim_37_2_MAF.root',
+    'file:skimmedFiles/skim_38_2_oHj.root',
+    'file:skimmedFiles/skim_39_1_Pds.root',
+    'file:skimmedFiles/skim_3_1_uFy.root',
+    'file:skimmedFiles/skim_40_1_NK0.root',
+    'file:skimmedFiles/skim_41_1_vYn.root',
+    'file:skimmedFiles/skim_42_1_Pm5.root',
+    'file:skimmedFiles/skim_43_2_AfL.root',
+    'file:skimmedFiles/skim_44_1_qiF.root',
+    'file:skimmedFiles/skim_45_1_5U2.root',
+    'file:skimmedFiles/skim_46_1_ROj.root',
+    'file:skimmedFiles/skim_46_2_HVc.root',
+    'file:skimmedFiles/skim_47_1_vZx.root',
+    'file:skimmedFiles/skim_48_1_Dgs.root',
+    'file:skimmedFiles/skim_49_1_2rF.root',
+    'file:skimmedFiles/skim_4_1_Pu3.root',
+    'file:skimmedFiles/skim_50_2_qZO.root',
+    'file:skimmedFiles/skim_51_2_buD.root',
+    'file:skimmedFiles/skim_52_1_fOk.root',
+    'file:skimmedFiles/skim_53_1_lgu.root',
+    'file:skimmedFiles/skim_54_2_s3z.root',
+    'file:skimmedFiles/skim_55_2_sxg.root',
+    'file:skimmedFiles/skim_56_1_ud8.root',
+    'file:skimmedFiles/skim_57_2_DOx.root',
+    'file:skimmedFiles/skim_58_1_yiN.root',
+    'file:skimmedFiles/skim_5_3_46G.root',
+    'file:skimmedFiles/skim_60_1_u1z.root',
+    'file:skimmedFiles/skim_61_1_33Z.root',
+    'file:skimmedFiles/skim_62_2_FET.root',
+    'file:skimmedFiles/skim_63_2_CBQ.root',
+    'file:skimmedFiles/skim_64_1_n61.root',
+    'file:skimmedFiles/skim_65_2_Y1R.root',
+    'file:skimmedFiles/skim_66_1_I4w.root',
+    'file:skimmedFiles/skim_67_1_mM2.root',
+    'file:skimmedFiles/skim_68_1_5Pm.root',
+    'file:skimmedFiles/skim_69_2_beL.root',
+    'file:skimmedFiles/skim_70_1_vc2.root',
+    'file:skimmedFiles/skim_71_2_0wb.root',
+    'file:skimmedFiles/skim_72_1_ZZ3.root',
+    'file:skimmedFiles/skim_73_2_PeR.root',
+    'file:skimmedFiles/skim_74_2_6yg.root',
+    'file:skimmedFiles/skim_76_2_q7J.root',
+    'file:skimmedFiles/skim_77_2_jSa.root',
+    'file:skimmedFiles/skim_79_1_31s.root',
+    'file:skimmedFiles/skim_7_1_J9t.root',
+    'file:skimmedFiles/skim_80_1_aKS.root',
+    'file:skimmedFiles/skim_81_1_6UE.root',
+    'file:skimmedFiles/skim_82_2_kut.root',
+    'file:skimmedFiles/skim_83_1_knC.root',
+    'file:skimmedFiles/skim_84_1_rdb.root',
+    'file:skimmedFiles/skim_85_1_JM1.root',
+    'file:skimmedFiles/skim_86_1_Va2.root',
+    'file:skimmedFiles/skim_87_2_LeU.root',
+    'file:skimmedFiles/skim_88_1_0Pw.root',
+    'file:skimmedFiles/skim_89_2_Gxf.root',
+    'file:skimmedFiles/skim_8_1_QGZ.root',
+    'file:skimmedFiles/skim_90_1_H4n.root',
+    'file:skimmedFiles/skim_91_1_L5Y.root',
+    'file:skimmedFiles/skim_9_1_krj.root'
+    )
 )
 
 process.maxEvents = cms.untracked.PSet(
@@ -48,7 +126,7 @@ from RSGraviton.RSAnalyzer.jethistos_cff import histograms as jethistos
 # Global tag
 process.load('Configuration.StandardSequences.GeometryExtended_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
-process.GlobalTag.globaltag = 'START3X_V26::All'
+process.GlobalTag.globaltag = 'GR10_P_V10::All'
 
 ##################
 # Mandatory cuts #
@@ -67,21 +145,6 @@ process.noscraping = cms.EDFilter("FilterOutScraping",
                                   thresh = cms.untracked.double(0.25)
                                   )
 
-#process.goodvertex=cms.Path(process.primaryVertexFilter+process.noscraping)
-
-# This is for skimming
-# process.collout = cms.OutputModule("PoolOutputModule",
-#                                   fileName = cms.untracked.string('/tmp/good_coll.root'),
-#                                   outputCommands = process.FEVTEventContent.outputCommands,
-#                                   dataset = cms.untracked.PSet(
-#                                       dataTier = cms.untracked.string('RAW-RECO'),
-#                                       filterName = cms.untracked.string('GOODCOLL')),
-#                                   SelectEvents = cms.untracked.PSet(
-#                                       SelectEvents = cms.vstring('goodvertex','l1tcollpath')
-#                                       )
-#                                   )
-
-
 ##########
 # Jet ID #
 ##########
@@ -93,7 +156,10 @@ process.jetIdCut = cms.EDAnalyzer("RSJetIdSelector",
 ###############
 # Corrections #
 ###############
-process.load('JetMETCorrections.Configuration.JetCorrectionServicesAllAlgos_cff')
+process.load('JetMETCorrections.Configuration.DefaultJEC_cff')
+process.ak7CaloL2Relative.useCondDB = False
+process.ak7CaloL3Absolute.useCondDB = False
+process.ak7CaloResidual.useCondDB = False
 
 # For Calo jets
 process.myL2L3CorJetAK7Calo = cms.EDProducer('CaloJetCorrectionProducer',
@@ -106,10 +172,10 @@ process.myCorrections = cms.Sequence(process.myL2L3CorJetAK7Calo)
 # Kinematic cuts #
 ##################
 
-thiagoJetPtCut = 80.0
+thiagoJetPtCut = 150.0
 thiagoJetEtaCut = 3.0
 thiagoJetMassCut = 0.0
-thiagoMETCut = 80.0
+thiagoMETCut = 150.0
 
 ### For Path 1 - FAT jet from Z.
 process.oneJetAboveZero = cms.EDFilter("JetConfigurableSelector",
@@ -196,19 +262,6 @@ process.eventCounterEight = process.eventCounter.clone()
 ###########
 # Filters #
 ###########
-process.hardaGenParticles = cms.EDProducer("PdgIdAndStatusCandSelector",
-                                          src = cms.InputTag("genParticles"),
-                                          status = cms.vint32(3),
-                                          pdgId = cms.vint32(1,2,3,4,5,6,11,12,13,14,15,16,21,22,23,24,5000039)
-                                          )
-
-process.hardGenParticles = cms.EDProducer("GenParticlePruner",
-                                            src = cms.InputTag("genParticles"),
-                                            select = cms.vstring("drop  *  ", # this is the default
-                                                                 "keep status = 3"
-                                                                 )
-                                            )
-
 process.deltaPhiFilter = cms.EDFilter("RSEventDeltaPhiFilter",
                                       jets = cms.InputTag("getHardJets"),
                                       maxDeltaPhi = cms.double(2.8)
@@ -308,7 +361,8 @@ process.eventAnalyzer = cms.EDAnalyzer("RSEventAnalyzer",
                                        genParticles = cms.InputTag("hardGenParticles"),
                                        VBTFelectron = cms.InputTag("electronVBTFFilter"),
                                        VBTFmuon = cms.InputTag("muonVBTFFilter"),
-                                       weight = cms.double(1.0)
+                                       weight = cms.double(1.0),
+                                       isData = cms.bool(True)
                                        )
 
 process.compoundJetAnalyzer = cms.EDAnalyzer("CompoundJetAnalyzer",
@@ -377,6 +431,6 @@ process.pathCutByCut = cms.Path(process.eventCounter + process.goodVertexSequenc
                                 process.jetPruning +
                                 process.leptonStuff + # This one is not cutting!
                                 process.eventCounterSeven + 
-                                process.hardGenParticles + 
+#                                process.hardGenParticles + 
                                 process.eventAnalyzer
                                 )

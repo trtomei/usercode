@@ -57,7 +57,7 @@ process.noscraping = cms.EDFilter("FilterOutScraping",
 ##########
 # Jet ID #
 ##########
-process.jetIdCut = cms.EDAnalyzer("RSJetIdSelector",
+process.jetIdCut = cms.EDProducer("RSJetIdSelector",
                                   jets = cms.InputTag("ak7CaloJets"),
                                   jetID = cms.InputTag("ak7JetID")
                                   )
@@ -91,10 +91,10 @@ process.oneJetAboveZero = cms.EDFilter("JetConfigurableSelector",
                                        minNumber = cms.int32(1)                                       
                                        )
 
-process.getLargestJet = cms.EDProducer("LargestPtCaloJetSelector",
-                                       src = cms.InputTag("oneJetAboveZero"),
-                                       maxNumber = cms.uint32(1)
-                                       )
+process.getLargestJet = cms.EDFilter("LargestPtCaloJetSelector",
+                                     src = cms.InputTag("oneJetAboveZero"),
+                                     maxNumber = cms.uint32(1)
+                                     )
 
 process.ptCut = cms.EDFilter("JetConfigurableSelector",
                              src = cms.InputTag("getLargestJet"),

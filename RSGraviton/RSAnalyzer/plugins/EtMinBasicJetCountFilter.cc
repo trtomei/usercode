@@ -9,7 +9,7 @@
 #include "FWCore/Framework/interface/MakerMacros.h"
 #include "DataFormats/JetReco/interface/BasicJet.h"
 #include "CommonTools/UtilAlgos/interface/ObjectCountFilter.h"
-#include "PhysicsTools/UtilAlgos/interface/EtMinSelector.h"
+#include "CommonTools/UtilAlgos/interface/EtMinSelector.h"
 
 typedef ObjectCountFilter<
   reco::BasicJetCollection, 

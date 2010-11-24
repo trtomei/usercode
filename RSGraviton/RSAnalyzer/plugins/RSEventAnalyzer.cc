@@ -54,6 +54,7 @@ private:
   edm::InputTag VBTFelectron_;
   edm::InputTag VBTFmuon_;
   edm::InputTag TIV_;
+  bool isData_;
   double G_gravTransMass;
   double G_weight;
   double G_jet1pt;
@@ -124,6 +125,7 @@ RSEventAnalyzer::RSEventAnalyzer(const edm::ParameterSet& iConfig) :
   VBTFelectron_(iConfig.getParameter<edm::InputTag>("VBTFelectron") ),
   VBTFmuon_(iConfig.getParameter<edm::InputTag>("VBTFmuon") ),
   TIV_(iConfig.getParameter<edm::InputTag>("TIV") ),
+  isData_(iConfig.getParameter<bool>("isData") ),
   G_gravTransMass(0),
   G_weight(iConfig.getParameter<double>("weight") )
 {
@@ -208,8 +210,6 @@ RSEventAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
   iEvent.getByLabel(met_, metHandle);
   Handle<PFMETCollection> pfmetHandle;
   iEvent.getByLabel(pfmet_, pfmetHandle);
-  Handle<GenParticleCollection> genParticlesHandle;
-  iEvent.getByLabel(genParticles_, genParticlesHandle);
   Handle<GsfElectronCollection> electronsHandle;
   iEvent.getByLabel(electrons_,electronsHandle);
   Handle<MuonCollection> muonsHandle;
@@ -372,20 +372,30 @@ RSEventAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
   }
   
   // And the lovely particles.
-  int actualNumParticles = genParticlesHandle->size();
-
-  G_allParticles->clear();
-  for(size_t i = 0; i != genParticlesHandle->size(); ++i) {
-    double genParticlePx = genParticlesHandle->at(i).px();
-    double genParticlePy = genParticlesHandle->at(i).py();
-    double genParticlePz = genParticlesHandle->at(i).pz();
-    double genParticleEnergy = genParticlesHandle->at(i).energy();
-    math::XYZTLorentzVector theGenParticle; theGenParticle.SetPxPyPzE(genParticlePx,genParticlePy,genParticlePz,genParticleEnergy);
+  Handle<GenParticleCollection> genParticlesHandle;
+  if(isData_) {
+    G_allParticles->clear();
+    math::XYZTLorentzVector theGenParticle; theGenParticle.SetPxPyPzE(-1,-1,-1,-1);
     G_allParticles->push_back(theGenParticle);
-    G_particlesPdg[i] = int(genParticlesHandle->at(i).pdgId());
+    G_particlesPdg[0] = 0;
+    G_numParticles = -1;
   }
-  G_numParticles = actualNumParticles;
-
+  else {
+    iEvent.getByLabel(genParticles_, genParticlesHandle);
+    int actualNumParticles = genParticlesHandle->size();
+    
+    G_allParticles->clear();
+    for(size_t i = 0; i != genParticlesHandle->size(); ++i) {
+      double genParticlePx = genParticlesHandle->at(i).px();
+      double genParticlePy = genParticlesHandle->at(i).py();
+      double genParticlePz = genParticlesHandle->at(i).pz();
+      double genParticleEnergy = genParticlesHandle->at(i).energy();
+      math::XYZTLorentzVector theGenParticle; theGenParticle.SetPxPyPzE(genParticlePx,genParticlePy,genParticlePz,genParticleEnergy);
+      G_allParticles->push_back(theGenParticle);
+      G_particlesPdg[i] = int(genParticlesHandle->at(i).pdgId());
+    }
+    G_numParticles = actualNumParticles;
+  } 
   // Pray
   mytree->Fill();
 }
