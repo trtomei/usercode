@@ -35,7 +35,7 @@ process.TFileService = cms.Service("TFileService",
 # Global tag
 process.load('Configuration.StandardSequences.GeometryExtended_cff')
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
-process.GlobalTag.globaltag = 'GR10_P_V10::All'
+process.GlobalTag.globaltag = 'GR_R_38X_V15::All'
 
 ##################
 # Mandatory cuts #
