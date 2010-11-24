@@ -75,6 +75,25 @@ process.myL2L3CorJetAK7Calo = cms.EDProducer('CaloJetCorrectionProducer',
 
 process.myCorrections = cms.Sequence(process.myL2L3CorJetAK7Calo)
 
+###########
+# Trigger #
+###########
+process.load('L1TriggerConfig.L1GtConfigProducers.L1GtTriggerMaskAlgoTrigConfig_cff')
+process.load('L1TriggerConfig.L1GtConfigProducers.L1GtTriggerMaskTechTrigConfig_cff')
+process.load('HLTrigger/HLTfilters/hltLevel1GTSeed_cfi')
+
+process.triggerSelection = cms.EDFilter("TriggerResultsFilter",
+                                        triggerConditions = cms.vstring(
+    'HLT_MET65_CenJet50U_v*',
+    'HLT_MET80_CenJet50U_v*',
+    ),
+                                        hltResults = cms.InputTag( "TriggerResults" , "", "HLT"),
+                                        l1tResults = cms.InputTag( "" ),
+                                        l1tIgnoreMask = cms.bool( True ),
+                                        l1techIgnorePrescales = cms.bool( False ),
+                                        daqPartitions = cms.uint32( 1 ),
+                                        throw = cms.bool( False )
+                                        )
 ##################
 # Kinematic cuts #
 ##################
@@ -152,7 +171,8 @@ process.thiagoSelection = cms.Sequence(
     process.eventCounterFive
     )
 
-process.pathSelection = cms.Path(process.thiagoSelection)
+#process.pathSelection = cms.Path(process.thiagoSelection)
+process.pathSelection = cms.Path(process.triggerSelection)
 
 process.skimOut = cms.OutputModule("PoolOutputModule",
                                    fileName = cms.untracked.string('skim.root'),
