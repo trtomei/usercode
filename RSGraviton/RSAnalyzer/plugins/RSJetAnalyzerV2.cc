@@ -13,7 +13,7 @@ Implementation:
 //
 // Original Author:  Thiago Fernandez Perez
 //         Created:  Wed Apr 23 17:48:37 CEST 2008
-// $Id: RSJetAnalyzerV2.cc,v 1.3 2010/05/17 11:27:46 tomei Exp $
+// $Id: RSJetAnalyzerV2.cc,v 1.4 2010/07/28 01:29:20 tomei Exp $
 //
 //
 
@@ -46,7 +46,7 @@ public:
   ~RSJetAnalyzerV2();
 
 private:
-  virtual void beginJob(const edm::EventSetup&) ;
+  virtual void beginJob() ;
   virtual void analyze(const edm::Event&, const edm::EventSetup&);
   virtual void endJob() ;
   // ----------member data ---------------------------
@@ -56,6 +56,7 @@ private:
   TH2F*     h_pT_mass;
   TH2F*     h_pT_energy;
   TH2F*     h_energy_mass;
+  TH2F*     h_eta_phi; 
   TH1F*     h_ptOverMass;
   TH1F*     h_ptOverEnergy;
   TH1F*     h_massOverEnergy;
@@ -81,6 +82,7 @@ RSJetAnalyzerV2::RSJetAnalyzerV2(const edm::ParameterSet& iConfig) :
   h_pT_mass       = fs->make<TH2F>( "pT_mass", "pT X mass", 500, 0., 1000., 500, 0., 1000.);
   h_pT_energy     = fs->make<TH2F>( "pT_energy", "pT X energy", 500, 0., 1000., 500, 0., 1000.);
   h_energy_mass   = fs->make<TH2F>( "energy_mass", "energy X mass", 500, 0., 1000., 500, 0., 1000.);
+  h_eta_phi       = fs->make<TH2F>( "eta_phi", "eta X phi", 200,-5.0,5.0,72,-3.141592,3.141592);
   h_ptOverMass    = fs->make<TH1F>( "ptOverMass", "pT over mass", 500, 0., 50.);
   h_ptOverEnergy  = fs->make<TH1F>( "ptOverEnergy", "pT over energy", 20, 0., 1.);
   h_massOverEnergy= fs->make<TH1F>( "massOverEnergy", "mass over energy",20,0., 1.);
@@ -112,7 +114,8 @@ RSJetAnalyzerV2::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
   // Let us double check that we have the wanted jet available.
   if((numberInCollection_+1)>jetsHandle->size())
     throw cms::Exception("ProductNotFound")
-      << "The jet collection does not contain enough events!\n";
+      << "The jet collection does not contain enough events!\n"
+      << "We have only " << jetsHandle->size() << " jets!\n";
 
   // Choose which jet to analyze.
   const Jet & theJet = (* jetsHandle)[numberInCollection_];
@@ -124,6 +127,7 @@ RSJetAnalyzerV2::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
   h_pT_mass->Fill(thePt, theMass);
   h_pT_energy->Fill(thePt, theEnergy);
   h_energy_mass->Fill(theEnergy, theMass);
+  h_eta_phi->Fill(theJet.eta(),theJet.phi());
   h_ptOverMass->Fill(thePt/theMass);
   h_ptOverEnergy->Fill(thePt/theEnergy);
   h_massOverEnergy->Fill(theMass/theEnergy);
@@ -131,7 +135,7 @@ RSJetAnalyzerV2::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 
 // ------------ method called once each job just before starting event loop  ------------
 void 
-RSJetAnalyzerV2::beginJob(const edm::EventSetup&)
+RSJetAnalyzerV2::beginJob()
 {
 }
 
