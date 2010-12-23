@@ -1,9 +1,9 @@
 // -*- C++ -*-
 //
-// Package:    JetConfigurableSelector
-// Class:      JetConfigurableSelector
+// Package:    PFJetConfigurableSelector
+// Class:      PFJetConfigurableSelector
 // 
-/**\class JetConfigurableSelector JetConfigurableSelector.cc RSGraviton/JetConfigurableSelector/src/JetConfigurableSelector.cc
+/**\class PFJetConfigurableSelector PFJetConfigurableSelector.cc RSGraviton/PFJetConfigurableSelector/src/PFJetConfigurableSelector.cc
 
  Description: [one line class summary]
 
@@ -13,7 +13,7 @@
 //
 // Original Author:  Thiago Tomei
 //         Created:  Thu Mar  4 16:26:36 BRT 2010
-// $Id: JetConfigurableSelector.cc,v 1.3 2010/05/17 11:27:46 tomei Exp $
+// $Id: PFJetConfigurableSelector.cc,v 1.3 2010/05/17 11:27:46 tomei Exp $
 //
 //
 
@@ -30,16 +30,16 @@
 
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 #include "CommonTools/UtilAlgos/interface/StringCutObjectSelector.h"
-#include "DataFormats/JetReco/interface/CaloJetCollection.h"
+#include "DataFormats/JetReco/interface/PFJetCollection.h"
 
 //
 // class declaration
 //
 
-class JetConfigurableSelector : public edm::EDFilter {
+class PFJetConfigurableSelector : public edm::EDFilter {
    public:
-      explicit JetConfigurableSelector(const edm::ParameterSet&);
-      ~JetConfigurableSelector();
+      explicit PFJetConfigurableSelector(const edm::ParameterSet&);
+      ~PFJetConfigurableSelector();
 
    private:
       virtual void beginJob() ;
@@ -51,7 +51,7 @@ class JetConfigurableSelector : public edm::EDFilter {
   std::string theCut_;
   int minNumber_;
   char buffer[1024];
-  typedef StringCutObjectSelector<reco::CaloJet> JetStringFilterFunctor;
+  typedef StringCutObjectSelector<reco::PFJet> JetStringFilterFunctor;
 };
 
 //
@@ -65,17 +65,17 @@ class JetConfigurableSelector : public edm::EDFilter {
 //
 // constructors and destructor
 //
-JetConfigurableSelector::JetConfigurableSelector(const edm::ParameterSet& iConfig) :
+PFJetConfigurableSelector::PFJetConfigurableSelector(const edm::ParameterSet& iConfig) :
   src_(iConfig.getParameter<edm::InputTag>("src")),
   theCut_(iConfig.getParameter<std::string>("theCut")),
   minNumber_(iConfig.getParameter<int>("minNumber"))
 {
-  produces<reco::CaloJetCollection>();
+  produces<reco::PFJetCollection>();
   strcpy(buffer,theCut_.c_str());
 }
 
 
-JetConfigurableSelector::~JetConfigurableSelector()
+PFJetConfigurableSelector::~PFJetConfigurableSelector()
 {
  
    // do anything here that needs to be done at desctruction time
@@ -90,24 +90,24 @@ JetConfigurableSelector::~JetConfigurableSelector()
 
 // ------------ method called on each new Event  ------------
 bool
-JetConfigurableSelector::filter(edm::Event& iEvent, const edm::EventSetup& iSetup)
+PFJetConfigurableSelector::filter(edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
-  edm::Handle<reco::CaloJetCollection> jetsHandle;
+  edm::Handle<reco::PFJetCollection> jetsHandle;
   iEvent.getByLabel(src_,jetsHandle);
 
-  std::auto_ptr<reco::CaloJetCollection> passingJets(new reco::CaloJetCollection);
+  std::auto_ptr<reco::PFJetCollection> passingJets(new reco::PFJetCollection);
   const int size = jetsHandle->size();
   passingJets->reserve( size );
 
   JetStringFilterFunctor theFilter(buffer);
 
-  for(reco::CaloJetCollection::const_iterator ijet = jetsHandle->begin();
+  for(reco::PFJetCollection::const_iterator ijet = jetsHandle->begin();
       ijet != jetsHandle->end();
       ++ijet)  {    
 
     bool pass = theFilter(*ijet);
     if(pass) {
-      reco::CaloJet jetClone = *(ijet->clone());
+      reco::PFJet jetClone = *(ijet->clone());
       passingJets->push_back(jetClone);
     }
 
@@ -128,14 +128,14 @@ JetConfigurableSelector::filter(edm::Event& iEvent, const edm::EventSetup& iSetu
 
 // ------------ method called once each job just before starting event loop  ------------
 void 
-JetConfigurableSelector::beginJob()
+PFJetConfigurableSelector::beginJob()
 {
 }
 
 // ------------ method called once each job just after ending the event loop  ------------
 void 
-JetConfigurableSelector::endJob() {
+PFJetConfigurableSelector::endJob() {
 }
 
 //define this as a plug-in
-DEFINE_FWK_MODULE(JetConfigurableSelector);
+DEFINE_FWK_MODULE(PFJetConfigurableSelector);

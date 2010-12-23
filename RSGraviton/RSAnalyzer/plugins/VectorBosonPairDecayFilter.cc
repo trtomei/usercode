@@ -55,7 +55,7 @@ VectorBosonPairDecayFilter::VectorBosonPairDecayFilter(const edm::ParameterSet& 
   verbose_(iConfig.getParameter<bool>("verbose")),
   wantNeutrinos_(iConfig.getParameter<bool>("wantNeutrinos")),
   wantQuarks_(iConfig.getParameter<bool>("wantQuarks")),
-  wantElectrons_(iConfig.getParameter<bool>("Electrons")),
+  wantElectrons_(iConfig.getParameter<bool>("wantElectrons")),
   wantMuons_(iConfig.getParameter<bool>("wantMuons")),
   wantTaus_(iConfig.getParameter<bool>("wantTaus"))
 {
@@ -101,7 +101,7 @@ VectorBosonPairDecayFilter::filter(edm::Event& iEvent, const edm::EventSetup& iS
     const HepMC::GenParticle* p =  *piter;
     if(verbose_) p->print();
     int ppdgid = std::abs(p->pdg_id());
-    if(ppdgid!=23 || ppdgid!=24) continue; // If it is not Z or W, go to the next particle.
+    if(ppdgid!=23 && ppdgid!=24) continue; // If it is not Z or W, go to the next particle.
     
     // Ok, it is either Z or W.
     // Get the decay vertex.
@@ -113,6 +113,7 @@ VectorBosonPairDecayFilter::filter(edm::Event& iEvent, const edm::EventSetup& iS
       const HepMC::GenParticle* theDaughter = *d;
 
       // Check the nature of this daughter.
+
       if(isQuark(theDaughter)) {DecayToQuarks=true;}
       if(isNeutrino(theDaughter)) {DecayToNeutrinos=true;}
       if(isElectron(theDaughter)) {DecayToElectrons=true;}
@@ -121,7 +122,7 @@ VectorBosonPairDecayFilter::filter(edm::Event& iEvent, const edm::EventSetup& iS
     }
   }
   
-  // Check if the particle is accepted. Essentially, everything that was asked must be found.
+  // Check if the event is accepted. Essentially, everything that was asked must be found.
   bool accepted1 = (wantNeutrinos_ && DecayToNeutrinos) || !wantNeutrinos_;
   bool accepted2 = (wantQuarks_ && DecayToQuarks)    || !wantQuarks_;
   bool accepted3 = (wantElectrons_ && DecayToElectrons) || !wantElectrons_;

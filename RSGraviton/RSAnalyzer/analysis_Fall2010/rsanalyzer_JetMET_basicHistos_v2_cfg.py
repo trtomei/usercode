@@ -19,13 +19,17 @@ process.load("Configuration.StandardSequences.Geometry_cff")
 process.load("Configuration.StandardSequences.MagneticField_cff")
 process.load('Configuration.StandardSequences.Services_cff')
 
+### Global tag
+process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
+process.GlobalTag.globaltag = 'GR_R_38X_V15::All'
+
 process.options = cms.untracked.PSet(
     wantSummary = cms.untracked.bool(True)
     )
 
 process.source = cms.Source("PoolSource",
                             fileNames = cms.untracked.vstring(
-    "file:selectedHBHEAndTrigger.root"
+    "file:/home/trtomei/storage/data/skimming/METFwd_Run2010B-Nov4ReReco_v1/selectedHBHEAndTrigger.root"
     )
 )
 
@@ -39,22 +43,41 @@ process.TFileService = cms.Service("TFileService",
 )
 
 from RSGraviton.RSAnalyzer.jethistos_cff import histograms as jethistos
+from RSGraviton.RSAnalyzer.basicjethistos_cff import histograms as basicjethistos
+
+##################
+# Mandatory cuts #
+##################
+# Good vertices, no scraping
+process.primaryVertexFilter = cms.EDFilter("VertexSelector",
+                                           src = cms.InputTag("offlinePrimaryVertices"),
+                                           cut = cms.string("!isFake && ndof > 4 && abs(z) <= 24 && position.Rho <= 2"),
+                                           filter = cms.bool(True),
+                                           )
+
+process.noscraping = cms.EDFilter("FilterOutScraping",
+                                  applyfilter = cms.untracked.bool(True),
+                                  debugOn = cms.untracked.bool(False),
+                                  numtrack = cms.untracked.uint32(10),
+                                  thresh = cms.untracked.double(0.25)
+                                  )
+
+process.vertexScraping = cms.Sequence(process.primaryVertexFilter + process.noscraping)
 
 ##########
 # Jet ID #
 ##########
-process.jetIdCut = cms.EDProducer("RSJetIdSelector",
+process.jetIdCut = cms.EDFilter("RSJetIdSelector",
                                   jets = cms.InputTag("ak7CaloJets"),
-                                  jetID = cms.InputTag("ak7JetID")
+                                  jetID = cms.InputTag("ak7JetID"),
+                                  threshold = cms.double(30.0),
+                                  filter = cms.bool(True)
                                   )
 
 ###############
 # Corrections #
 ###############
 process.load('JetMETCorrections.Configuration.DefaultJEC_cff')
-process.ak7CaloL2Relative.useCondDB = False
-process.ak7CaloL3Absolute.useCondDB = False
-process.ak7CaloResidual.useCondDB = False
 process.myL2L3CorJetAK7Calo = cms.EDProducer('CaloJetCorrectionProducer',
                                              src        = cms.InputTag('jetIdCut'),
                                              correctors = cms.vstring('ak7CaloL2L3')
@@ -66,7 +89,9 @@ process.myCorrections = cms.Sequence(process.myL2L3CorJetAK7Calo)
 ###########
 process.load('L1TriggerConfig.L1GtConfigProducers.L1GtTriggerMaskAlgoTrigConfig_cff')
 process.load('L1TriggerConfig.L1GtConfigProducers.L1GtTriggerMaskTechTrigConfig_cff')
-process.load('HLTrigger/HLTfilters/hltLevel1GTSeed_cfi')
+process.load('HLTrigger.HLTfilters.hltLevel1GTSeed_cfi')
+process.load('HLTrigger.special.hltPhysicsDeclared_cfi')
+process.hltPhysicsDeclared.L1GtReadoutRecordTag = 'gtDigis'
 
 process.triggerSelection = cms.EDFilter("TriggerResultsFilter",
                                         triggerConditions = cms.vstring(
@@ -84,10 +109,10 @@ process.triggerSelection = cms.EDFilter("TriggerResultsFilter",
 ##################
 # Kinematic cuts #
 ##################
-thiagoJetPtCut = 0.0
-thiagoJetEtaCut = 9999.0
+thiagoJetPtCut = 80.0
+thiagoJetEtaCut = 3.0
 thiagoJetMassCut = 0.0
-thiagoMETCut = 0.0
+thiagoMETCut = 80.0
 
 ### For Path 1 - FAT jet from Z.
 process.oneJetAboveZero = cms.EDFilter("JetConfigurableSelector",
@@ -139,9 +164,9 @@ process.load('CommonTools/RecoAlgos/HBHENoiseFilter_cfi')
 #
 # EMF cut
 process.EMFCut = cms.EDFilter("JetConfigurableSelector",
-                              src = cms.InputTag("getLargestJet"),
+                              src = cms.InputTag("getHardJets"),
                               theCut = cms.string("(emEnergyFraction > 0.1) && (emEnergyFraction < 0.9)"),
-                              minNumber = cms.int32(1)
+                              minNumber = cms.int32(-1)
                               )
 
 # TIV cut
@@ -196,9 +221,9 @@ process.plotMET = cms.EDAnalyzer("CandViewHistoAnalyzer",
                                      )
                                  )
 
-process.plotJetsGeneral = cms.EDAnalyzer("CaloJetHistoAnalyzer",
+process.plotJetsGeneral = cms.EDAnalyzer("CandViewHistoAnalyzer",
                                          src = cms.InputTag("getHardJets"),
-                                         histograms = jethistos
+                                         histograms = basicjethistos
                                          )
 
 process.deepJetAnalyzer = cms.EDAnalyzer("RSJetAnalyzerV2",
@@ -206,22 +231,24 @@ process.deepJetAnalyzer = cms.EDAnalyzer("RSJetAnalyzerV2",
                                          numberInCollection = cms.uint32(0)
                                          )
 # Path
-process.p1 = cms.Path(process.HBHENoiseFilter *
-                      (
-                          process.triggerSelection +
-                          process.jetIdCut +
-                          process.myCorrections +
-                          process.jetCuts + process.METCut +    
-#                          process.differentPtCut +
-#                          process.getHardJets +
-#                          process.EMFCut +
-#                          process.TIVCut +
-#                          process.multiJetCut +
-#                          process.plotMET +
-#                          process.plotJetsGeneral)
-                          process.deepJetAnalyzer
-                      )
-)
+process.p1 = cms.Path(
+    process.HBHENoiseFilter +
+    process.vertexScraping + 
+#    process.hltPhysicsDeclared +
+#    process.triggerSelection +
+    process.jetIdCut +
+    process.myCorrections +
+    process.jetCuts + process.METCut +    
+    process.differentPtCut +
+    process.getHardJets +
+#    process.EMFCut +
+#    process.TIVCut +
+#    process.multiJetCut +
+    process.plotMET +
+    process.plotJetsGeneral +
+    process.deepJetAnalyzer
+    )
+
 #process.load('HLTrigger.HLTcore.triggerSummaryAnalyzerAOD_cfi')
 #process.load('HLTrigger.HLTcore.hltEventAnalyzerAOD_cfi')
 #process.p2 = cms.Path(process.triggerSummaryAnalyzerAOD + process.hltEventAnalyzerAOD)

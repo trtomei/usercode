@@ -3,7 +3,7 @@
 // Package:    RSJetAnalyzerV2
 // Class:      RSJetAnalyzerV2
 // 
-/**\class RSJetIdSelector RSJetIdSelector.cc RSGraviton/RSJetIdSelector/src/RSJetIdSelector.cc
+/**\class RSPFJetIdSelector RSPFJetIdSelector.cc RSGraviton/RSPFJetIdSelector/src/RSPFJetIdSelector.cc
 
 Description: Class to select jets based on JetID in RS->jets events.
 
@@ -13,7 +13,7 @@ Implementation:
 //
 // Original Author:  Thiago Fernandez Perez
 //         Created:  Wed Apr 23 17:48:37 CEST 2008
-// $Id: RSJetIdSelector.cc,v 1.2 2010/07/28 01:29:20 tomei Exp $
+// $Id: RSPFJetIdSelector.cc,v 1.2 2010/07/28 01:29:20 tomei Exp $
 //
 //
 
@@ -32,7 +32,7 @@ Implementation:
 #include "FWCore/Utilities/interface/InputTag.h"
 #include "FWCore/Utilities/interface/Exception.h"
 #include "DataFormats/JetReco/interface/Jet.h"
-#include "DataFormats/JetReco/interface/CaloJetCollection.h"
+#include "DataFormats/JetReco/interface/PFJetCollection.h"
 #include "DataFormats/JetReco/interface/JetID.h"
 #include "JetMETCorrections/Objects/interface/JetCorrector.h"
 #include "FWCore/ServiceRegistry/interface/Service.h"
@@ -41,10 +41,10 @@ Implementation:
 // class decleration
 //
 
-class RSJetIdSelector : public edm::EDFilter {
+class RSPFJetIdSelector : public edm::EDFilter {
 public:
-  explicit RSJetIdSelector(const edm::ParameterSet&);
-  ~RSJetIdSelector();
+  explicit RSPFJetIdSelector(const edm::ParameterSet&);
+  ~RSPFJetIdSelector();
 
 private:
   virtual void beginJob();
@@ -69,19 +69,18 @@ private:
 //
 // constructors and destructor
 //
-RSJetIdSelector::RSJetIdSelector(const edm::ParameterSet& iConfig) :
+RSPFJetIdSelector::RSPFJetIdSelector(const edm::ParameterSet& iConfig) :
   jets_(iConfig.getParameter<edm::InputTag>("jets") ),
-  jetID_(iConfig.getParameter<edm::InputTag>("jetID") ),
   threshold_(iConfig.getParameter<double>("threshold") ),
   filter_(iConfig.getParameter<bool>("filter") )
 {
   //now do what ever initialization is needed
-  produces<reco::CaloJetCollection>();
+  produces<reco::PFJetCollection>();
   edm::Service<TFileService> fs;
 }
 
 
-RSJetIdSelector::~RSJetIdSelector()
+RSPFJetIdSelector::~RSPFJetIdSelector()
 {
  
   // do anything here that needs to be done at desctruction time
@@ -95,61 +94,64 @@ RSJetIdSelector::~RSJetIdSelector()
 
 // ------------ method called to for each event  ------------
 bool
-RSJetIdSelector::filter(edm::Event& iEvent, const edm::EventSetup& iSetup)
+RSPFJetIdSelector::filter(edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
   using namespace edm;
   
-  // jet ID handle
-  edm::Handle<reco::JetIDValueMap> hJetIDMap;
-  iEvent.getByLabel(jetID_, hJetIDMap );
-
   // jets
-  edm::Handle<edm::View< reco::CaloJet > > hJets;
+  edm::Handle<reco::PFJetCollection> hJets;
   iEvent.getByLabel(jets_, hJets );
   
   // Implementing loose cuts.
-  //* EMF > 0.01 if |eta| < 2.6
-  //* n90hits > 1
-  //* fHPD < 0.98 
-
-  const std::string correctorName("ak7CaloL2L3");
+  //* Neutral Hadron Fraction <0.99
+  //* Neutral EM Fraction <0.99
+  //* Number of Constituents >1
+  //*  And for |eta| < 2.4 
+  //*  Charged Hadron Fraction >0
+  //*  Charged Multiplicity >0
+  //*  Charged EM Fraction <0.99
+  
+  const std::string correctorName("ak7PFL2L3");
   const JetCorrector* corrector = JetCorrector::getJetCorrector(correctorName,iSetup);   //Define the jet corrector
   bool foundProblematicJets = false;
   
-  unsigned int idx;
-  std::vector<unsigned int> passingIdx;
-  std::auto_ptr<reco::CaloJetCollection> passingJets( new reco::CaloJetCollection );
+  std::auto_ptr<reco::PFJetCollection> passingJets( new reco::PFJetCollection );
   const int size = hJets->size();
   passingJets->reserve( size );
 
-  for ( edm::View<reco::CaloJet>::const_iterator ibegin = hJets->begin(),
+  for ( reco::PFJetCollection::const_iterator ibegin = hJets->begin(),
 	  iend = hJets->end(), ijet = ibegin;
 	ijet != iend; ++ijet ) {
+  
+    reco::PFJet theJet = *ijet;
 
-    idx = ijet - ibegin;
-    edm::RefToBase<reco::CaloJet> jetRef = hJets->refAt(idx);
-    reco::JetID theJetId = (*hJetIDMap)[ jetRef ];
-    reco::CaloJet theNewJet = (*jetRef);
+    bool nhfCut = false;
+    bool nemCut = false;
+    bool numConstituentsCut = false;
+    bool chfCut = false;
+    bool chargedMultCut = false;
+    bool cemCut = false;
+    if(std::abs(theJet.eta()) < 2.4) { // This means we are in the tracker...
+      chfCut = (theJet.chargedHadronEnergyFraction() > 0.0);
+      chargedMultCut = (theJet.chargedMultiplicity() > 0);
+      cemCut = (theJet.chargedEmEnergyFraction() < 0.99);
+    } 
+    else {
+      chfCut = true;
+      cemCut = true;
+      chargedMultCut = true;
+    }
 
-    bool emfCut = false;
-    bool n90HitsCut = false;
-    bool fHPDCut = false;
-    if(std::abs(jetRef->eta()) < 2.6 && jetRef->emEnergyFraction() > 0.01)
-      emfCut = true;
-    if(std::abs(jetRef->eta()) > 2.6)
-      emfCut = true;
-    if(theJetId.n90Hits > 1)
-      n90HitsCut = true;
-    if(theJetId.fHPD < 0.98)
-      fHPDCut = true;
+    nhfCut = (theJet.neutralHadronEnergyFraction() < 0.99);
+    nemCut = (theJet.neutralEmEnergyFraction() < 0.99);
+    numConstituentsCut = (theJet.nConstituents() >  1);
 
     // Calculate correction
-    double scale = corrector->correction(jetRef->p4());  //calculate the correction
-    double newPt = scale*(jetRef->pt());
+    double scale = corrector->correction(theJet.p4());  //calculate the correction
+    double newPt = scale*(theJet.pt());
 
-    if(emfCut && n90HitsCut && fHPDCut) {
-      passingIdx.push_back(idx); 
-      passingJets->push_back(theNewJet);
+    if(nhfCut && nemCut && numConstituentsCut && chfCut && cemCut && chargedMultCut) {
+      passingJets->push_back(theJet);
     }
     else {
       if(newPt > threshold_)
@@ -158,7 +160,6 @@ RSJetIdSelector::filter(edm::Event& iEvent, const edm::EventSetup& iSetup)
     
   }
   
-
   iEvent.put(passingJets);
   // We want to return FALSE if we foundProblematicJets
   if(filter_)
@@ -169,14 +170,14 @@ RSJetIdSelector::filter(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
 // ------------ method called once each job just before starting event loop  ------------
 void 
-RSJetIdSelector::beginJob()
+RSPFJetIdSelector::beginJob()
 {
 }
 
 // ------------ method called once each job just after ending the event loop  ------------
 void 
-RSJetIdSelector::endJob() {
+RSPFJetIdSelector::endJob() {
 }
 
 //define this as a plug-in
-DEFINE_FWK_MODULE(RSJetIdSelector);
+DEFINE_FWK_MODULE(RSPFJetIdSelector);

@@ -1,5 +1,4 @@
 import FWCore.ParameterSet.Config as cms
-import sys
 
 from Configuration.Generator.PythiaUESettings_cfi import *
 
@@ -15,7 +14,6 @@ myParameters = cms.vstring('PMAS(5,1)=4.8 ! b quark mass',
                            '23:ALLON                  ! Turn on all Z decays'
                            )
 
-source = cms.Source("EmptySource")
 generator = cms.EDFilter("Pythia6GeneratorFilter",
                          pythiaHepMCVerbosity = cms.untracked.bool(False),
                          maxEventsToPrint = cms.untracked.int32(0),

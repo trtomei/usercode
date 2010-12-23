@@ -13,7 +13,7 @@ Implementation:
 //
 // Original Author:  Thiago Fernandez Perez
 //         Created:  Wed Apr 23 17:48:37 CEST 2008
-// $Id: RSJetAnalyzerV2.cc,v 1.4 2010/07/28 01:29:20 tomei Exp $
+// $Id: RSJetAnalyzerV2.cc,v 1.5 2010/12/20 17:36:34 tomei Exp $
 //
 //
 
@@ -31,8 +31,8 @@ Implementation:
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 #include "FWCore/Utilities/interface/InputTag.h"
 #include "FWCore/Utilities/interface/Exception.h"
+#include "DataFormats/Common/interface/View.h"
 #include "DataFormats/JetReco/interface/Jet.h"
-#include "DataFormats/JetReco/interface/CaloJetCollection.h"
 #include "FWCore/ServiceRegistry/interface/Service.h"
 #include "CommonTools/UtilAlgos/interface/TFileService.h"
 #include "TH2F.h"
@@ -108,7 +108,7 @@ RSJetAnalyzerV2::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
   using namespace edm;
   using namespace reco;
 
-  Handle<CaloJetCollection> jetsHandle;
+  Handle<edm::View<Jet> > jetsHandle;
   iEvent.getByLabel(jets_,jetsHandle);
   
   // Let us double check that we have the wanted jet available.

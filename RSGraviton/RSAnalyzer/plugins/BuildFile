@@ -18,4 +18,5 @@
   <use name=PhysicsTools/UtilAlgos>
   <use name=CommonTools/UtilAlgos>
   <use name=CommonTools/CandUtils>
+  <use name=JetMETCorrections/Objects>
 </library>

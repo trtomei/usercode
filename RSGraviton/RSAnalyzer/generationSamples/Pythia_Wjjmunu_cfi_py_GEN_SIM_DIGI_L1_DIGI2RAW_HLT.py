@@ -39,6 +39,7 @@ process.options = cms.untracked.PSet(
 # Input source
 process.source = cms.Source("EmptySource")
 
+process.options = cms.untracked.PSet( wantSummary = cms.untracked.bool(True) )
 # Output definition
 
 process.RAWSIMoutput = cms.OutputModule("PoolOutputModule",
@@ -60,8 +61,8 @@ process.RAWSIMoutput = cms.OutputModule("PoolOutputModule",
 process.GlobalTag.globaltag = 'MC_38Y_V14::All'
 process.VBDecayGenFilter = cms.EDFilter("VectorBosonPairDecayFilter",
     verbose = cms.bool(False),
-    wantNeutrinos = cms.bool(True),
-    wantMuons = cms.bool(False),
+    wantNeutrinos = cms.bool(False),
+    wantMuons = cms.bool(True),
     wantQuarks = cms.bool(True),
     wantElectrons = cms.bool(False),
     wantTaus = cms.bool(False)
@@ -104,8 +105,8 @@ process.generator = cms.EDFilter("Pythia6GeneratorFilter",
             'MSUB(391)=1               ! q qbar -> G* ', 
             'MSUB(392)=1               ! g g -> G*', 
             '5000039:ALLOFF            ! Turn off all decays of G*', 
-            '5000039:ONIFANY 23        ! Turn on the decays ZZ', 
-            '23:ONIFANY 1 2 3 4 5 6 12 14 16 ! Turn on all Z decays'),
+            '5000039:ONIFANY 24        ! Turn on the decays ZZ', 
+            '24:ONIFANY 1 2 3 4 5 6 13 ! Turn on all Z decays'),
         parameterSets = cms.vstring('pythiaUESettings', 
             'processParameters')
     )
