@@ -20,8 +20,7 @@ process.options = cms.untracked.PSet(
     wantSummary = cms.untracked.bool(True)
     )
 
-process.source = cms.Source("PoolSource",
-                            fileNames = cms.untracked.vstring(
-    'file:selectedHBHEAndTrigger.root'
-    )
-)
+readFiles = cms.untracked.vstring()
+process.source = cms.Source ("PoolSource",fileNames = readFiles)
+readFiles.extend(['file:/home/trtomei/storage/data/skimming/METFwd_Run2010B-Nov4ReReco_v1/selectedHBHEAndTrigger.root'])
+

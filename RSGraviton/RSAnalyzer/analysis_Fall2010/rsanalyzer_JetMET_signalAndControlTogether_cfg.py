@@ -9,7 +9,7 @@ process = cms.Process("ANALYSIS")
 # Basic process controls. #
 ###########################
 
-thiagoOutputFileName = 'selection_realData.root'
+thiagoOutputFileName = 'signalAndControlTogether_realData.root'
 thiagoInputFilesList = "RSGraviton.RSAnalyzer.Spring10."+'AlpgenW2j_100to300_cfi'
 thiagoJetPtCut = 150.0
 thiagoJetEtaCut = 2.4
@@ -29,14 +29,6 @@ process.load('Configuration.StandardSequences.Services_cff')
 readFiles = cms.untracked.vstring()
 secFiles = cms.untracked.vstring()
 process.source = cms.Source ("PoolSource",fileNames = readFiles, secondaryFileNames = secFiles)
-#readFiles.extend( [
-#    '/store/mc/Fall10/RSGravitonToZZToNuNuJJ_M-1000_7TeV-pythia6/AODSIM/START38_V12-v1/0013/F4A840A8-6CCC-DF11-A218-A4BADB3D00FF.root',
-#    '/store/mc/Fall10/RSGravitonToZZToNuNuJJ_M-1000_7TeV-pythia6/AODSIM/START38_V12-v1/0013/9A07F077-3DCD-DF11-A190-003048C9CA8E.root',
-#    '/store/mc/Fall10/RSGravitonToZZToNuNuJJ_M-1000_7TeV-pythia6/AODSIM/START38_V12-v1/0013/62AC2F3D-68CC-DF11-99A1-001E682F8738.root',
-#    '/store/mc/Fall10/RSGravitonToZZToNuNuJJ_M-1000_7TeV-pythia6/AODSIM/START38_V12-v1/0013/4C699E75-3CCD-DF11-B294-0030487CAA5D.root',
-#    '/store/mc/Fall10/RSGravitonToZZToNuNuJJ_M-1000_7TeV-pythia6/AODSIM/START38_V12-v1/0013/2A6004A3-3DCD-DF11-B959-00238BBDEAF7.root',
-#    '/store/mc/Fall10/RSGravitonToZZToNuNuJJ_M-1000_7TeV-pythia6/AODSIM/START38_V12-v1/0013/1A64EBE3-72CC-DF11-BA19-E0CB4E29C4DB.root' ] );
-
 readFiles.extend( [ 'file:/home/trtomei/storage/data/skimming/METFwd_Run2010B-Nov4ReReco_v1/selectedHBHEAndTrigger.root', ] )
 
 #process.load(thiagoInputFilesList)
@@ -54,10 +46,13 @@ process.TFileService = cms.Service("TFileService",
 )
 
 from RSGraviton.RSAnalyzer.jethistos_cff import histograms as jethistos
+from RSGraviton.RSAnalyzer.METhistos_cff import histograms as METhistos
 
 ##########
 # Jet ID #
 ##########
+# This will filter out events where any jet above 30 GeV fails the Jet ID cut.
+# Default is loose cut, use tightQuality if you want tight cut.
 process.jetIdCut = cms.EDFilter("RSJetIdSelector",
                                 jets = cms.InputTag("ak7CaloJets"),
                                 jetID = cms.InputTag("ak7JetID"),
@@ -101,10 +96,23 @@ process.triggerSelection = cms.EDFilter("TriggerResultsFilter",
                                         )
 
 ##################
+# For MC Studies #
+##################
+process.MCmuons = cms.EDFilter("PdgIdAndStatusCandViewSelector",
+                               src = cms.InputTag("genParticles"),
+                               pdgId = cms.vint32( 13 ),
+                               status = cms.vint32( 3 ),
+                               filter = cms.bool(True)
+                               )
+      
+process.MCelectrons = process.MCmuons.clone(pdgId = cms.vint32(11))
+process.MCtaus = process.MCmuons.clone(pdgId = cms.vint32(15))
+
+##################
 # Kinematic cuts #
 ##################
 
-### For Path 1 - FAT jet from Z.
+### For Path 1 - FAT jet from Z + MET
 process.oneJetAboveZero = cms.EDFilter("JetConfigurableSelector",
                                        src = cms.InputTag("myL2L3CorJetAK7Calo"),
                                        theCut = cms.string("pt > -1.0"),
@@ -148,10 +156,11 @@ process.getHardJets = cms.EDFilter("LargestPtCaloJetSelector",
                                    maxNumber = cms.uint32(9999)
                                    )
 
+### Other cuts
+
+# HCAL noise cut
 process.load('CommonTools/RecoAlgos/HBHENoiseFilter_cfi')
 
-# Other cuts
-#
 # EMF cut
 process.EMFCut = cms.EDFilter("JetConfigurableSelector",
                               src = cms.InputTag("getLargestJet"),
@@ -163,7 +172,7 @@ process.EMFCut = cms.EDFilter("JetConfigurableSelector",
 process.TIVCut = cms.EDFilter("RSTrackerIndirectVetoFilter",
                               src = cms.InputTag("generalTracks"),
                               excludeTracks = cms.bool(False),
-                              tracksToExclude = cms.InputTag("leadingMuon"),
+                              tracksToExclude = cms.InputTag("leadingMuon"), # Has no effect if excludeTracks is false
                               trackMinPt = cms.double(1.0),
                               seedTrackMinPt = cms.double(10.0),
                               trackMaxEta = cms.double(2.4),
@@ -176,18 +185,75 @@ process.TIVCut = cms.EDFilter("RSTrackerIndirectVetoFilter",
                               filter = cms.bool(True)
                               )
 
+process.TIVStarCut = process.TIVCut.clone(excludeTracks = cms.bool(True))
+
 # Multijets cut
 process.multiJetCut = cms.EDFilter("RSEventDeltaPhiFilter",
                                    jets = cms.InputTag("getHardJets"),
                                    maxValue = cms.double(0.94)
                                    )
 
-# Anti-hot-region cut
-process.hotRegionCut = cms.EDFilter("JetConfigurableSelector",
-                                    src = cms.InputTag("getLargestJet"),
-                                    theCut = cms.string("phi > -2.7"),
-                                    minNumber = cms.int32(1)
+### Control region
+
+# Muon control
+process.leadingMuon = cms.EDFilter("LargestPtMuonSelector",
+                                   src = cms.InputTag("muons"),
+                                   maxNumber = cms.uint32(1)
+                                   )
+
+process.muonCut = cms.EDFilter("EtaPtMinCandViewSelector",
+                               src = cms.InputTag("leadingMuon"),
+                               ptMin = cms.double(20.0),
+                               etaMin = cms.double(-2.4),
+                               etaMax = cms.double(2.4),
+                               minNumber = cms.uint32(1),
+                               filter = cms.bool(True)
+                               )
+
+process.muonVBTFFilter = cms.EDFilter('RSMuonVBTFFilter',
+                                      MuonTag = cms.untracked.InputTag("leadingMuon"),
+                                      JetTag = cms.untracked.InputTag("ak5CaloJets"),
+                                      # Preselection!
+                                      PtThrForZ1 = cms.untracked.double(20.0),
+                                      PtThrForZ2 = cms.untracked.double(10.0),
+                                      vetoSecondMuonEvents = cms.untracked.bool(False),
+                                      EJetMin = cms.untracked.double(40.),
+                                      NJetMax = cms.untracked.int32(999999),
+                                      # Main cuts ->
+                                      PtCut = cms.untracked.double(20.0),
+                                      EtaCut = cms.untracked.double(2.1),
+                                      IsRelativeIso = cms.untracked.bool(True),
+                                      IsCombinedIso = cms.untracked.bool(True),
+                                      IsoCut03 = cms.untracked.double(0.15),
+                                      # Muon quality cuts ->
+                                      DxyCut = cms.untracked.double(0.2), # dxy < 0.2 cm (cosmics)
+                                      NormalizedChi2Cut = cms.untracked.double(10.), # chi2/ndof < 10.
+                                      TrackerHitsCut = cms.untracked.int32(11),  # Hits in inner track > 10
+                                      PixelHitsCut = cms.untracked.int32(1),  # Pixel Hits  > 0
+                                      MuonHitsCut = cms.untracked.int32(1),  # Valid Muon Hits  > 0
+                                      IsAlsoTrackerMuon = cms.untracked.bool(True),
+                                      NMatchesCut = cms.untracked.int32(2),  # At least 2 Chambers matched with segments
+                                      # filter
+                                      filter = cms.untracked.bool(True)
+                                      )
+
+process.VBTFmuon = cms.Sequence(process.leadingMuon + process.muonCut + process.muonVBTFFilter)
+
+# build W->MuNu candidates using MET
+process.wmnCands = cms.EDProducer("CandViewShallowCloneCombiner",
+                                    checkCharge = cms.bool(False),
+                                    cut = cms.string(""),
+                                    decay = cms.string("leadingMuon corMetGlobalMuons")
                                     )
+# MET cut
+process.wmnCut = cms.EDFilter("PtMinCandViewSelector",
+                              src = cms.InputTag("wmnCands"),
+                              ptMin = cms.double(thiagoMETCut),
+                              minNumber = cms.uint32(1),
+                              filter = cms.bool(True)
+                              )
+
+process.muonMETCut = cms.Sequence(process.wmnCands + process.wmnCut)
 
 #########
 # PLOTS #
@@ -195,67 +261,44 @@ process.hotRegionCut = cms.EDFilter("JetConfigurableSelector",
 
 process.plotMET = cms.EDAnalyzer("CandViewHistoAnalyzer",
                                  src = cms.InputTag("corMetGlobalMuons"),
-                                 histograms = cms.VPSet(
-                                     cms.PSet(nbins = cms.untracked.int32(500),
-                                              description = cms.untracked.string('MET'),
-                                              plotquantity = cms.untracked.string('et'),
-                                              min = cms.untracked.double(0.0),
-                                              max = cms.untracked.double(1000.0),
-                                              name = cms.untracked.string('MET')
-                                              ),
-                                     cms.PSet(nbins = cms.untracked.int32(500),
-                                              description = cms.untracked.string('METpt'),
-                                              plotquantity = cms.untracked.string('pt'),
-                                              min = cms.untracked.double(0.0),
-                                              max = cms.untracked.double(1000.0),
-                                              name = cms.untracked.string('METpt')
-                                              ),
-                                     cms.PSet(nbins = cms.untracked.int32(72),
-                                              description = cms.untracked.string('MET phi'),
-                                              plotquantity = cms.untracked.string('phi'),
-                                              min = cms.untracked.double(-3.141592),
-                                              max = cms.untracked.double(3.141592),
-                                              name = cms.untracked.string('MET_phi')
-                                              )
-                                     )
+                                 histograms = METhistos
                                  )
+
+process.plotMETControl = process.plotMET.clone(src = cms.InputTag("wmnCands"))
 
 process.plotJetsGeneral = cms.EDAnalyzer("CaloJetHistoAnalyzer",
                                          src = cms.InputTag("getHardJets"),
                                          histograms = jethistos
                                          )
+process.plotJetsGeneralControl = process.plotJetsGeneral.clone()
 
-# Path
-process.p1 = cms.Path(process.HBHENoiseFilter *
-                      (#process.triggerSelection +
-                       process.jetIdCut +
-                       process.myCorrections +
-                       process.jetCuts + process.METCut +    
-                       process.differentPtCut +
-                       process.getHardJets +
-                       process.EMFCut +
-                       process.TIVCut +
-                       process.multiJetCut +
-#                       process.hotRegionCut +
-                       process.plotMET +
-                       process.plotJetsGeneral
-                       )
-)
+#########
+# PATHS #
+#########
+process.analysisSignalSequence = cms.Sequence(process.HBHENoiseFilter + 
+                                              process.jetIdCut +
+                                              process.myCorrections +
+                                              process.jetCuts +
+                                              process.METCut +
+                                              process.differentPtCut +
+                                              process.getHardJets +
+                                              process.EMFCut +
+                                              process.TIVCut +
+                                              process.multiJetCut
+                                              )
 
-#process.load('HLTrigger.HLTcore.triggerSummaryAnalyzerAOD_cfi')
-#process.load('HLTrigger.HLTcore.hltEventAnalyzerAOD_cfi')
-#process.p2 = cms.Path(process.triggerSummaryAnalyzerAOD + process.hltEventAnalyzerAOD)
+process.analysisControlSequence = cms.Sequence(process.HBHENoiseFilter + 
+                                               process.VBTFmuon + 
+                                               process.jetIdCut +
+                                               process.myCorrections +
+                                               process.jetCuts +
+                                               process.muonMETCut +
+                                               process.differentPtCut +
+                                               process.getHardJets +
+                                               process.EMFCut +
+                                               process.TIVStarCut +
+                                               process.multiJetCut
+                                               )
 
-myoutput  = process.RECOEventContent.outputCommands
-#myoutput.append('keep *_getHardJets_*_*')
-#print myoutput
-
-process.skimOut = cms.OutputModule("PoolOutputModule",
-                                   fileName = cms.untracked.string('selectedHBHEAndTrigger.root'),
-                                   outputCommands = myoutput,
-                                   dataset = cms.untracked.PSet(dataTier = cms.untracked.string('RECO'),
-                                                                filterName = cms.untracked.string('SKIMMING')),
-                                   SelectEvents = cms.untracked.PSet(SelectEvents = cms.vstring('p1')
-                                                                     )
-                                   )
-#process.e = cms.EndPath(process.skimOut)
+process.pSignal = cms.Path(process.analysisSignalSequence + process.plotMET + process.plotJetsGeneral)
+process.pControl = cms.Path(process.analysisControlSequence + process.plotMETControl + process.plotJetsGeneralControl)

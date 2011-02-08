@@ -9,13 +9,6 @@ process = cms.Process("ANALYSIS")
 # Basic process controls. #
 ###########################
 
-thiagoOutputFileName = 'selection_realData.root'
-thiagoInputFilesList = "RSGraviton.RSAnalyzer.Spring10."+'AlpgenW2j_100to300_cfi'
-thiagoJetPtCut = 150.0
-thiagoJetEtaCut = 2.4
-thiagoJetMassCut = 0.0
-thiagoMETCut = 150.0
-
 ##################
 # Basic services #
 ##################
@@ -26,9 +19,10 @@ process.load("Configuration.StandardSequences.Geometry_cff")
 process.load("Configuration.StandardSequences.MagneticField_cff")
 process.load('Configuration.StandardSequences.Services_cff')
 
+
 readFiles = cms.untracked.vstring()
 secFiles = cms.untracked.vstring()
-process.source = cms.Source ("PoolSource",fileNames = readFiles, secondaryFileNames = secFiles)
+#process.source = cms.Source ("PoolSource",fileNames = readFiles, secondaryFileNames = secFiles)
 #readFiles.extend( [
 #    '/store/mc/Fall10/RSGravitonToZZToNuNuJJ_M-1000_7TeV-pythia6/AODSIM/START38_V12-v1/0013/F4A840A8-6CCC-DF11-A218-A4BADB3D00FF.root',
 #    '/store/mc/Fall10/RSGravitonToZZToNuNuJJ_M-1000_7TeV-pythia6/AODSIM/START38_V12-v1/0013/9A07F077-3DCD-DF11-A190-003048C9CA8E.root',
@@ -37,9 +31,14 @@ process.source = cms.Source ("PoolSource",fileNames = readFiles, secondaryFileNa
 #    '/store/mc/Fall10/RSGravitonToZZToNuNuJJ_M-1000_7TeV-pythia6/AODSIM/START38_V12-v1/0013/2A6004A3-3DCD-DF11-B959-00238BBDEAF7.root',
 #    '/store/mc/Fall10/RSGravitonToZZToNuNuJJ_M-1000_7TeV-pythia6/AODSIM/START38_V12-v1/0013/1A64EBE3-72CC-DF11-BA19-E0CB4E29C4DB.root' ] );
 
-readFiles.extend( [ 'file:/home/trtomei/storage/data/skimming/METFwd_Run2010B-Nov4ReReco_v1/selectedHBHEAndTrigger.root', ] )
+#readFiles.extend( [ 'file:/home/trtomei/storage/data/skimming/METFwd_Run2010B-Nov4ReReco_v1/selectedHBHEAndTrigger.root', ] )
+#process.source = cms.Source("PoolSource",
+#                            fileNames = cms.untracked.vstring(
+#    "file:/home/trtomei/hdacs/CMSSW_3_6_3_patch2/src/RSGraviton/RSAnalyzer/analysis_Summer2010/hadronicChannel/test/W1Jets_pt300to800-alpgen.root"
+#    )
+#                            )
 
-#process.load(thiagoInputFilesList)
+process.load("RSGraviton.RSAnalyzer.Spring10.AlpgenW2j_100to300_cfi")
 process.options = cms.untracked.PSet(
     wantSummary = cms.untracked.bool(True)
     )
@@ -50,7 +49,7 @@ process.maxEvents = cms.untracked.PSet(
 
 ### The output
 process.TFileService = cms.Service("TFileService",
-                                   fileName = cms.string(thiagoOutputFileName)
+                                   fileName = cms.string('output_w1j_100to300.root')
 )
 
 from RSGraviton.RSAnalyzer.jethistos_cff import histograms as jethistos
@@ -101,8 +100,25 @@ process.triggerSelection = cms.EDFilter("TriggerResultsFilter",
                                         )
 
 ##################
+# For MC Studies #
+##################
+process.MCmuons = cms.EDFilter("PdgIdAndStatusCandViewSelector",
+                               src = cms.InputTag("genParticles"),
+                               pdgId = cms.vint32( 13 ),
+                               status = cms.vint32( 3 ),
+                               filter = cms.bool(True)
+                               )
+      
+process.MCelectrons = process.MCmuons.clone(pdgId = cms.vint32(11))
+process.MCtaus = process.MCmuons.clone(pdgId = cms.vint32(15))
+
+##################
 # Kinematic cuts #
 ##################
+thiagoJetPtCut = 150.0
+thiagoJetEtaCut = 2.4
+thiagoJetMassCut = 0.0
+thiagoMETCut = 150.0
 
 ### For Path 1 - FAT jet from Z.
 process.oneJetAboveZero = cms.EDFilter("JetConfigurableSelector",
@@ -162,7 +178,7 @@ process.EMFCut = cms.EDFilter("JetConfigurableSelector",
 # TIV cut
 process.TIVCut = cms.EDFilter("RSTrackerIndirectVetoFilter",
                               src = cms.InputTag("generalTracks"),
-                              excludeTracks = cms.bool(False),
+                              excludeTracks = cms.bool(True),
                               tracksToExclude = cms.InputTag("leadingMuon"),
                               trackMinPt = cms.double(1.0),
                               seedTrackMinPt = cms.double(10.0),
@@ -188,13 +204,73 @@ process.hotRegionCut = cms.EDFilter("JetConfigurableSelector",
                                     theCut = cms.string("phi > -2.7"),
                                     minNumber = cms.int32(1)
                                     )
+# Muon control
+process.leadingMuon = cms.EDFilter("LargestPtMuonSelector",
+                                   src = cms.InputTag("muons"),
+                                   maxNumber = cms.uint32(1)
+                                   )
+
+process.muonCut = cms.EDFilter("EtaPtMinCandViewSelector",
+                               src = cms.InputTag("leadingMuon"),
+                               ptMin = cms.double(20.0),
+                               etaMin = cms.double(-2.4),
+                               etaMax = cms.double(2.4),
+                               minNumber = cms.uint32(1),
+                               filter = cms.bool(True)
+                               )
+
+process.muonVBTFFilter = cms.EDFilter('RSMuonVBTFFilter',
+                                      MuonTag = cms.untracked.InputTag("leadingMuon"),
+                                      JetTag = cms.untracked.InputTag("ak5CaloJets"),
+                                      # Preselection!
+                                      PtThrForZ1 = cms.untracked.double(20.0),
+                                      PtThrForZ2 = cms.untracked.double(10.0),
+                                      vetoSecondMuonEvents = cms.untracked.bool(False),
+                                      EJetMin = cms.untracked.double(40.),
+                                      NJetMax = cms.untracked.int32(999999),
+                                      # Main cuts ->
+                                      PtCut = cms.untracked.double(20.0),
+                                      EtaCut = cms.untracked.double(2.1),
+                                      IsRelativeIso = cms.untracked.bool(True),
+                                      IsCombinedIso = cms.untracked.bool(True),
+                                      IsoCut03 = cms.untracked.double(0.15),
+                                      # Muon quality cuts ->
+                                      DxyCut = cms.untracked.double(0.2), # dxy < 0.2 cm (cosmics)
+                                      NormalizedChi2Cut = cms.untracked.double(10.), # chi2/ndof < 10.
+                                      TrackerHitsCut = cms.untracked.int32(11),  # Hits in inner track > 10
+                                      PixelHitsCut = cms.untracked.int32(1),  # Pixel Hits  > 0
+                                      MuonHitsCut = cms.untracked.int32(1),  # Valid Muon Hits  > 0
+                                      IsAlsoTrackerMuon = cms.untracked.bool(True),
+                                      NMatchesCut = cms.untracked.int32(2),  # At least 2 Chambers matched with segments
+                                      # filter
+                                      filter = cms.untracked.bool(True)
+                                      )
+
+process.VBTFmuon = cms.Sequence(process.muonCut + process.muonVBTFFilter)
+
+# build W->MuNu candidates using PF MET
+process.wmnCands = cms.EDProducer("CandViewShallowCloneCombiner",
+                                    checkCharge = cms.bool(False),
+                                    cut = cms.string(""),
+                                    decay = cms.string("leadingMuon corMetGlobalMuons")
+                                    )
+# W filter
+# MET cut
+process.wmnCut = cms.EDFilter("PtMinCandViewSelector",
+                              src = cms.InputTag("wmnCands"),
+                              ptMin = cms.double(thiagoMETCut),
+                              minNumber = cms.uint32(1),
+                              filter = cms.bool(True)
+                              )
+
+process.muonMETCut = cms.Sequence(process.wmnCands + process.wmnCut)
 
 #########
 # PLOTS #
 #########
 
 process.plotMET = cms.EDAnalyzer("CandViewHistoAnalyzer",
-                                 src = cms.InputTag("corMetGlobalMuons"),
+                                 src = cms.InputTag("wmnCands"),
                                  histograms = cms.VPSet(
                                      cms.PSet(nbins = cms.untracked.int32(500),
                                               description = cms.untracked.string('MET'),
@@ -219,43 +295,47 @@ process.plotMET = cms.EDAnalyzer("CandViewHistoAnalyzer",
                                               )
                                      )
                                  )
+process.plotMETmuons = process.plotMET.clone()
+process.plotMETelectrons = process.plotMET.clone()
+process.plotMETtaus = process.plotMET.clone()
 
 process.plotJetsGeneral = cms.EDAnalyzer("CaloJetHistoAnalyzer",
                                          src = cms.InputTag("getHardJets"),
                                          histograms = jethistos
                                          )
+process.plotJetsGeneralmuons = process.plotJetsGeneral.clone()
+process.plotJetsGeneralelectrons = process.plotJetsGeneral.clone()
+process.plotJetsGeneraltaus = process.plotJetsGeneral.clone()
 
 # Path
-process.p1 = cms.Path(process.HBHENoiseFilter *
-                      (#process.triggerSelection +
-                       process.jetIdCut +
-                       process.myCorrections +
-                       process.jetCuts + process.METCut +    
-                       process.differentPtCut +
-                       process.getHardJets +
-                       process.EMFCut +
-                       process.TIVCut +
-                       process.multiJetCut +
-#                       process.hotRegionCut +
-                       process.plotMET +
-                       process.plotJetsGeneral
-                       )
-)
+process.analysisSequence = cms.Sequence(process.HBHENoiseFilter + 
+                                        process.jetIdCut +
+                                        process.myCorrections +
+                                        process.jetCuts +
+                                        #                       process.METCut +    
+                                        process.leadingMuon +
+                                        process.muonMETCut +
+                                        process.differentPtCut +
+                                        process.getHardJets +
+                                        process.EMFCut +
+                                        process.TIVCut +
+                                        process.multiJetCut
+                                       #                       process.hotRegionCut +
+                                        )
 
-#process.load('HLTrigger.HLTcore.triggerSummaryAnalyzerAOD_cfi')
-#process.load('HLTrigger.HLTcore.hltEventAnalyzerAOD_cfi')
-#process.p2 = cms.Path(process.triggerSummaryAnalyzerAOD + process.hltEventAnalyzerAOD)
+process.countMuons = cms.EDAnalyzer("EventCounter")
+process.countElectrons = cms.EDAnalyzer("EventCounter")
+process.countTaus = cms.EDAnalyzer("EventCounter")
 
-myoutput  = process.RECOEventContent.outputCommands
-#myoutput.append('keep *_getHardJets_*_*')
-#print myoutput
+process.fiducialMuons = cms.EDFilter("EtaPtMinCandViewSelector",
+                                     src = cms.InputTag("MCmuons"),
+                                     ptMin = cms.double(20),
+                                     etaMin = cms.double(-2.1),
+                                     etaMax = cms.double(2.1),
+                                     filter = cms.bool(True)
+                                     )
 
-process.skimOut = cms.OutputModule("PoolOutputModule",
-                                   fileName = cms.untracked.string('selectedHBHEAndTrigger.root'),
-                                   outputCommands = myoutput,
-                                   dataset = cms.untracked.PSet(dataTier = cms.untracked.string('RECO'),
-                                                                filterName = cms.untracked.string('SKIMMING')),
-                                   SelectEvents = cms.untracked.PSet(SelectEvents = cms.vstring('p1')
-                                                                     )
-                                   )
-#process.e = cms.EndPath(process.skimOut)
+process.pmuons     = cms.Path(process.MCmuons + process.analysisSequence + process.countMuons + process.VBTFmuon + process.plotMETmuons + process.plotJetsGeneralmuons)
+#process.pmuons = cms.Path(process.MCmuons + process.fiducialMuons + process.leadingMuon + process.VBTFmuon)
+#process.pelectrons = cms.Path(process.MCelectrons + process.analysisSequence + process.countElectrons + process.VBTFmuon + process.plotMETelectrons + process.plotJetsGeneralelectrons)
+#process.ptaus      = cms.Path(process.MCtaus + process.analysisSequence + process.countTaus + process.VBTFmuon + process.plotMETtaus + process.plotJetsGeneraltaus)
