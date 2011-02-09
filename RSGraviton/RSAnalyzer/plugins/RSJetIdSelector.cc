@@ -13,7 +13,7 @@ Implementation:
 //
 // Original Author:  Thiago Fernandez Perez
 //         Created:  Wed Apr 23 17:48:37 CEST 2008
-// $Id: RSJetIdSelector.cc,v 1.2 2010/07/28 01:29:20 tomei Exp $
+// $Id: RSJetIdSelector.cc,v 1.3 2010/12/23 16:14:24 tomei Exp $
 //
 //
 
@@ -56,6 +56,7 @@ private:
   edm::InputTag jetID_;
   double threshold_;
   bool filter_;
+  bool tightQuality_;
 };
 
 //
@@ -73,7 +74,8 @@ RSJetIdSelector::RSJetIdSelector(const edm::ParameterSet& iConfig) :
   jets_(iConfig.getParameter<edm::InputTag>("jets") ),
   jetID_(iConfig.getParameter<edm::InputTag>("jetID") ),
   threshold_(iConfig.getParameter<double>("threshold") ),
-  filter_(iConfig.getParameter<bool>("filter") )
+  filter_(iConfig.getParameter<bool>("filter") ),
+  tightQuality_(iConfig.getParameter<bool>("tightQuality") )
 {
   //now do what ever initialization is needed
   produces<reco::CaloJetCollection>();
@@ -111,6 +113,8 @@ RSJetIdSelector::filter(edm::Event& iEvent, const edm::EventSetup& iSetup)
   //* EMF > 0.01 if |eta| < 2.6
   //* n90hits > 1
   //* fHPD < 0.98 
+  // Also tight:
+  // fHPD < 0.95 if pt > 25 GeV
 
   const std::string correctorName("ak7CaloL2L3");
   const JetCorrector* corrector = JetCorrector::getJetCorrector(correctorName,iSetup);   //Define the jet corrector
@@ -140,7 +144,9 @@ RSJetIdSelector::filter(edm::Event& iEvent, const edm::EventSetup& iSetup)
       emfCut = true;
     if(theJetId.n90Hits > 1)
       n90HitsCut = true;
-    if(theJetId.fHPD < 0.98)
+    if(theJetId.fHPD < 0.95)
+      fHPDCut = true;
+    if((theJetId.fHPD < 0.98) && !tightQuality_)
       fHPDCut = true;
 
     // Calculate correction

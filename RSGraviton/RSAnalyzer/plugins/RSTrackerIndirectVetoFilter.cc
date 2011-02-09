@@ -13,7 +13,7 @@
 //
 // Original Author:  Thiago Tomei
 //         Created:  Thu Mar  4 16:26:36 BRT 2010
-// $Id: RSTrackerIndirectVetoFilter.cc,v 1.1 2010/06/02 16:30:44 tomei Exp $
+// $Id: RSTrackerIndirectVetoFilter.cc,v 1.2 2010/06/09 13:52:52 tomei Exp $
 //
 //
 
@@ -33,6 +33,9 @@
 //#include "RSGraviton/RSAnalyzer/interface/JetConfigurableSelectionFunctor.h"
 #include "DataFormats/TrackReco/interface/Track.h"
 #include "DataFormats/TrackReco/interface/TrackFwd.h"
+#include "DataFormats/Candidate/interface/Candidate.h"
+#include "DataFormats/Candidate/interface/CandidateFwd.h"
+#include "DataFormats/MuonReco/interface/Muon.h"
 #include "DataFormats/Math/interface/deltaR.h"
 #include "DataFormats/Math/interface/Vector3D.h"
 //#include "CommonTools/UtilAlgos/interface/StringCutObjectSelector.h"
@@ -53,6 +56,7 @@ class RSTrackerIndirectVetoFilter : public edm::EDFilter {
       
       // ----------member data ---------------------------
   edm::InputTag src_;
+  edm::InputTag tracksToExclude_;
   double trackMinPt_;
   double seedTrackMinPt_;
   double trackMaxEta_;
@@ -62,7 +66,10 @@ class RSTrackerIndirectVetoFilter : public edm::EDFilter {
   int pixelHits_;
   int trackerHits_;
   bool highPurityRequired_;
+  bool excludeTracks_;
   bool filter_;
+
+  // Meh... something to conver tracks to candidates on the fly
 };
 
 //
@@ -78,6 +85,7 @@ class RSTrackerIndirectVetoFilter : public edm::EDFilter {
 //
 RSTrackerIndirectVetoFilter::RSTrackerIndirectVetoFilter(const edm::ParameterSet& iConfig) :
   src_(iConfig.getParameter<edm::InputTag>("src")),
+  tracksToExclude_(iConfig.getParameter<edm::InputTag>("tracksToExclude")),
   trackMinPt_(iConfig.getParameter<double>("trackMinPt")),
   seedTrackMinPt_(iConfig.getParameter<double>("seedTrackMinPt")),
   trackMaxEta_(iConfig.getParameter<double>("trackMaxEta")),
@@ -87,6 +95,7 @@ RSTrackerIndirectVetoFilter::RSTrackerIndirectVetoFilter(const edm::ParameterSet
   pixelHits_(iConfig.getParameter<int>("pixelHits")),
   trackerHits_(iConfig.getParameter<int>("trackerHits")),
   highPurityRequired_(iConfig.getParameter<bool>("highPurityRequired")),
+  excludeTracks_(iConfig.getParameter<bool>("excludeTracks")),
   filter_(iConfig.getParameter<bool>("filter"))
 {
   produces<double>();
@@ -113,16 +122,40 @@ RSTrackerIndirectVetoFilter::filter(edm::Event& iEvent, const edm::EventSetup& i
   edm::Handle<reco::TrackCollection> tracksHandle;
   iEvent.getByLabel(src_,tracksHandle);
   
+  edm::Handle<edm::View<reco::Candidate> > tracksToExclude;
+  if(excludeTracks_)
+    iEvent.getByLabel(tracksToExclude_, tracksToExclude);
+  
   // Transient only!!!
   std::vector<math::XYZVector> passingTracks;
   
   //const int size = tracksHandle->size();
   //std::cout << "Starting from " << size << " tracks" << std::endl;
   
-  for(reco::TrackCollection::const_iterator itrack = tracksHandle->begin();
-      itrack != tracksHandle->end();
-      ++itrack)  {    
+  for(size_t i = 0; i != tracksHandle->size(); ++i) {
+    
+    // Get the TrackRef
+    reco::TrackRef itrack(tracksHandle,i);
 
+    // And compare for overlaps. If explicitly asked exclude any tracks that have overlaps with the tracksToExclude.
+    bool notExcluded = true;
+
+    if(excludeTracks_) {
+      for(edm::View<reco::Candidate>::const_iterator it = tracksToExclude->begin();
+	  it != tracksToExclude->end();
+	  ++it) {
+	const reco::Candidate* excludedCand = &(*it);
+	const reco::Muon* excludedMuon = dynamic_cast<const reco::Muon*>(excludedCand);
+	// We want to be sure it is a muon.
+	if (excludedMuon==NULL) continue;
+	
+	// Get the track and compare
+	const reco::TrackRef excludedTrack = excludedMuon->innerTrack();
+	bool overlap(excludedTrack==itrack);
+	notExcluded = !overlap;
+      }
+    }
+    
     bool highPurityCut = true;
     bool trackerHitsCut = true;
     bool pixelHitsCut = true;
@@ -152,7 +185,7 @@ RSTrackerIndirectVetoFilter::filter(edm::Event& iEvent, const edm::EventSetup& i
       trackEtaCut = false;
     }
 
-    bool fullTrackCut = (highPurityCut && trackerHitsCut && pixelHitsCut && trackPtCut && trackEtaCut);
+    bool fullTrackCut = (notExcluded && highPurityCut && trackerHitsCut && pixelHitsCut && trackPtCut && trackEtaCut);
     // If track is good, select it in.
     if(fullTrackCut) {
       math::XYZVector theSelectedTrack;
