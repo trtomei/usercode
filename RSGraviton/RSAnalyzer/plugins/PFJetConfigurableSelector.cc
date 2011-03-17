@@ -13,7 +13,7 @@
 //
 // Original Author:  Thiago Tomei
 //         Created:  Thu Mar  4 16:26:36 BRT 2010
-// $Id: PFJetConfigurableSelector.cc,v 1.3 2010/05/17 11:27:46 tomei Exp $
+// $Id: PFJetConfigurableSelector.cc,v 1.4 2010/12/23 16:14:24 tomei Exp $
 //
 //
 

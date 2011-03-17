@@ -216,8 +216,8 @@ RSEventAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
   iEvent.getByLabel(muons_,muonsHandle);
   Handle<double> TIVHandle;
   iEvent.getByLabel(TIV_,TIVHandle);
-  Handle<int> VBTFelectronHandle;
-  iEvent.getByLabel(VBTFelectron_.label(),"electronVBTFStatus",VBTFelectronHandle);
+  //Handle<int> VBTFelectronHandle;
+  //iEvent.getByLabel(VBTFelectron_.label(),"electronVBTFStatus",VBTFelectronHandle);
   Handle<int> VBTFmuonHandle;
   iEvent.getByLabel(VBTFmuon_.label(),"muonVBTFStatus",VBTFmuonHandle);
 
@@ -353,7 +353,7 @@ RSEventAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
   }
 
   double theTIV = *TIVHandle;
-  int theVBTFe = *VBTFelectronHandle;
+  int theVBTFe = -1;//*VBTFelectronHandle;
   int theVBTFmu = *VBTFmuonHandle;
   G_smallestTIV = theTIV;
   G_largestEMF = largestEMF;

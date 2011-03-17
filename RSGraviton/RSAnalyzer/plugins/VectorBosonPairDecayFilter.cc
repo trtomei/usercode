@@ -100,13 +100,18 @@ VectorBosonPairDecayFilter::filter(edm::Event& iEvent, const edm::EventSetup& iS
     // Check for vector bosons.
     const HepMC::GenParticle* p =  *piter;
     if(verbose_) p->print();
+    
     int ppdgid = std::abs(p->pdg_id());
     if(ppdgid!=23 && ppdgid!=24) continue; // If it is not Z or W, go to the next particle.
-    
+    if(verbose_)
+      std::cout << "Found boson" << std::endl;
+
     // Ok, it is either Z or W.
     // Get the decay vertex.
     HepMC::GenVertex* DecayVertex = p->end_vertex();
     if(DecayVertex == 0) continue; // Ooops, it was one of the documentation particles that have no decay vertex. Go to the next one!
+    if(verbose_)
+      std::cout << "Found boson decay vertex" << std::endl;
 
     for (HepMC::GenVertex::particle_iterator d = DecayVertex->particles_begin(HepMC::children);
 	 d != DecayVertex->particles_end(HepMC::children); d++) {
@@ -114,8 +119,22 @@ VectorBosonPairDecayFilter::filter(edm::Event& iEvent, const edm::EventSetup& iS
 
       // Check the nature of this daughter.
 
-      if(isQuark(theDaughter)) {DecayToQuarks=true;}
-      if(isNeutrino(theDaughter)) {DecayToNeutrinos=true;}
+      if(isQuark(theDaughter)) {
+	DecayToQuarks=true; 
+	if(verbose_) {
+	  std::cout << "Found quark daughter" << std::endl;
+	 theDaughter->print();
+	}
+      }
+      
+      if(isNeutrino(theDaughter)) {
+	DecayToNeutrinos=true;
+      	if(verbose_) {
+	  std::cout << "Found neutrino daughter" << std::endl;
+	  theDaughter->print();
+	}
+      }
+      
       if(isElectron(theDaughter)) {DecayToElectrons=true;}
       if(isMuon(theDaughter)) {DecayToMuons=true;}
       if(isTau(theDaughter)) {DecayToTaus=true;}

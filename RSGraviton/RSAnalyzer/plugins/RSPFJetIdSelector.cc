@@ -13,7 +13,7 @@ Implementation:
 //
 // Original Author:  Thiago Fernandez Perez
 //         Created:  Wed Apr 23 17:48:37 CEST 2008
-// $Id: RSPFJetIdSelector.cc,v 1.2 2010/07/28 01:29:20 tomei Exp $
+// $Id: RSPFJetIdSelector.cc,v 1.1 2010/12/23 16:14:24 tomei Exp $
 //
 //
 
@@ -33,10 +33,12 @@ Implementation:
 #include "FWCore/Utilities/interface/Exception.h"
 #include "DataFormats/JetReco/interface/Jet.h"
 #include "DataFormats/JetReco/interface/PFJetCollection.h"
-#include "DataFormats/JetReco/interface/JetID.h"
 #include "JetMETCorrections/Objects/interface/JetCorrector.h"
 #include "FWCore/ServiceRegistry/interface/Service.h"
 #include "CommonTools/UtilAlgos/interface/TFileService.h"
+#include "DataFormats/Candidate/interface/Candidate.h"
+#include "DataFormats/Candidate/interface/CandidateFwd.h"
+#include "DataFormats/Math/interface/deltaR.h"
 //
 // class decleration
 //
@@ -53,9 +55,18 @@ private:
   // ----------member data ---------------------------
 
   edm::InputTag jets_;
-  edm::InputTag jetID_;
+  edm::InputTag muons_;
+  std::string correctorName_;
+  double neutralHadronFraction_;
+  double neutralEMFraction_;
+  double chargedHadronFraction_;
+  double chargedEMFraction_;
   double threshold_;
+  double muonDR_;
+  int multiplicity_;
+  int numberOfConstituents_;
   bool filter_;
+  bool clearFromMuons_;
 };
 
 //
@@ -71,8 +82,18 @@ private:
 //
 RSPFJetIdSelector::RSPFJetIdSelector(const edm::ParameterSet& iConfig) :
   jets_(iConfig.getParameter<edm::InputTag>("jets") ),
+  muons_(iConfig.getParameter<edm::InputTag>("muons") ),
+  correctorName_(iConfig.getParameter<std::string>("correctorName") ),
+  neutralHadronFraction_(iConfig.getParameter<double>("neutralHadronFraction") ),
+  neutralEMFraction_(iConfig.getParameter<double>("neutralEMFraction") ),
+  chargedHadronFraction_(iConfig.getParameter<double>("chargedHadronFraction") ),
+  chargedEMFraction_(iConfig.getParameter<double>("chargedEMFraction") ),
   threshold_(iConfig.getParameter<double>("threshold") ),
-  filter_(iConfig.getParameter<bool>("filter") )
+  muonDR_(iConfig.getParameter<double>("muonDR") ),
+  multiplicity_(iConfig.getParameter<int>("multiplicity") ),
+  numberOfConstituents_(iConfig.getParameter<int>("numberOfConstituents") ),
+  filter_(iConfig.getParameter<bool>("filter") ),
+  clearFromMuons_(iConfig.getParameter<bool>("clearFromMuons") )
 {
   //now do what ever initialization is needed
   produces<reco::PFJetCollection>();
@@ -101,6 +122,11 @@ RSPFJetIdSelector::filter(edm::Event& iEvent, const edm::EventSetup& iSetup)
   // jets
   edm::Handle<reco::PFJetCollection> hJets;
   iEvent.getByLabel(jets_, hJets );
+
+  // muons
+  edm::Handle<View<reco::Candidate> > hMuons;
+  if(clearFromMuons_)
+    iEvent.getByLabel(muons_,hMuons);
   
   // Implementing loose cuts.
   //* Neutral Hadron Fraction <0.99
@@ -111,8 +137,7 @@ RSPFJetIdSelector::filter(edm::Event& iEvent, const edm::EventSetup& iSetup)
   //*  Charged Multiplicity >0
   //*  Charged EM Fraction <0.99
   
-  const std::string correctorName("ak7PFL2L3");
-  const JetCorrector* corrector = JetCorrector::getJetCorrector(correctorName,iSetup);   //Define the jet corrector
+  const JetCorrector* corrector = JetCorrector::getJetCorrector(correctorName_,iSetup);   //Define the jet corrector
   bool foundProblematicJets = false;
   
   std::auto_ptr<reco::PFJetCollection> passingJets( new reco::PFJetCollection );
@@ -131,10 +156,12 @@ RSPFJetIdSelector::filter(edm::Event& iEvent, const edm::EventSetup& iSetup)
     bool chfCut = false;
     bool chargedMultCut = false;
     bool cemCut = false;
+    bool passesMuonCheck = true;
+
     if(std::abs(theJet.eta()) < 2.4) { // This means we are in the tracker...
-      chfCut = (theJet.chargedHadronEnergyFraction() > 0.0);
-      chargedMultCut = (theJet.chargedMultiplicity() > 0);
-      cemCut = (theJet.chargedEmEnergyFraction() < 0.99);
+      chfCut = (theJet.chargedHadronEnergyFraction() > chargedHadronFraction_);
+      chargedMultCut = (theJet.chargedMultiplicity() > multiplicity_);
+      cemCut = (theJet.chargedEmEnergyFraction() < chargedEMFraction_);
     } 
     else {
       chfCut = true;
@@ -142,15 +169,26 @@ RSPFJetIdSelector::filter(edm::Event& iEvent, const edm::EventSetup& iSetup)
       chargedMultCut = true;
     }
 
-    nhfCut = (theJet.neutralHadronEnergyFraction() < 0.99);
-    nemCut = (theJet.neutralEmEnergyFraction() < 0.99);
-    numConstituentsCut = (theJet.nConstituents() >  1);
+    nhfCut = (theJet.neutralHadronEnergyFraction() < neutralHadronFraction_);
+    nemCut = (theJet.neutralEmEnergyFraction() < neutralEMFraction_);
+    numConstituentsCut = (theJet.nConstituents() > numberOfConstituents_ );
 
     // Calculate correction
     double scale = corrector->correction(theJet.p4());  //calculate the correction
     double newPt = scale*(theJet.pt());
 
-    if(nhfCut && nemCut && numConstituentsCut && chfCut && cemCut && chargedMultCut) {
+    // Check if it is close to muon;
+    if(clearFromMuons_) {
+      for(size_t imuon = 0; imuon != hMuons->size(); ++imuon) {
+	const reco::Candidate& theMuon = hMuons->at(0);
+	double dR = deltaR(theMuon.eta(),theMuon.phi(),theJet.eta(),theJet.phi());
+	if(dR < muonDR_)
+	  passesMuonCheck = false;
+      }
+    }
+
+    if(nhfCut && nemCut && numConstituentsCut && chfCut && cemCut && chargedMultCut && passesMuonCheck) {
+      //      printf("Ok, found a good jet with pt = %g, eta = %g, phi = %g\n",theJet.pt(),theJet.eta(),theJet.phi());
       passingJets->push_back(theJet);
     }
     else {

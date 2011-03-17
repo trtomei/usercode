@@ -14,12 +14,11 @@
 #include "FWCore/Utilities/interface/Exception.h"
 #include "DataFormats/Candidate/interface/Candidate.h"
 #include "DataFormats/Candidate/interface/CandidateFwd.h"
-#include "DataFormats/Math/interface/deltaPhi.h"
 
-class RSEventDeltaPhiFilter : public edm::EDFilter {
+class RSEventNumJetsFilter : public edm::EDFilter {
 public:
-  explicit RSEventDeltaPhiFilter(const edm::ParameterSet&);
-  ~RSEventDeltaPhiFilter();
+  explicit RSEventNumJetsFilter(const edm::ParameterSet&);
+  ~RSEventNumJetsFilter();
   
 private:
   virtual void beginJob() ;
@@ -27,7 +26,7 @@ private:
   virtual void endJob() ;
       // ----------Member data ---------------------------
   edm::InputTag jets_;
-  double maxValue_;
+  int maxJets_;
 };
 
 //
@@ -41,16 +40,16 @@ private:
 //
 // constructors and destructor
 //
-RSEventDeltaPhiFilter::RSEventDeltaPhiFilter(const edm::ParameterSet& iConfig) :
+RSEventNumJetsFilter::RSEventNumJetsFilter(const edm::ParameterSet& iConfig) :
   jets_(iConfig.getParameter<edm::InputTag>("jets")),
-  maxValue_(iConfig.getParameter<double>("maxValue"))
+  maxJets_(iConfig.getParameter<int>("maxJets"))
 {
    //now do what ever initialization is needed
 
 }
 
 
-RSEventDeltaPhiFilter::~RSEventDeltaPhiFilter()
+RSEventNumJetsFilter::~RSEventNumJetsFilter()
 {
  
    // do anything here that needs to be done at desctruction time
@@ -65,7 +64,7 @@ RSEventDeltaPhiFilter::~RSEventDeltaPhiFilter()
 
 // ------------ method called on each new Event  ------------
 bool
-RSEventDeltaPhiFilter::filter(edm::Event& iEvent, const edm::EventSetup& iSetup)
+RSEventNumJetsFilter::filter(edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
   using namespace edm;
   using namespace reco;
@@ -76,36 +75,24 @@ RSEventDeltaPhiFilter::filter(edm::Event& iEvent, const edm::EventSetup& iSetup)
   bool accepted = false;
 
   // We accept the event if there is exactly one jet.
-  if(jetsHandle->size() == 1)
+  int numJets = int(jetsHandle->size());
+
+  if(numJets < maxJets_)
     accepted = true;
-
-  // If there are two jets, we check the deltaPhi in between them.
-  if(jetsHandle->size() == 2) {
-    double phiJet1 = ((*jetsHandle)[0]).phi();
-    double phiJet2 = ((*jetsHandle)[1]).phi();
-    double diffPhi = deltaPhi(phiJet1,phiJet2);
-    double cValue = cos(diffPhi);
-    double value = acos(cValue);
-
-    std::cout << "Value is " << value << std::endl;
-    std::cout << "cos(value) is " << cValue << std::endl;
-    if(value < maxValue_)
-      accepted = true;
-  }
-  
+    
   return accepted;
 }
 
 // ------------ method called once each job just before starting event loop  ------------
 void 
-RSEventDeltaPhiFilter::beginJob()
+RSEventNumJetsFilter::beginJob()
 {
 }
 
 // ------------ method called once each job just after ending the event loop  ------------
 void 
-RSEventDeltaPhiFilter::endJob() {
+RSEventNumJetsFilter::endJob() {
 }
 
 //define this as a plug-in
-DEFINE_FWK_MODULE(RSEventDeltaPhiFilter);
+DEFINE_FWK_MODULE(RSEventNumJetsFilter);

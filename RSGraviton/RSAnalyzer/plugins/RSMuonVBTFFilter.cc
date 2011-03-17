@@ -90,10 +90,8 @@ RSMuonVBTFFilter::RSMuonVBTFFilter( const ParameterSet & cfg ) :
       // To filter or not?
       filter_(cfg.getUntrackedParameter<bool>("filter",false))
 {
-  produces< reco::MuonCollection >
-    ("selectedVBTFMuons").setBranchAlias("selectedVBTFMuons");
-  produces < int >
-    ("muonVBTFStatus").setBranchAlias("muonVBTFStatus");
+  produces< reco::MuonCollection >();
+  produces < int >();
 }
 
 void RSMuonVBTFFilter::beginJob() {
@@ -147,12 +145,6 @@ bool RSMuonVBTFFilter::filter (Event & ev, const EventSetup &) {
   Handle<reco::BeamSpot> beamSpotHandle;
   ev.getByLabel(InputTag("offlineBeamSpot"), beamSpotHandle);
   
-  // Get the flags ready.
-  bool preselection = true; // Leading muon passes preselection
-  bool isGlobal     = true; // Leading muon is global
-  bool kinematic    = true; // Leading muon passes kinematics
-  bool quality      = true; // Leading muon passes quality
-  bool iso          = true; // Leading muon passes isolation
 
   // Get the collections ready
   auto_ptr<reco::MuonCollection> 
@@ -160,70 +152,88 @@ bool RSMuonVBTFFilter::filter (Event & ev, const EventSetup &) {
   auto_ptr<int> muonVBTFStatus(new int);
   
   if(weGotMuons) {
-    // Ok, get the muon itself and pray.
-    const reco::Muon & mu = muonCollection->at(leadingMuonIndex);
-    // Shove the guy into the collection already.
-    reco::Muon theChosenMuon = *(mu.clone()); 
-    selectedVBTFMuons->push_back(theChosenMuon);
-    
-    // Preselection cuts
-    if (nmuonsForZ2>1 && vetoSecondMuonEvents_) // Oops, Z candidate
-      preselection = false;
-    if (njets>nJetMax_) // Oops, too many jets
-      preselection = false;
 
-    // Want a global muon.
-    isGlobal = mu.isGlobalMuon();
-    
-    // Kinematic cuts
-    if(!isGlobal) kinematic = false; // Don't even continue, we already failed the global muon cut...
-    if(isGlobal) {double pt = mu.pt();
-      double eta = mu.eta();
-      if (pt<ptCut_) kinematic=false;
-      if (fabs(eta)>etaCut_) kinematic=false;
-    }
-    
-    // Quality cuts
-    if(!kinematic) quality = false; // Don't even continue, we already failed the kinematic cuts...
-    if(kinematic) {
-      reco::TrackRef gm = mu.globalTrack();
-      reco::TrackRef tk = mu.innerTrack();
-      double dxy = gm->dxy(beamSpotHandle->position());
-      double normalizedChi2 = gm->normalizedChi2(); 
-      int trackerHits = tk->hitPattern().numberOfValidTrackerHits();
-      int pixelHits = tk->hitPattern().numberOfValidPixelHits();
-      int muonHits = gm->hitPattern().numberOfValidMuonHits();
-      int nMatches = mu.numberOfMatches(); 
+    // Loop over muons we got
+    for(unsigned int imuon = 0; imuon!=muonCollectionSize; ++imuon){
       
-      if (fabs(dxy)>dxyCut_) {quality = false;}
-      if (normalizedChi2>normalizedChi2Cut_) {quality=false;}
-      if (trackerHits<trackerHitsCut_) {quality=false;}
-      if (pixelHits<pixelHitsCut_) {quality=false;}
-      if (muonHits<muonHitsCut_) {quality=false;}
-      if (!mu.isTrackerMuon()) {quality=false;}
-      if (nMatches<nMatchesCut_) {quality=false;}
-    }
-    
-    // Isolation cuts
-    if(!quality) iso = false; // Don't even continue, we already failed the quality cuts...
-    if(quality) {
-      double pt = mu.pt();
-      double SumPt = mu.isolationR03().sumPt; double isovar=SumPt;
-      double Cal   = mu.isolationR03().emEt + mu.isolationR03().hadEt; 
-      if (isCombinedIso_) isovar += Cal;
-      if (isRelativeIso_) isovar /= pt;
-      iso = (isovar<=isoCut03_);
-    }
-  }
-
-  bool theFilterResult = (weGotMuons && isGlobal && kinematic && quality && iso); 
+      // Ok, get the muon itself and pray.
+      const reco::Muon & mu = muonCollection->at(imuon);
+      
+      // Get the flags ready.
+      bool preselection = true; // Muon passes preselection
+      bool isGlobal     = true; // Muon is global
+      bool kinematic    = true; // Muon passes kinematics
+      bool quality      = true; // Muon passes quality
+      bool iso          = true; // Muon passes isolation
+      
+      // Preselection cuts
+      if (nmuonsForZ2>1 && vetoSecondMuonEvents_) // Oops, Z candidate
+	preselection = false;
+      if (njets>nJetMax_) // Oops, too many jets
+	preselection = false;
+      
+      // Want a global muon - tracker + stand-alone
+      isGlobal = mu.isGlobalMuon();
+      
+      // Kinematic cuts
+      if(!isGlobal) kinematic = false; // Don't even continue, we already failed the global muon cut...
+      if(isGlobal) {double pt = mu.pt();
+	double eta = mu.eta();
+	if (pt<ptCut_) kinematic=false;
+	if (fabs(eta)>etaCut_) kinematic=false;
+      }
+      
+      // Quality cuts
+      if(!kinematic) quality = false; // Don't even continue, we already failed the kinematic cuts...
+      if(kinematic) {
+	reco::TrackRef gm = mu.globalTrack();
+	reco::TrackRef tk = mu.innerTrack();
+	double dxy = gm->dxy(beamSpotHandle->position());
+	double normalizedChi2 = gm->normalizedChi2(); 
+	int trackerHits = tk->hitPattern().numberOfValidTrackerHits();
+	int pixelHits = tk->hitPattern().numberOfValidPixelHits();
+	int muonHits = gm->hitPattern().numberOfValidMuonHits();
+	int nMatches = mu.numberOfMatches(); 
+	
+	bool check1 = (trackerHits >= trackerHitsCut_);
+	bool check2 = (pixelHits >= pixelHitsCut_);
+	bool check3 = (muonHits >= muonHitsCut_);
+	bool check4 = (fabs(dxy) < dxyCut_);
+	bool check5 = (normalizedChi2 < normalizedChi2Cut_);
+	bool check6 = (nMatches >= nMatchesCut_);
+	
+	quality = (check1 && check2 && check3 && check4 && check5 && check6);
+      }
+      
+      // Isolation cuts
+      if(!quality) iso = false; // Don't even continue, we already failed the quality cuts...
+      if(quality) {
+	double pt = mu.pt();
+	double SumPt = mu.isolationR03().sumPt; double isovar=SumPt;
+	double Cal   = mu.isolationR03().emEt + mu.isolationR03().hadEt; 
+	if (isCombinedIso_) isovar += Cal;
+	if (isRelativeIso_) isovar /= pt;
+	iso = (isovar<=isoCut03_);
+      }
+      
+      // If this muon passes selections, put it in the collection.
+      if(isGlobal && kinematic && quality && iso) {
+	reco::Muon theChosenMuon = *(mu.clone()); 
+	selectedVBTFMuons->push_back(theChosenMuon);
+      }
+      
+    } // Close loop over muons
+  } // Close if(weGotMuons)
+  
+  bool theFilterResult = (selectedVBTFMuons->size() > 0);
   if(theFilterResult == true)
     *muonVBTFStatus = 1;
   else
     *muonVBTFStatus = 0;
 
-  ev.put( selectedVBTFMuons, "selectedVBTFMuons");
-  ev.put( muonVBTFStatus, "muonVBTFStatus");
+  // We always put the collections in the events.
+  ev.put( selectedVBTFMuons );
+  ev.put( muonVBTFStatus );
   
   // choose your destiny
   if(filter_ == true)
