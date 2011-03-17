@@ -45,7 +45,10 @@ process.GlobalTag.globaltag = 'GR_R_39X_V5::All'
 # Trigger #
 ###########
 process.triggerSelection = cms.EDFilter("TriggerResultsFilter",
-                                        triggerConditions = cms.vstring('HLT_Jet70U*',
+                                        triggerConditions = cms.vstring('HLT_MET100_v*',
+                                                                        'HLT_MET120_v*',
+                                                                        'HLT_MET65_CenJet50U_v*'
+                                                                        'HLT_MET80_CenJet50U_v*'
                                                                         ),
                                         hltResults = cms.InputTag( "TriggerResults" , "", "HLT"),
                                         l1tResults = cms.InputTag( "" ),
@@ -68,4 +71,5 @@ process.skimOut = cms.OutputModule("PoolOutputModule",
                                                                      )
                                    )
 
+print process.RECOEventContent.outputCommands
 process.e = cms.EndPath(process.skimOut)

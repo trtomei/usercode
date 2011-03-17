@@ -45,7 +45,10 @@ process.GlobalTag.globaltag = 'GR_R_39X_V5::All'
 # Trigger #
 ###########
 process.triggerSelection = cms.EDFilter("TriggerResultsFilter",
-                                        triggerConditions = cms.vstring('HLT_Jet70U*',
+                                        triggerConditions = cms.vstring('HLT_MET65',
+                                                                        'HLT_MET100',
+                                                                        'HLT_MET80_v*'
+                                                                        'HLT_MET100_v*'
                                                                         ),
                                         hltResults = cms.InputTag( "TriggerResults" , "", "HLT"),
                                         l1tResults = cms.InputTag( "" ),

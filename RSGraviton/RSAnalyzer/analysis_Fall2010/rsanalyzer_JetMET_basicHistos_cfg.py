@@ -25,6 +25,8 @@ process.load('FWCore.MessageService.MessageLogger_cfi')
 process.load("Configuration.StandardSequences.Geometry_cff")
 process.load("Configuration.StandardSequences.MagneticField_cff")
 process.load('Configuration.StandardSequences.Services_cff')
+process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
+process.GlobalTag.globaltag = 'START38_V14::All'
 
 readFiles = cms.untracked.vstring()
 secFiles = cms.untracked.vstring()
@@ -36,8 +38,8 @@ process.source = cms.Source ("PoolSource",fileNames = readFiles, secondaryFileNa
 #    '/store/mc/Fall10/RSGravitonToZZToNuNuJJ_M-1000_7TeV-pythia6/AODSIM/START38_V12-v1/0013/4C699E75-3CCD-DF11-B294-0030487CAA5D.root',
 #    '/store/mc/Fall10/RSGravitonToZZToNuNuJJ_M-1000_7TeV-pythia6/AODSIM/START38_V12-v1/0013/2A6004A3-3DCD-DF11-B959-00238BBDEAF7.root',
 #    '/store/mc/Fall10/RSGravitonToZZToNuNuJJ_M-1000_7TeV-pythia6/AODSIM/START38_V12-v1/0013/1A64EBE3-72CC-DF11-BA19-E0CB4E29C4DB.root' ] );
+readFiles.extend(['/store/user/tomei/METFwd_Run2010B-Dec22ReReco_v1/skim_59_1_wJp.root'])
 
-readFiles.extend( [ 'file:/home/trtomei/storage/data/skimming/METFwd_Run2010B-Nov4ReReco_v1/selectedHBHEAndTrigger.root', ] )
 
 #process.load(thiagoInputFilesList)
 process.options = cms.untracked.PSet(
@@ -58,6 +60,8 @@ from RSGraviton.RSAnalyzer.jethistos_cff import histograms as jethistos
 ##########
 # Jet ID #
 ##########
+process.load('JetMETCorrections.Configuration.DefaultJEC_cff')
+
 process.jetIdCut = cms.EDFilter("RSJetIdSelector",
                                 jets = cms.InputTag("ak7CaloJets"),
                                 jetID = cms.InputTag("ak7JetID"),
@@ -69,10 +73,9 @@ process.jetIdCut = cms.EDFilter("RSJetIdSelector",
 ###############
 # Corrections #
 ###############
-process.load('JetMETCorrections.Configuration.DefaultJEC_cff')
-process.ak7CaloL2Relative.useCondDB = False
-process.ak7CaloL3Absolute.useCondDB = False
-process.ak7CaloResidual.useCondDB = False
+#process.ak7CaloL2Relative.useCondDB = False
+#process.ak7CaloL3Absolute.useCondDB = False
+#process.ak7CaloResidual.useCondDB = False
 process.myL2L3CorJetAK7Calo = cms.EDProducer('CaloJetCorrectionProducer',
                                              src        = cms.InputTag('jetIdCut'),
                                              correctors = cms.vstring('ak7CaloL2L3')
@@ -228,17 +231,17 @@ process.plotJetsGeneral = cms.EDAnalyzer("CaloJetHistoAnalyzer",
 # Path
 process.p1 = cms.Path(process.HBHENoiseFilter *
                       (#process.triggerSelection +
-                       process.jetIdCut +
-                       process.myCorrections +
-                       process.jetCuts + process.METCut +    
-                       process.differentPtCut +
-                       process.getHardJets +
-                       process.EMFCut +
-                       process.TIVCut +
-                       process.multiJetCut +
+                       process.jetIdCut# +
+#                       process.myCorrections +
+#                       process.jetCuts + process.METCut +    
+#                       process.differentPtCut +
+#                       process.getHardJets +
+#                       process.EMFCut +
+#                       process.TIVCut +
+#                       process.multiJetCut +
 #                       process.hotRegionCut +
-                       process.plotMET +
-                       process.plotJetsGeneral
+#                       process.plotMET +
+#                       process.plotJetsGeneral
                        )
 )
 
