@@ -14,11 +14,11 @@ thiagoOutputFileName = ''
 thiagoSuffix = ''
 thiagoNumEvents =-1
 thiagoInputFilesList = ''
-thiagoJetPtCut = 150.0
+thiagoJetPtCut = 300.0
 thiagoSmallJetPtCut = 30.0
 thiagoJetEtaCut = 2.4
 thiagoJetMassCut = 50.0
-thiagoMETCut = 150.0
+thiagoMETCut = 200.0
 thiagoMaxJets = 3
 thiagoMaxAngle = 2.8
 
@@ -49,19 +49,14 @@ if 'numEvents' in myOptions:
 else:
     thiagoNumEvents = -1
     
-#readFiles = cms.untracked.vstring()
-#secFiles = cms.untracked.vstring()
-#process.source = cms.Source ("PoolSource",fileNames = readFiles, secondaryFileNames = secFiles)
-#readFiles.extend(['file:patTuple_Run2010B.root',])
-#readFiles.extend(['file:Run2010Bp1/preselection_Run2010Bp1.root',])
-#readFiles.extend(['file:Run2010Bp2/preselection_Run2010Bp2.root',])
-#readFiles.extend(['file:Run2010Bp2_oldReco.root',])
-#readFiles.extend(['file:signal_M1250.root',])
-#readFiles.extend(['file:/home/trtomei/hdacs/CMSSW_3_9_9/src/RSGraviton/RSAnalyzer/analysis_Winter2011/manualGo/patTuple_'+thiagoOutputFileName+'.root'])
-#process.load("RSGraviton.RSAnalyzer.Fall10.ZinvisibleJets_cff")
-process.load("RSGraviton.RSAnalyzer.Fall10."+thiagoOutputFileName+"_cff")
 
-#process.load(thiagoInputFilesList)
+readFiles = cms.untracked.vstring()
+secFiles = cms.untracked.vstring()
+process.source = cms.Source ("PoolSource",fileNames = readFiles, secondaryFileNames = secFiles)
+readFiles.extend(['file:pattuple_'+thiagoOutputFileName+'.root',])
+#readFiles.extend(['file:testPattuple.root',])
+#process.load("RSGraviton.RSAnalyzer.Fall10."+thiagoOutputFileName+"_cff")
+
 process.options = cms.untracked.PSet(
     wantSummary = cms.untracked.bool(True)
     )
@@ -370,12 +365,18 @@ process.plotMET = cms.EDAnalyzer("CandViewHistoAnalyzer",
                                  )
 
 process.plotMETControl = process.plotMET.clone(src = cms.InputTag("wmnCands"))
+process.plotMETPreselection = process.plotMET.clone()
+process.plotMETAfterMassCut = process.plotMET.clone()
+process.plotMETControlAfterMassCut = process.plotMETControl.clone()
 
 process.plotJetsGeneral = cms.EDAnalyzer("CandViewHistoAnalyzer",
                                          src = cms.InputTag("getHardJets"),
                                          histograms = basicjethistos
                                          )
 process.plotJetsGeneralControl = process.plotJetsGeneral.clone()
+process.plotJetsGeneralPreselection = process.plotJetsGeneral.clone()
+process.plotJetsGeneralAfterMassCut = process.plotJetsGeneral.clone()
+process.plotJetsGeneralControlAfterMassCut = process.plotJetsGeneral.clone()
 
 process.WtransverseMass = cms.EDAnalyzer("TransverseMassAnalyzer",
                                          objectOne = cms.InputTag("patMETsPFlow"),
@@ -393,8 +394,17 @@ process.gravtransverseMass = cms.EDAnalyzer("TransverseMassAnalyzer",
                                             nbins = cms.int32(200)
                                             )
 
+process.gravtransverseMassControl = cms.EDAnalyzer("TransverseMassAnalyzer",
+                                                   objectOne = cms.InputTag("wmnCands"),
+                                                   objectTwo = cms.InputTag("getLargestJet"),
+                                                   xmin = cms.double(0.0),
+                                                   xmax = cms.double(2000.0),
+                                                   nbins = cms.int32(200)
+                                                   )
+
 process.WtransverseMassAfterMassCut = process.WtransverseMass.clone()
 process.gravtransverseMassAfterMassCut = process.gravtransverseMass.clone()
+process.gravtransverseMassControlAfterMassCut = process.gravtransverseMassControl.clone()
 
 #########
 # PATHS #
@@ -420,6 +430,8 @@ process.analysisSearchSequence = cms.Sequence(process.eventCounterOne +
                                               process.angularCut + 
                                               process.eventCounterEight +
                                               process.gravtransverseMass +
+                                              process.plotJetsGeneral +
+                                              process.plotMET +
                                               process.jetMassCut +
                                               process.gravtransverseMassAfterMassCut +
                                               process.eventCounterNine)
@@ -444,9 +456,13 @@ process.analysisControlSequence = cms.Sequence(process.eventCounterAlpha +
                                                process.angularCut +
                                                process.eventCounterTheta +
                                                process.WtransverseMass + 
+                                               process.gravtransverseMassControl +
+                                               process.plotJetsGeneralControl +
+                                               process.plotMETControl + 
                                                process.jetMassCut +
-                                               process.WtransverseMassAfterMassCut + 
+                                               process.WtransverseMassAfterMassCut +
+                                               process.gravtransverseMassControlAfterMassCut + 
                                                process.eventCounterIota)
 
-process.pSearch = cms.Path(process.analysisSearchSequence + process.plotMET + process.plotJetsGeneral)
-process.pControl = cms.Path(process.analysisControlSequence + process.plotMETControl + process.plotJetsGeneralControl)
+process.pSearch = cms.Path(process.analysisSearchSequence + process.plotMETAfterMassCut + process.plotJetsGeneralAfterMassCut)
+process.pControl = cms.Path(process.analysisControlSequence + process.plotMETControlAfterMassCut + process.plotJetsGeneralControlAfterMassCut)

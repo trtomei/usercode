@@ -108,7 +108,7 @@ void
 RSGenEventAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
 
-  std::cout << "uno" << std::endl;
+  //std::cout << "uno" << std::endl;
   // Get everything we need from the Event
   edm::Handle<reco::GenParticleCollection> genParticles_h;
   iEvent.getByLabel("prunedGenParticles",genParticles_h);
@@ -117,7 +117,7 @@ RSGenEventAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   edm::Handle<reco::GenJetCollection> genJets_h;
   iEvent.getByLabel("sortedJets",genJets_h);
 
-  std::cout << "dos" << std::endl;
+  //std::cout << "dos" << std::endl;
   // Get the Graviton
   const reco::GenParticle* theGraviton = 0;
   for(reco::GenParticleCollection::const_iterator i = genParticles_h->begin();
@@ -130,7 +130,7 @@ RSGenEventAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   }
   
   // Do the check for the sixth particle - to be sure we are coming from qqbar or gluongluon, as asked.
-  std::cout << "tres" << std::endl;
+  //std::cout << "tres" << std::endl;
   const reco::GenParticle* theMother = &(genParticles_h->at(5));
   if(allProcesses_ == false) {
     if(qqbarProcess_ == true)
@@ -141,7 +141,7 @@ RSGenEventAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
 	return;
   }
   
-  std::cout << "cuatro" << std::endl;
+  //std::cout << "cuatro" << std::endl;
   const reco::Candidate* Z1 = theGraviton->daughter(0);
   const reco::Candidate* Z2 = theGraviton->daughter(1);
   const reco::Candidate* Z1D1 = Z1->daughter(0);
@@ -149,7 +149,7 @@ RSGenEventAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   const reco::Candidate* Z2D1 = Z2->daughter(0);
   const reco::Candidate* Z2D2 = Z2->daughter(1);  
 
-  std::cout << "cinco" << std::endl;
+  //std::cout << "cinco" << std::endl;
   // dR Z daughters X Z pt
   double dRDaughtersZ1 = deltaR(Z1D1->eta(),Z1D1->phi(),Z1D2->eta(),Z1D2->phi()); 
   double dRZ1D1 = deltaR(Z1->eta(),Z1->phi(),Z1D1->eta(),Z1D1->phi());
@@ -164,12 +164,12 @@ RSGenEventAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   h_dRZ2D1->Fill(dRZ2D1,Z2->pt());
   h_dRZ2D2->Fill(dRZ2D2,Z2->pt());
     
-  std::cout << "seis" << std::endl;
+  //std::cout << "seis" << std::endl;
   // GenMET
   const reco::GenMET& theMET = genMet_h->front();
   h_genMET->Fill(theMET.pt());
   
-  std::cout << "siete" << std::endl;
+  //std::cout << "siete" << std::endl;
   // GenJets
   const reco::GenJet& theJet= (*genJets_h)[0];
   const reco::Candidate* ZHad = 0;
@@ -183,7 +183,7 @@ RSGenEventAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   h_dRJetZ_Zpt->Fill(dRJetZ,ZHad->pt());
   h_dPtJetZ_Zpt->Fill(dPtJetZ,ZHad->pt());
   
-  std::cout << "ocho" << std::endl;
+  //std::cout << "ocho" << std::endl;
   // GTM
   double phiJet = theJet.phi();
   double phiMET = theMET.phi();
@@ -191,7 +191,7 @@ RSGenEventAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSe
   double theGravTransMass = sqrt(2*theMET.pt()*theJet.pt()*(1-cos(diffPhi)));
   h_gravTransMass->Fill(theGravTransMass);
   
-  std::cout << "nueve" << std::endl;
+  //std::cout << "nueve" << std::endl;
   // Cosine theta star
   TLorentzVector zed1; zed1.SetPxPyPzE(Z1->px(),Z1->py(),Z1->pz(),Z1->energy());
   TLorentzVector zed2; zed2.SetPxPyPzE(Z2->px(),Z2->py(),Z2->pz(),Z2->energy());

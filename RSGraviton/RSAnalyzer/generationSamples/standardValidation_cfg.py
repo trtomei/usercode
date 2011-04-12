@@ -1,23 +1,24 @@
 import FWCore.ParameterSet.Config as cms
+import sys
 
-process = cms.Process("TEST")
+process = cms.Process("VALIDATION")
 process.load("SimGeneral.HepPDTESSource.pythiapdt_cfi")
 process.load("PhysicsTools.HepMCCandAlgos.genParticles_cfi")
 process.genParticles.abortOnUnknownPDGCode = False
 process.genParticles.excludeUnfragmentedClones = cms.bool(True)
 
-#process.load("RSGraviton.RSAnalyzer.HerwigValidation_cfi")
-#process.source = cms.Source("PoolSource",
-#                            fileNames = cms.untracked.vstring("file:/storage/trtomei/data/Pythia_800GeV_kmpl005_RECO.root",
-#                                                              "file:/storage/trtomei/data/Pythia_800GeV_kmpl005_RECO_02.root",
-#                                                              "file:/storage/trtomei/data/Pythia_800GeV_kmpl005_RECO_03.root")
-#                            )
-myMass = '600'
-#process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring("file:pythia"+myMass+".root"))
-process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring("file:/storage/trtomei/data/PythiaWjjlnu_800GeV_kmpl005_CMSSW358_RECO.root"))
+tag = ''
+numEvents = -1
+
+if 'input' in sys.argv:
+    tag = sys.argv[sys.argv.index('input')+1]
+if 'numEvents' in sys.argv:
+    numEvents = int(sys.argv[sys.argv.index('numEvents')+1])
+
+process.load("RSGraviton.RSAnalyzer.Fall10."+tag+"_cff")
 
 process.maxEvents = cms.untracked.PSet(
-    input = cms.untracked.int32(25000)
+    input = cms.untracked.int32(numEvents)
     )
 
 gravPdgId = 5000039
@@ -43,25 +44,25 @@ process.prunedGenParticles = cms.EDProducer("GenParticlePruner",
 #                                                                 )
 #                                            )
 
-process.gravitons = cms.EDProducer("PdgIdAndStatusCandViewSelector",
+process.gravitons = cms.EDFilter("PdgIdAndStatusCandViewSelector",
                                    src = cms.InputTag("prunedGenParticles"),
                                    pdgId = cms.vint32( gravPdgId ),
                                    status = cms.vint32(3)
                                    )
-process.Zbosons = cms.EDProducer("PdgIdCandViewSelector",
+process.Zbosons = cms.EDFilter("PdgIdCandViewSelector",
                                  src = cms.InputTag("prunedGenParticles"),
                                  pdgId = cms.vint32( 23 )
                                  )
 
 process.eventCounter = cms.EDAnalyzer("EventCounter")
 
-process.sortedJets = cms.EDProducer("LargestEtGenJetSelector",
-                                    src = cms.InputTag("sisCone7GenJets"),
-                                    maxNumber = cms.uint32(1)
-                                    )
+process.sortedJets = cms.EDFilter("LargestEtGenJetSelector",
+                                  src = cms.InputTag("ak7GenJets"),
+                                  maxNumber = cms.uint32(1)
+                                  )
 
 process.TFileService = cms.Service("TFileService",
-                                   fileName = cms.string("validation_pythia"+myMass+".root")
+                                   fileName = cms.string("validation_pythia"+tag+".root")
                                    )
 
 from RSGraviton.RSAnalyzer.Zhistos_cff import histograms as Zhistos
@@ -131,10 +132,10 @@ process.p = cms.Path(#process.goodDecays +
 #                     process.genParticles +
 #                     process.doThings +                  
 #                     process.eventCounter +                 
-#                     process.prunedGenParticles +
+                     process.prunedGenParticles +
 #                     process.printList )#+ 
-                      process.printDecay )
-#    (process.gravitons + process.Zbosons + process.sortedJets) +
-#    (process.plotGraviton + process.plotZBosons + process.plotJets) +
+#                      process.printDecay )
+    (process.gravitons + process.Zbosons + process.sortedJets) +
+    (process.plotGraviton + process.plotZBosons + process.plotJets) +
 #    process.printList)
-#    process.analyzer)
+    process.analyzer)
