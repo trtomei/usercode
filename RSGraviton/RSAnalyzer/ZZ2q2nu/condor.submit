@@ -1,0 +1,76 @@
+executable           = script.sh
+transfer_executable  = true
+universe             = grid
+grid_resource        = gt2 osg-ce.sprace.org.br/jobmanager-condor
+log                  = resultado.log
+output               = resultado.out
+error                = resultado.error
+should_transfer_files   = YES 
+transfer_output_files = output.root
+when_to_transfer_output = ON_EXIT
+
+
+arguments            = input W0j numEvents 1000000
+initialdir           = /home/trtomei/tmp/condor/Run1/W0j
+queue
+
+arguments            = input W1j_0to100 numEvents 1000000
+initialdir           = /home/trtomei/tmp/condor/Run1/W1j_0to100
+queue
+
+arguments            = input W2j_0to100 numEvents 1000000
+initialdir           = /home/trtomei/tmp/condor/Run1/W2j_0to100
+queue
+
+arguments            = input W3j_0to100 numEvents 1000000
+initialdir           = /home/trtomei/tmp/condor/Run1/W3j_0to100
+queue
+
+arguments            = input W4j_0to100 numEvents 1000000
+initialdir           = /home/trtomei/tmp/condor/Run1/W4j_0to100
+queue
+
+arguments            = input W5j_0to100 numEvents 1000000
+initialdir           = /home/trtomei/tmp/condor/Run1/W5j_0to100
+queue
+
+arguments            = input W1j_100to300 numEvents 1000000
+initialdir           = /home/trtomei/tmp/condor/Run1/W1j_100to300
+queue
+
+arguments            = input W2j_100to300 numEvents 1000000
+initialdir           = /home/trtomei/tmp/condor/Run1/W2j_100to300
+queue
+
+arguments            = input W3j_100to300 numEvents 1000000
+initialdir           = /home/trtomei/tmp/condor/Run1/W3j_100to300
+queue
+
+arguments            = input W4j_100to300 numEvents 1000000
+initialdir           = /home/trtomei/tmp/condor/Run1/W4j_100to300
+queue
+
+arguments            = input W5j_100to300 numEvents 1000000
+initialdir           = /home/trtomei/tmp/condor/Run1/W5j_100to300
+queue
+
+arguments            = input W1j_300to800 numEvents 1000000
+initialdir           = /home/trtomei/tmp/condor/Run1/W1j_300to800
+queue
+
+arguments            = input W2j_300to800 numEvents 1000000
+initialdir           = /home/trtomei/tmp/condor/Run1/W2j_300to800
+queue
+
+arguments            = input W3j_300to800 numEvents 1000000
+initialdir           = /home/trtomei/tmp/condor/Run1/W3j_300to800
+queue
+
+arguments            = input W4j_300to800 numEvents 1000000
+initialdir           = /home/trtomei/tmp/condor/Run1/W4j_300to800
+queue
+
+arguments            = input W5j_300to800 numEvents 1000000
+initialdir           = /home/trtomei/tmp/condor/Run1/W5j_300to800
+queue
+

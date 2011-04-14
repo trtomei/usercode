@@ -1,0 +1,12 @@
+executable           = setupCMSSW.sh
+transfer_executable  = true
+universe             = grid
+grid_resource        = gt2 osg-ce.sprace.org.br/jobmanager-condor
+log                  = resultado.log
+output               = resultado.out
+error                = resultado.error
+should_transfer_files   = YES 
+transfer_input_files = RSGraviton.tar.gz
+when_to_transfer_output = ON_EXIT
+
+queue 

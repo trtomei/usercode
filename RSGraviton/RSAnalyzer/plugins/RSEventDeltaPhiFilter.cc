@@ -84,12 +84,8 @@ RSEventDeltaPhiFilter::filter(edm::Event& iEvent, const edm::EventSetup& iSetup)
     double phiJet1 = ((*jetsHandle)[0]).phi();
     double phiJet2 = ((*jetsHandle)[1]).phi();
     double diffPhi = deltaPhi(phiJet1,phiJet2);
-    double cValue = cos(diffPhi);
-    double value = acos(cValue);
-
-    std::cout << "Value is " << value << std::endl;
-    std::cout << "cos(value) is " << cValue << std::endl;
-    if(value < maxValue_)
+   
+    if(diffPhi < maxValue_)
       accepted = true;
   }
   
