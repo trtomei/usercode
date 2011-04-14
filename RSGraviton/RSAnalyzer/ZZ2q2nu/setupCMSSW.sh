@@ -12,7 +12,7 @@ ls -lh
 echo "Go to our directory"
 # Here we have to go to our particular directory. It depends on who you are and
 # to which username you're mapped.
-#cd /home/OSG/uscms062
+cd /home/OSG/uscms062
 echo "Trying to setup CMSSW"
 source $OSG_APP/cmssoft/cms/cmsset_default.sh
 ls -lh

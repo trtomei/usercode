@@ -9,4 +9,5 @@ should_transfer_files   = YES
 transfer_input_files = RSGraviton.tar.gz
 when_to_transfer_output = ON_EXIT
 
+arguments = CMSSW_X_Y_Z_version
 queue 
