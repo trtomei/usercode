@@ -16,6 +16,7 @@ cd /home/OSG/uscms062
 echo "Trying to setup CMSSW"
 source $OSG_APP/cmssoft/cms/cmsset_default.sh
 ls -lh
+rm -rf CMSSW_*
 scramv1 project CMSSW $1
 cd $1/src
 eval `scramv1 runtime -sh`

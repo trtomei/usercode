@@ -31,6 +31,8 @@ process.load('FWCore.MessageService.MessageLogger_cfi')
 process.load("Configuration.StandardSequences.Geometry_cff")
 process.load("Configuration.StandardSequences.MagneticField_cff")
 process.load('Configuration.StandardSequences.Services_cff')
+process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
+process.GlobalTag.globaltag = 'MC_38Y_V14::All'    ##  (according to https://twiki.cern.ch/twiki/bin/view/CMS/SWGuideFrontierConditions)
 
 # Other statements
 myOptions = sys.argv
@@ -49,14 +51,13 @@ if 'numEvents' in myOptions:
 else:
     setupNumEvents = -1
     
-
 readFiles = cms.untracked.vstring()
 secFiles = cms.untracked.vstring()
-process.source = cms.Source ("PoolSource",fileNames = readFiles, secondaryFileNames = secFiles)
-#readFiles.extend(['file:pattuple_'+setupFileName+'.root',])
-#readFiles.extend(["file:/home/trtomei/hdacs/CMSSW_3_9_9/src/GeneratorInterface/AlpgenInterface/test/pattuple_"+setupFileName+".root",])
-readFiles.extend(["file:/home/trtomei/hdacs/CMSSW_3_9_9/src/RSGraviton/RSAnalyzer/analysis_Winter2011/pattuple_"+setupFileName+".root",])
-#process.load("RSGraviton.RSAnalyzer.Fall10."+setupFileName+"_cff")
+process.load("RSGraviton.RSAnalyzer.Fall10.RSToZZToNuNuJJ_"+setupFileName+"_cff")
+#process.source = cms.Source ("PoolSource",fileNames = readFiles, secondaryFileNames = secFiles)
+#readFiles.extend(["file:tempEDMfile.root",])
+
+process.MessageLogger.cerr.FwkReport.reportEvery = 100
 
 process.options = cms.untracked.PSet(
     wantSummary = cms.untracked.bool(True)
@@ -71,25 +72,60 @@ process.TFileService = cms.Service("TFileService",
                                    fileName = cms.string('output_'+setupFileName+setupSuffix+'.root')
 )
 
-process.MessageLogger.cerr.FwkReport.reportEvery = 100
+# Configure PAT to use PF2PAT instead of AOD sources
+# this function will modify the PAT sequences. It is currently 
+# not possible to run PF2PAT+PAT and standard PAT at the same time
+process.load("PhysicsTools.PatAlgos.patSequences_cff")
+from PhysicsTools.PatAlgos.patEventContent_cff import patEventContent
 
-from RSGraviton.RSAnalyzer.basicjethistos_cff import histograms as basicjethistos
-from RSGraviton.RSAnalyzer.jethistos_cff import histograms as jethistos
-from RSGraviton.RSAnalyzer.METhistos_cff import histograms as METhistos
+process.out = cms.OutputModule("PoolOutputModule",
+                               fileName = cms.untracked.string('temp_pattuple.root'),
+                               # save only events passing the full path
+                               # save PAT Layer 1 output; you need a '*' to
+                               # unpack the list of commands 'patEventContent'
+                               outputCommands = cms.untracked.vstring('drop *', *patEventContent )
+                               )
 
-##################
-# The global tag #
-##################
-# Not needed I think, already used in PAT
-#process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
-#process.GlobalTag.globaltag = 'GR_R_39X_V5::All' # 3_9_X RECO
-#process.GlobalTag.globaltag = 'GR_R_38X_V15::All ' # 3_8_X RECO
+from PhysicsTools.PatAlgos.tools.pfTools import *
+from PhysicsTools.PatAlgos.tools.coreTools import *
 
-# Counting - important
-# Gives 18 histograms - One to nine, alpha to iota
-# that can be used to count how many events remain
-# at each step of the analysis
-process.load("RSGraviton.RSAnalyzer.eventCounters_cfi")
+postfix = "PFlow"
+jetAlgo="AK7"
+usePF2PAT(process,runPF2PAT=True, jetAlgo=jetAlgo, runOnMC=True, postfix=postfix) 
+
+# top projections in PF2PAT:
+process.pfNoPileUpPFlow.enable = True 
+process.pfNoMuonPFlow.enable = False 
+process.pfNoElectronPFlow.enable = True 
+process.pfNoTauPFlow.enable = True 
+process.pfNoJetPFlow.enable = True 
+process.pfNoMuon.verbose = True
+
+### Preselection cuts
+process.primaryVertexFilter = cms.EDFilter("GoodVertexFilter",
+                                           vertexCollection = cms.InputTag('offlinePrimaryVertices'),
+                                           minimumNDOF = cms.uint32(4) ,
+                                           maxAbsZ = cms.double(24),
+                                           maxd0 = cms.double(2)
+                                           )
+
+process.noscraping = cms.EDFilter("FilterOutScraping",
+                                  applyfilter = cms.untracked.bool(True),
+                                  debugOn = cms.untracked.bool(False),
+                                  numtrack = cms.untracked.uint32(10),
+                                  thresh = cms.untracked.double(0.25)
+                                  )
+
+process.load('CommonTools/RecoAlgos/HBHENoiseFilter_cfi')
+
+process.preselection = cms.Sequence(process.primaryVertexFilter + process.noscraping + process.HBHENoiseFilter)
+
+process.cutOnJet = cms.EDFilter("CandViewSelector",
+                                src = cms.InputTag("cleanPatJetsPFlow"),
+                                cut = cms.string("(pt > 110.0) && (abs(eta) < 2.4)"),
+                                minNumber = cms.int32(1),
+                                filter = cms.bool(True)
+                                )
 
 ############
 # Cleaning #
@@ -106,6 +142,16 @@ process.load("RSGraviton.RSAnalyzer.pfJetId_cfi")
 ######################
 # Jet Kinematic cuts #
 ######################
+
+process.jetScaler = cms.EDProducer("RSDistortedJetsProducer",
+                                   src = cms.InputTag("jetIdCut"),
+                                   calibrationChanges = cms.double(0.015),
+                                   ePU = cms.double(0.75),
+                                   JA = cms.double(1.6),
+                                   AvgPu = cms.double(2.2),
+                                   Constant = cms.double(1.0),
+                                   upScale = cms.bool(True)
+                                   )
 
 ### For Path 1 - FAT jet from Z + MET
 process.oneJetAboveZero = cms.EDFilter("CandViewSelector",
@@ -223,108 +269,27 @@ process.muonMETCut = cms.Sequence(process.wmnCands + process.wmnCut)
 #########
 # PLOTS #
 #########
-process.plotMET = cms.EDAnalyzer("CandViewHistoAnalyzer",
-                                 src = cms.InputTag("patMETsPFlow"),
-                                 histograms = METhistos
-                                 )
-
-process.plotMETControl = process.plotMET.clone(src = cms.InputTag("wmnCands"))
-process.plotMETPreselection = process.plotMET.clone()
-process.plotMETAfterMassCut = process.plotMET.clone()
-process.plotMETControlAfterMassCut = process.plotMETControl.clone()
-
-process.plotJetsGeneral = cms.EDAnalyzer("CandViewHistoAnalyzer",
-                                         src = cms.InputTag("getHardJets"),
-                                         histograms = basicjethistos
-                                         )
-process.plotJetsGeneralControl = process.plotJetsGeneral.clone()
-process.plotJetsGeneralPreselection = process.plotJetsGeneral.clone()
-process.plotJetsGeneralAfterMassCut = process.plotJetsGeneral.clone()
-process.plotJetsGeneralControlAfterMassCut = process.plotJetsGeneral.clone()
-
-process.WtransverseMass = cms.EDAnalyzer("TransverseMassAnalyzer",
-                                         objectOne = cms.InputTag("patMETsPFlow"),
-                                         objectTwo = cms.InputTag("leadingMuon"),
-                                         xmin = cms.double(0.0),
-                                         xmax = cms.double(200.0),
-                                         nbins = cms.int32(20)
-                                         )
-
-process.gravtransverseMass = cms.EDAnalyzer("TransverseMassAnalyzer",
-                                            objectOne = cms.InputTag("patMETsPFlow"),
-                                            objectTwo = cms.InputTag("getLargestJet"),
-                                            xmin = cms.double(0.0),
-                                            xmax = cms.double(2000.0),
-                                            nbins = cms.int32(200)
-                                            )
-
-process.gravtransverseMassControl = cms.EDAnalyzer("TransverseMassAnalyzer",
-                                                   objectOne = cms.InputTag("wmnCands"),
-                                                   objectTwo = cms.InputTag("getLargestJet"),
-                                                   xmin = cms.double(0.0),
-                                                   xmax = cms.double(2000.0),
-                                                   nbins = cms.int32(200)
-                                                   )
-
-process.WtransverseMassAfterMassCut = process.WtransverseMass.clone()
-process.gravtransverseMassAfterMassCut = process.gravtransverseMass.clone()
-process.gravtransverseMassControlAfterMassCut = process.gravtransverseMassControl.clone()
 
 #########
 # PATHS #
 #########
-process.analysisSearchSequence = cms.Sequence(process.eventCounterOne + 
-                                              process.cleanPatCandidatesPFlow +
-                                              process.jetIdCut +
+process.analysisSearchSequence = cms.Sequence(process.jetIdCut +
+#                                              process.jetScaler +
                                               process.jetCuts +
-                                              process.eventCounterTwo + 
                                               process.METCut +
-                                              process.eventCounterThree + 
                                               ~process.anyElectrons +
                                               ~process.anyMuons +
-                                              process.eventCounterFour + 
                                               process.TIVCut +
-                                              process.eventCounterFive + 
                                               process.differentPtCut +
                                               process.getHardJets +
-                                              process.eventCounterSix + 
                                               process.multiJetCut +
-                                              process.eventCounterSeven + 
                                               process.angularCut + 
-                                              process.eventCounterEight +
-                                              process.gravtransverseMass +
-                                              process.plotJetsGeneral +
-                                              process.plotMET +
-                                              process.jetMassCut +
-                                              process.gravtransverseMassAfterMassCut +
-                                              process.eventCounterNine)
+                                              process.jetMassCut
+                                              )
 
-process.analysisControlSequence = cms.Sequence(process.eventCounterAlpha +
-                                               process.cleanPatCandidatesPFlow +
-                                               process.muonSequence +
-                                               process.eventCounterBeta + 
-                                               process.jetIdCut +
-                                               process.jetCuts +
-                                               process.eventCounterGamma + 
-                                               process.muonMETCut +
-                                               process.eventCounterDelta + 
-                                               process.TIVStarCut +
-                                               process.eventCounterEpsilon + 
-                                               process.differentPtCut +
-                                               process.getHardJets +
-                                               process.eventCounterZeta + 
-                                               process.multiJetCut +
-                                               process.eventCounterEta + 
-                                               process.angularCut +
-                                               process.eventCounterTheta +
-                                               process.WtransverseMass + 
-                                               process.gravtransverseMassControl +
-                                               process.plotJetsGeneralControl +
-                                               process.plotMETControl + 
-                                               process.jetMassCut +
-                                               process.WtransverseMassAfterMassCut +
-                                               process.gravtransverseMassControlAfterMassCut + 
-                                               process.eventCounterIota)
 
-process.pSearch = cms.Path(process.analysisSearchSequence + process.plotMETAfterMassCut + process.plotJetsGeneralAfterMassCut)
-process.pControl = cms.Path(process.analysisControlSequence + process.plotMETControlAfterMassCut + process.plotJetsGeneralControlAfterMassCut)
+process.pSearch = cms.Path(process.preselection + 
+                           getattr(process,"patPF2PATSequence"+postfix) +
+                           process.cleanPatCandidatesPFlow +
+                           process.cutOnJet +
+                           process.analysisSearchSequence)

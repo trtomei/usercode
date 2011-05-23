@@ -21,4 +21,5 @@
   <use name=CommonTools/RecoAlgos>
   <use name=CommonTools/CandUtils>
   <use name=JetMETCorrections/Objects>
+  <use name=CondFormats/JetMETObjects>
 </library>

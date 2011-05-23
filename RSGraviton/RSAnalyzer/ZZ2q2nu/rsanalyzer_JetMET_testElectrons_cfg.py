@@ -186,9 +186,11 @@ process.load("RSGraviton.RSAnalyzer.trackerIndirectVeto_cfi")
 # Cuts on the presence of leptons - to have inverted results in the Path.
 process.anyElectrons = cms.EDFilter("PATElectronSelector",
                                     src = cms.InputTag("cleanPatElectronsPFlow"),
-                                    cut = cms.string(""),
+                                    cut = cms.string(''),
                                     filter = cms.bool(True)
                                     )
+process.goodElectrons = process.anyElectrons.clone(cut = cms.string("(pt > 10) & (electronID('eidLoose') > 0.5)"))
+
 process.anyMuons = cms.EDFilter("PATMuonSelector",
                                 src = cms.InputTag("cleanPatMuonsPFlow"),
                                 cut = cms.string(""),
@@ -273,7 +275,7 @@ process.gravtransverseMassControlAfterMassCut = process.gravtransverseMassContro
 #########
 # PATHS #
 #########
-process.analysisSearchSequence = cms.Sequence(process.eventCounterOne + 
+process.analysisStandardSequence = cms.Sequence(process.eventCounterOne + 
                                               process.cleanPatCandidatesPFlow +
                                               process.jetIdCut +
                                               process.jetCuts +
@@ -299,32 +301,37 @@ process.analysisSearchSequence = cms.Sequence(process.eventCounterOne +
                                               process.gravtransverseMassAfterMassCut +
                                               process.eventCounterNine)
 
-process.analysisControlSequence = cms.Sequence(process.eventCounterAlpha +
-                                               process.cleanPatCandidatesPFlow +
-                                               process.muonSequence +
-                                               process.eventCounterBeta + 
-                                               process.jetIdCut +
-                                               process.jetCuts +
-                                               process.eventCounterGamma + 
-                                               process.muonMETCut +
-                                               process.eventCounterDelta + 
-                                               process.TIVStarCut +
-                                               process.eventCounterEpsilon + 
-                                               process.differentPtCut +
-                                               process.getHardJets +
-                                               process.eventCounterZeta + 
-                                               process.multiJetCut +
-                                               process.eventCounterEta + 
-                                               process.angularCut +
-                                               process.eventCounterTheta +
-                                               process.WtransverseMass + 
-                                               process.gravtransverseMassControl +
-                                               process.plotJetsGeneralControl +
-                                               process.plotMETControl + 
-                                               process.jetMassCut +
-                                               process.WtransverseMassAfterMassCut +
-                                               process.gravtransverseMassControlAfterMassCut + 
-                                               process.eventCounterIota)
+process.analysisElectronIDSequence = cms.Sequence(process.eventCounterOne + 
+                                              process.cleanPatCandidatesPFlow +
+                                              process.jetIdCut +
+                                              process.jetCuts +
+                                              process.eventCounterTwo + 
+                                              process.METCut +
+                                              process.eventCounterThree + 
+                                              ~process.goodElectrons +
+                                              ~process.anyMuons +
+                                              process.eventCounterFour + 
+                                              process.TIVCut +
+                                              process.eventCounterFive + 
+                                              process.differentPtCut +
+                                              process.getHardJets +
+                                              process.eventCounterSix + 
+                                              process.multiJetCut +
+                                              process.eventCounterSeven + 
+                                              process.angularCut + 
+                                              process.eventCounterEight +
+                                              process.gravtransverseMass +
+                                              process.plotJetsGeneral +
+                                              process.plotMET +
+                                              process.jetMassCut +
+                                              process.gravtransverseMassAfterMassCut +
+                                              process.eventCounterNine)
 
-process.pSearch = cms.Path(process.analysisSearchSequence + process.plotMETAfterMassCut + process.plotJetsGeneralAfterMassCut)
-process.pControl = cms.Path(process.analysisControlSequence + process.plotMETControlAfterMassCut + process.plotJetsGeneralControlAfterMassCut)
+process.MCelectron = cms.EDFilter("PdgIdAndStatusCandViewSelector",
+                                  src = cms.InputTag("hardGenParticles"),
+                                  pdgId = cms.vint32( 11 ),
+                                  status = cms.vint32( 3 ),
+                                  filter = cms.bool(True)
+                                  )
+process.p1 = cms.Path(process.analysisStandardSequence)
+process.p2 = cms.Path(process.analysisElectronIDSequence)

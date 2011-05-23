@@ -17,14 +17,14 @@ cd /home/OSG/uscms062
 echo "Trying to setup CMSSW"
 source $OSG_APP/cmssoft/cms/cmsset_default.sh
 ls -lh
-cd CMSSW_3_9_9/src
+cd CMSSW_3_9_9_patch1/src
 pwd
 eval `scramv1 runtime -sh`
 echo $CMSSW_BASE
 which cmsRun
 echo "Go back to our directory"
 cd $ARRIVALDIR
-cp ./rsanalyzer_JetMET_PATsignalAndControlTogether_cfg.py ./CMSSW.py
+cp ./*.py ./CMSSW.py
 cmsRun CMSSW.py $1 $2 $3 $4
 ls -lh
 echo "Normalizing output name"

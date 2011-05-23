@@ -6,7 +6,7 @@ log                  = resultado.log
 output               = resultado.out
 error                = resultado.error
 should_transfer_files   = YES 
-transfer_input_files = rsanalyzer_JetMET_PATsignalAndControlTogether_cfg.py
+transfer_input_files = rsanalyzer_JetMET_PATtreeDumper_cfg.py
 transfer_output_files = output.root
 when_to_transfer_output = ON_EXIT
 
