@@ -15,17 +15,18 @@ ls -lh
 echo "Go to our directory"
 cd /home/OSG/uscms062
 echo "Trying to setup CMSSW"
+export SCRAM_ARCH=slc5_amd64_gcc434
 source $OSG_APP/cmssoft/cms/cmsset_default.sh
 ls -lh
-cd CMSSW_3_9_9_patch1/src
+cd CMSSW_4_2_3_patch2/src
 pwd
 eval `scramv1 runtime -sh`
 echo $CMSSW_BASE
 which cmsRun
 echo "Go back to our directory"
 cd $ARRIVALDIR
-cp ./*.py ./CMSSW.py
-cmsRun CMSSW.py $1 $2 $3 $4
+cp ./*.py ./localCMSSW.py
+cmsRun localCMSSW.py $1 $2 $3 $4
 ls -lh
 echo "Normalizing output name"
 mv *.root output.root

@@ -49,14 +49,27 @@ if 'numEvents' in myOptions:
 else:
     setupNumEvents = -1
     
-cms.tracer = cms.Service("Tracer")
 
 readFiles = cms.untracked.vstring()
 secFiles = cms.untracked.vstring()
 process.source = cms.Source ("PoolSource",fileNames = readFiles, secondaryFileNames = secFiles)
 #readFiles.extend(['file:pattuple_'+setupFileName+'.root',])
-readFiles.extend(["file:/home/trtomei/hdacs/CMSSW_3_9_9/src/RSGraviton/RSAnalyzer/analysis_Winter2011/pattuple_"+setupFileName+".root",])
-#setupFileName='VVJets'
+#readFiles.extend(["file:/home/trtomei/hdacs/CMSSW_3_9_9/src/GeneratorInterface/AlpgenInterface/test/pattuple_"+setupFileName+".root",])
+#readFiles.extend(["file:/home/trtomei/hdacs/CMSSW_3_9_9/src/RSGraviton/RSAnalyzer/analysis_Winter2011/pattuple_"+setupFileName+".root",])
+readFiles.extend(["file:condor_dataPattuples_2011May10ReReco_0/output.root",
+                  "file:condor_dataPattuples_2011May10ReReco_1/output.root",
+                  "file:condor_dataPattuples_2011May10ReReco_10/output.root",
+                  "file:condor_dataPattuples_2011May10ReReco_11/output.root",
+                  "file:condor_dataPattuples_2011May10ReReco_12/output.root",
+                  "file:condor_dataPattuples_2011May10ReReco_2/output.root",
+                  "file:condor_dataPattuples_2011May10ReReco_3/output.root",
+                  "file:condor_dataPattuples_2011May10ReReco_4/output.root",
+                  "file:condor_dataPattuples_2011May10ReReco_5/output.root",
+                  "file:condor_dataPattuples_2011May10ReReco_6/output.root",
+                  "file:condor_dataPattuples_2011May10ReReco_7/output.root",
+                  "file:condor_dataPattuples_2011May10ReReco_8/output.root",
+                  "file:condor_dataPattuples_2011May10ReReco_9/output.root",
+                  ])                  
 #process.load("RSGraviton.RSAnalyzer.Fall10."+setupFileName+"_cff")
 
 process.options = cms.untracked.PSet(
@@ -92,17 +105,15 @@ from RSGraviton.RSAnalyzer.METhistos_cff import histograms as METhistos
 # at each step of the analysis
 process.load("RSGraviton.RSAnalyzer.eventCounters_cfi")
 
-############
-# Cleaning #
-############
-# Standard PAT cleaning - clean muons, then electrons, then jet with deltaR = 0.3
-process.load("RSGraviton.RSAnalyzer.patCleaning_cfi")
-
 ##########
 # Jet ID #
 ##########
 # This selector selects PAT jets with loose jet ID thresholds.
-process.load("RSGraviton.RSAnalyzer.pfJetId_cfi")
+from PhysicsTools.SelectorUtils.pfJetIDSelector_cfi import pfJetIDSelector
+process.jetIdCut = cms.EDFilter("PFJetIDSelectionFunctorFilter",
+                                filterParams = pfJetIDSelector.clone(),
+                                src = cms.InputTag("cleanPatJetsPFlow")
+                                )
 
 #######
 # TIV #
@@ -115,6 +126,7 @@ process.TIVStarCut = process.TIVCut.clone(excludeTracks = cms.bool(True),tracksT
 # Muons #
 #########
 process.load("RSGraviton.RSAnalyzer.muonSequence_cfi")
+process.VBTFmuons.src = "cleanPatMuonsPFlow"
 
 ######################
 # Jet Kinematic cuts #
@@ -124,7 +136,7 @@ process.differentPtCut = cms.EDFilter("CandViewSelector",
                                       src = cms.InputTag("jetIdCut"),
                                       cut = cms.string("(pt > "+str(setupSmallJetPtCut)+") && (abs(eta) < "+str(setupJetEtaCut)+")"),
                                       minNumber = cms.int32(1),
-                                      filter = cms.bool(True)
+                                      filter = cms.bool(False)
                                       )
 
 process.getHardJets = cms.EDFilter("LargestPtCandViewSelector",
@@ -144,14 +156,13 @@ process.treeDumper = cms.EDAnalyzer("ZZ2q2nuTreeMaker",
                                     VBTFmuon = cms.InputTag("VBTFmuons"),
                                     TIV = cms.InputTag("TIVCut"),
                                     TIVStar = cms.InputTag("TIVStarCut"),
-                                    isData = cms.bool(False),
+                                    isData = cms.bool(True),
                                     weight = cms.double(1.0)
                                     )
 #########
 # PATHS #
 #########
-process.p = cms.Path(process.cleanPatCandidatesPFlow +
-                     process.jetIdCut + 
+process.p = cms.Path(process.jetIdCut + 
                      process.differentPtCut +
                      process.getHardJets +
                      process.muonSequence + 

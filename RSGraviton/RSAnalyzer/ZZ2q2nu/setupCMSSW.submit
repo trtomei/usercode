@@ -6,8 +6,8 @@ log                  = resultado.log
 output               = resultado.out
 error                = resultado.error
 should_transfer_files   = YES 
-transfer_input_files = RSGraviton.tar.gz
+transfer_input_files = Summer11.tar.gz
 when_to_transfer_output = ON_EXIT
 
-arguments = CMSSW_3_9_9_patch1
+arguments = CMSSW_4_2_3_patch2
 queue

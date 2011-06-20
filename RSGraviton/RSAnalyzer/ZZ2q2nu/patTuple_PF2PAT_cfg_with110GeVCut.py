@@ -1,6 +1,7 @@
 ## import skeleton process
 from PhysicsTools.PatAlgos.patTemplate_cfg import *
 
+import sys
 # the source is already defined in patTemplate_cfg.
 # overriding source and various other things
 #process.load("PhysicsTools.PFCandProducer.Sources.source_ZtoEles_DBS_312_cfi")
@@ -8,21 +9,29 @@ from PhysicsTools.PatAlgos.patTemplate_cfg import *
 #     fileNames = cms.untracked.vstring('file:myAOD.root')
 #)
 
+# Some command line options
+myOptions = sys.argv
+skipEvents = 0
+numEvents = -1
+if 'skipEvents' in myOptions:
+    skipEvents = int(myOptions[myOptions.index('skipEvents')+1])
+if 'numEvents' in myOptions:
+    numEvents = int(myOptions[myOptions.index('numEvents')+1])
+
 # load the PAT config
 process.load("PhysicsTools.PatAlgos.patSequences_cff")
 
 from PhysicsTools.PatAlgos.cleaningLayer1.cleanPatCandidates_cff import *
 
-process.GlobalTag.globaltag = 'MC_38Y_V14::All'    ##  (according to https://twiki.cern.ch/twiki/bin/view/CMS/SWGuideFrontierConditions)
+process.GlobalTag.globaltag = 'GR_R_42_V14::All' ##  (according to https://twiki.cern.ch/twiki/bin/view/CMS/SWGuideFrontierConditions)
  
-#process.source.fileNames = [
-#    '/store/mc/Fall10/ZinvisibleJets_7TeV-madgraph/AODSIM/START38_V12-v1/0018/DE73F5C5-A1F1-DF11-B616-D8D385AE85A6.root',
-#    ]   
-massString = "m1250"
-process.load("RSGraviton.RSAnalyzer.Fall10.RSToZZToNuNuJJ_"+massString+"_cff")
-process.maxEvents.input = 1000         ##  (e.g. -1 to run on all events)
+#process.load("RSGraviton.RSAnalyzer.Summer11.METBTag_Run2011A_May10ReReco")
+#process.load("RSGraviton.RSAnalyzer.Summer11.MET_Run2011A_PromptReco_2011Jun06")
+process.load("RSGraviton.RSAnalyzer.Summer11.MET_Run2011A_PromptReco_2011Jun13")
+process.maxEvents.input = numEvents         ##  (e.g. -1 to run on all events)
+process.source.skipEvents=cms.untracked.uint32(skipEvents)
 
-process.MessageLogger.cerr.FwkReport.reportEvery = 10
+process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 
 # Configure PAT to use PF2PAT instead of AOD sources
 # this function will modify the PAT sequences. It is currently 
@@ -32,8 +41,16 @@ from PhysicsTools.PatAlgos.tools.coreTools import *
 
 postfix = "PFlow"
 jetAlgo="AK7"
-usePF2PAT(process,runPF2PAT=True, jetAlgo=jetAlgo, runOnMC=True, postfix=postfix) 
+usePF2PAT(process,runPF2PAT=True, jetAlgo=jetAlgo, runOnMC=False, postfix=postfix) 
 
+# A small fix to run while there are no L2L3residuals for 4_2_x
+if 'L2L3Residual' in getattr(process,'patJetCorrFactors' + postfix).levels:
+    getattr(process,'patJetCorrFactors' + postfix).levels.remove('L2L3Residual')
+# And for whatever reason... it was using L1Offset.
+# Move to L1Fastjet
+if 'L1Offset' in getattr(process,'patJetCorrFactors' + postfix).levels:
+    getattr(process,'patJetCorrFactors' + postfix).levels[0] = 'L1FastJet'
+    
 # to run second PF2PAT+PAT with differnt postfix uncomment the following lines
 # and add it to path
 #postfix2 = "PFlow2"
@@ -127,20 +144,41 @@ process.cleanPatCandidatesPFlow = cms.Sequence(
 
 # top projections in PF2PAT:
 process.pfNoPileUpPFlow.enable = True 
-process.pfNoMuonPFlow.enable = False 
+process.pfPileUpPFlow.Vertices = 'goodOfflinePrimaryVertices'
+process.pfPileUpPFlow.checkClosestZVertex = cms.bool(False)
+process.pfNoMuonPFlow.enable = True 
 process.pfNoElectronPFlow.enable = True 
-process.pfNoTauPFlow.enable = True 
 process.pfNoJetPFlow.enable = True 
+process.pfNoTauPFlow.enable = True
 
-process.pfNoMuon.verbose = True
+# Preparing Charged Hadron Subtraction
+process.pfJetsPFlow.doAreaFastjet = True
+process.pfJetsPFlow.doRhoFastjet = False
+process.patJetCorrFactorsPFlow.rho = cms.InputTag("kt6PFJetsPFlow", "rho")
+
+# Have to do this to get the Voronoi areas
+from RecoJets.JetProducers.kt4PFJets_cfi import kt4PFJets
+process.kt6PFJetsPFlow = kt4PFJets.clone(
+        rParam = cms.double(0.6),
+        src = cms.InputTag('pfNoElectron'+postfix),
+        doAreaFastjet = cms.bool(True),
+        doRhoFastjet = cms.bool(True),
+        voronoiRfact = cms.double(0.9)
+        )
 
 ### Preselection cuts
-process.primaryVertexFilter = cms.EDFilter("GoodVertexFilter",
-                                           vertexCollection = cms.InputTag('offlinePrimaryVertices'),
-                                           minimumNDOF = cms.uint32(4) ,
-                                           maxAbsZ = cms.double(24),
-                                           maxd0 = cms.double(2)
-                                           )
+#process.primaryVertexFilter = cms.EDFilter("GoodVertexFilter",
+#                                           vertexCollection = cms.InputTag('offlinePrimaryVertices'),
+#                                           minimumNDOF = cms.uint32(4) ,
+#                                           maxAbsZ = cms.double(24),
+#                                           maxd0 = cms.double(2)
+#                                           )
+# In 42X, the good vertices are the DAF (deterministic annealing filter) vertices
+from PhysicsTools.SelectorUtils.pvSelector_cfi import pvSelector
+process.goodOfflinePrimaryVertices = cms.EDFilter("PrimaryVertexObjectFilter",
+                                                  filterParams = pvSelector.clone( minNdof = cms.double(7.0), maxZ = cms.double(24.0) ),
+                                                  src=cms.InputTag('offlinePrimaryVertices')
+                                                  )
 
 process.noscraping = cms.EDFilter("FilterOutScraping",
                                   applyfilter = cms.untracked.bool(True),
@@ -150,11 +188,26 @@ process.noscraping = cms.EDFilter("FilterOutScraping",
                                   )
 
 process.load('CommonTools/RecoAlgos/HBHENoiseFilter_cfi')
+# New recommendations for 50 ns bunch spacing
+process.HBHENoiseFilter.minIsolatedNoiseSumE = cms.double(999999.)
+process.HBHENoiseFilter.minNumIsolatedNoiseChannels = cms.int32(999999)
+process.HBHENoiseFilter.minIsolatedNoiseSumEt = cms.double(999999.)
 
-process.preselection = cms.Sequence(process.primaryVertexFilter + process.noscraping + process.HBHENoiseFilter)
+process.vertexCounter = cms.EDFilter("RSPrimaryVertexCounter",
+                                     vertexCollection = cms.InputTag("goodOfflinePrimaryVertices"),
+                                     minimumNDOF = cms.uint32(0),
+                                     maxAbsZ = cms.double(999999.),
+                                     maxd0 = cms.double(999999.),
+                                     minNumberOfVertices = cms.int32(7),
+                                     maxNumberOfVertices = cms.int32(9999)
+                                     )
+                                     
+# Also Beam Halo
+process.load('RecoMET/METAnalyzers/CSCHaloFilter_cfi')
+
+process.preselection = cms.Sequence(process.goodOfflinePrimaryVertices + process.vertexCounter + process.noscraping + process.HBHENoiseFilter + process.CSCTightHaloFilter)
 
 ### Cut to make small
-
 process.cutOnJet = cms.EDFilter("CandViewSelector",
                                 src = cms.InputTag("cleanPatJetsPFlow"),
                                 cut = cms.string("(pt > 110.0) && (abs(eta) < 2.4)"),
@@ -162,27 +215,35 @@ process.cutOnJet = cms.EDFilter("CandViewSelector",
                                 filter = cms.bool(True)
                                 )
 
+# insert those kt6PFJets there, just after pfNoElectron
+getattr(process,"patPF2PATSequence"+postfix).replace(
+    getattr(process,"pfNoElectron"+postfix), getattr(process,"pfNoElectron"+postfix)*process.kt6PFJetsPFlow
+    )
+
 # Let it run
 process.p = cms.Path(
 #    process.patDefaultSequence  +
     process.preselection + 
     getattr(process,"patPF2PATSequence"+postfix) +
     process.cleanPatCandidatesPFlow +
-    process.hardGenParticles +
+#    process.hardGenParticles +
     process.cutOnJet
 )
 
 # Add PF2PAT output to the created file
 from PhysicsTools.PatAlgos.patEventContent_cff import patEventContentNoCleaning
-process.load("PhysicsTools.PFCandProducer.PF2PAT_EventContent_cff")
+process.load("CommonTools.ParticleFlow.PF2PAT_EventContent_cff")
 
 process.out.outputCommands = cms.untracked.vstring('drop *',
-                                                   'keep *_hardGenParticles_*_*',
+#                                                   'keep *_hardGenParticles_*_*',
+                                                   'keep *_TriggerResults_*_*',
                                                    'keep recoPFCandidates_particleFlow_*_*',
-                                                   'keep cleanPatMuonsPFlow_*_*_*',
-                                                   'keep cleanPatElectronsPFlow_*_*_*',
-                                                   'keep cleanPatJetsPFlow_*_*_*' ,
+                                                   'keep *_cleanPatMuonsPFlow_*_*',
+                                                   'keep *_cleanPatElectronsPFlow_*_*',
+                                                   'keep *_cleanPatJetsPFlow_*_*' ,
                                                    'keep recoTracks_generalTracks_*_*',
-                                                   *patEventContentNoCleaning ) 
+                                                   'keep *_selectedPatPFParticlesPFlow_*_*',
+                                                   'keep *_patMETsPFlow_*_*') 
 
-process.out.fileName = cms.untracked.string("pattuple_signal_"+massString+".root")
+name = "pattuple_PV"+str(process.vertexCounter.minNumberOfVertices)+"to"+str(process.vertexCounter.maxNumberOfVertices)+".root"
+process.out.fileName = cms.untracked.string(name)

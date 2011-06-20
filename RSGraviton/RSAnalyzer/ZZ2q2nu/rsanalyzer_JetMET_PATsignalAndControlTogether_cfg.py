@@ -55,7 +55,21 @@ secFiles = cms.untracked.vstring()
 process.source = cms.Source ("PoolSource",fileNames = readFiles, secondaryFileNames = secFiles)
 #readFiles.extend(['file:pattuple_'+setupFileName+'.root',])
 #readFiles.extend(["file:/home/trtomei/hdacs/CMSSW_3_9_9/src/GeneratorInterface/AlpgenInterface/test/pattuple_"+setupFileName+".root",])
-readFiles.extend(["file:/home/trtomei/hdacs/CMSSW_3_9_9/src/RSGraviton/RSAnalyzer/analysis_Winter2011/pattuple_"+setupFileName+".root",])
+#readFiles.extend(["file:/home/trtomei/hdacs/CMSSW_3_9_9/src/RSGraviton/RSAnalyzer/analysis_Winter2011/pattuple_"+setupFileName+".root",])
+readFiles.extend([#"file:condor_dataPattuples_0/output.root",
+                  "file:condor_dataPattuples_try2_0a/output.root",
+                  "file:condor_dataPattuples_try2_0b/output.root",
+                  "file:condor_dataPattuples_1/output.root",
+                  "file:condor_dataPattuples_2/output.root",
+                  "file:condor_dataPattuples_3/output.root",
+                  #"file:condor_dataPattuples_4/output.root",
+                  "file:condor_dataPattuples_try2_4a/output.root",
+                  "file:condor_dataPattuples_try2_4b/output.root",
+                  "file:condor_dataPattuples_try2_5a/output.root",
+                  "file:condor_dataPattuples_try2_5b/output.root",
+                  #"file:condor_dataPattuples_5/output.root",
+                  "file:condor_dataPattuples_6/output.root",
+                  ])                  
 #process.load("RSGraviton.RSAnalyzer.Fall10."+setupFileName+"_cff")
 
 process.options = cms.untracked.PSet(
@@ -91,17 +105,15 @@ from RSGraviton.RSAnalyzer.METhistos_cff import histograms as METhistos
 # at each step of the analysis
 process.load("RSGraviton.RSAnalyzer.eventCounters_cfi")
 
-############
-# Cleaning #
-############
-# Standard PAT cleaning - clean muons, then electrons, then jet with deltaR = 0.3
-process.load("RSGraviton.RSAnalyzer.patCleaning_cfi")
-
 ##########
 # Jet ID #
 ##########
 # This selector selects PAT jets with loose jet ID thresholds.
-process.load("RSGraviton.RSAnalyzer.pfJetId_cfi")
+from PhysicsTools.SelectorUtils.pfJetIDSelector_cfi import pfJetIDSelector
+process.jetIdCut = cms.EDFilter("PFJetIDSelectionFunctorFilter",
+                                filterParams = pfJetIDSelector.clone(),
+                                src = cms.InputTag("cleanPatJetsPFlow")
+                                )
 
 ######################
 # Jet Kinematic cuts #
@@ -199,6 +211,7 @@ process.anyMuons = cms.EDFilter("PATMuonSelector",
 ##################
 # Muon sequence - makes VBTF muons, then the leading muon.
 process.load("RSGraviton.RSAnalyzer.muonSequence_cfi")
+process.VBTFmuons.src = "cleanPatMuonsPFlow"
 
 # TIV cut - veto on isolated tracks.
 # Exempt the muon track!
@@ -274,7 +287,6 @@ process.gravtransverseMassControlAfterMassCut = process.gravtransverseMassContro
 # PATHS #
 #########
 process.analysisSearchSequence = cms.Sequence(process.eventCounterOne + 
-                                              process.cleanPatCandidatesPFlow +
                                               process.jetIdCut +
                                               process.jetCuts +
                                               process.eventCounterTwo + 
@@ -300,7 +312,6 @@ process.analysisSearchSequence = cms.Sequence(process.eventCounterOne +
                                               process.eventCounterNine)
 
 process.analysisControlSequence = cms.Sequence(process.eventCounterAlpha +
-                                               process.cleanPatCandidatesPFlow +
                                                process.muonSequence +
                                                process.eventCounterBeta + 
                                                process.jetIdCut +
