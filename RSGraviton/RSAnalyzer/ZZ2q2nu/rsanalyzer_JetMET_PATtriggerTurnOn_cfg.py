@@ -26,8 +26,30 @@ if 'numEvents' in myOptions:
 else:
     setupNumEvents = -1
 
-
-fileList = cms.untracked.vstring('file:'+setupInputFileName,)
+#fileList = cms.untracked.vstring('file:'+setupInputFileName,)
+fileList = cms.untracked.vstring([
+"file:condor_dataPattuples_2011May10ReReco_triggerStudies_0/output.root",
+"file:condor_dataPattuples_2011May10ReReco_triggerStudies_1/output.root",
+"file:condor_dataPattuples_2011May10ReReco_triggerStudies_10/output.root",
+"file:condor_dataPattuples_2011May10ReReco_triggerStudies_11/output.root",
+"file:condor_dataPattuples_2011May10ReReco_triggerStudies_12/output.root",
+"file:condor_dataPattuples_2011May10ReReco_triggerStudies_13/output.root",
+"file:condor_dataPattuples_2011May10ReReco_triggerStudies_14/output.root",
+"file:condor_dataPattuples_2011May10ReReco_triggerStudies_15/output.root",
+"file:condor_dataPattuples_2011May10ReReco_triggerStudies_16/output.root",
+"file:condor_dataPattuples_2011May10ReReco_triggerStudies_17/output.root",
+"file:condor_dataPattuples_2011May10ReReco_triggerStudies_18/output.root",
+"file:condor_dataPattuples_2011May10ReReco_triggerStudies_19/output.root",
+"file:condor_dataPattuples_2011May10ReReco_triggerStudies_2/output.root",
+"file:condor_dataPattuples_2011May10ReReco_triggerStudies_20/output.root",
+"file:condor_dataPattuples_2011May10ReReco_triggerStudies_3/output.root",
+"file:condor_dataPattuples_2011May10ReReco_triggerStudies_4/output.root",
+"file:condor_dataPattuples_2011May10ReReco_triggerStudies_5/output.root",
+"file:condor_dataPattuples_2011May10ReReco_triggerStudies_6/output.root",
+"file:condor_dataPattuples_2011May10ReReco_triggerStudies_7/output.root",
+"file:condor_dataPattuples_2011May10ReReco_triggerStudies_8/output.root",
+"file:condor_dataPattuples_2011May10ReReco_triggerStudies_9/output.root",
+])
 process.source = cms.Source("PoolSource",fileNames = fileList)
 
 process.maxEvents = cms.untracked.PSet(
@@ -38,7 +60,7 @@ process.options = cms.untracked.PSet(
         wantSummary = cms.untracked.bool(True)
         )
 
-process.MessageLogger.cerr.FwkReport.reportEvery = 100
+process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 
 ### The output
 process.TFileService = cms.Service("TFileService",
@@ -46,19 +68,15 @@ process.TFileService = cms.Service("TFileService",
 )
 
 # Jet
-process.load("RSGraviton.RSAnalyzer.patCleaning_cfi")
-process.load("RSGraviton.RSAnalyzer.pfJetId_cfi")
-
-# MET
-process.oneJetAboveZero = cms.EDFilter("CandViewSelector",
-                                       src = cms.InputTag("jetIdCut"),
-                                       cut = cms.string("pt > -1.0"),
-                                       minNumber = cms.int32(1),
-                                       filter = cms.bool(True)
-                                       )
+process.cutOnJet = cms.EDFilter("CandViewSelector",
+                                src = cms.InputTag("goodPatJetsPFlow"),
+                                cut = cms.string("(pt > 300.0) && (abs(eta) < 2.4)"),
+                                minNumber = cms.int32(1),
+                                filter = cms.bool(True)
+                                )
 
 process.getLargestJet = cms.EDFilter("LargestPtCandViewSelector",
-                                     src = cms.InputTag("oneJetAboveZero"),
+                                     src = cms.InputTag("goodPatJetsPFlow"),
                                      maxNumber = cms.uint32(1)
                                      )
 
@@ -105,7 +123,7 @@ process.plotMETwithTrigger = process.plotMET.clone()
 process.plotJetwithTrigger = process.plotJet.clone()
 
 process.triggerSelection = cms.EDFilter("TriggerResultsFilter",
-                                        triggerConditions = cms.vstring('HLT_MET65_CenJet50U_v*',),
+                                        triggerConditions = cms.vstring('HLT_CentralJet80_MET80_v*',),
                                         hltResults = cms.InputTag( "TriggerResults" , "", "HLT"),
                                         l1tResults = cms.InputTag( "" ),
                                         l1tIgnoreMask = cms.bool( True ),
@@ -115,18 +133,12 @@ process.triggerSelection = cms.EDFilter("TriggerResultsFilter",
                                         )
 
 process.p1 = cms.Path(
-    process.cleanPatCandidatesPFlow +
-    process.jetIdCut +
-    process.oneJetAboveZero +
-    process.getLargestJet +
-    process.plotJet
+    process.cutOnJet +
+    process.plotMET
     )
 
 process.p2 = cms.Path(
-    process.triggerSelection + 
-    process.cleanPatCandidatesPFlow +
-    process.jetIdCut + 
-    process.oneJetAboveZero +
-    process.getLargestJet +
-    process.plotJetwithTrigger
+    process.triggerSelection +
+    process.cutOnJet +
+    process.plotMETwithTrigger
     )

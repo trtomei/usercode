@@ -53,24 +53,18 @@ else:
 readFiles = cms.untracked.vstring()
 secFiles = cms.untracked.vstring()
 process.source = cms.Source ("PoolSource",fileNames = readFiles, secondaryFileNames = secFiles)
-#readFiles.extend(['file:pattuple_'+setupFileName+'.root',])
-#readFiles.extend(["file:/home/trtomei/hdacs/CMSSW_3_9_9/src/GeneratorInterface/AlpgenInterface/test/pattuple_"+setupFileName+".root",])
-#readFiles.extend(["file:/home/trtomei/hdacs/CMSSW_3_9_9/src/RSGraviton/RSAnalyzer/analysis_Winter2011/pattuple_"+setupFileName+".root",])
-readFiles.extend(["file:condor_dataPattuples_2011May10ReReco_0/output.root",
-                  "file:condor_dataPattuples_2011May10ReReco_1/output.root",
-                  "file:condor_dataPattuples_2011May10ReReco_10/output.root",
-                  "file:condor_dataPattuples_2011May10ReReco_11/output.root",
-                  "file:condor_dataPattuples_2011May10ReReco_12/output.root",
-                  "file:condor_dataPattuples_2011May10ReReco_2/output.root",
-                  "file:condor_dataPattuples_2011May10ReReco_3/output.root",
-                  "file:condor_dataPattuples_2011May10ReReco_4/output.root",
-                  "file:condor_dataPattuples_2011May10ReReco_5/output.root",
-                  "file:condor_dataPattuples_2011May10ReReco_6/output.root",
-                  "file:condor_dataPattuples_2011May10ReReco_7/output.root",
-                  "file:condor_dataPattuples_2011May10ReReco_8/output.root",
-                  "file:condor_dataPattuples_2011May10ReReco_9/output.root",
+readFiles.extend(["file:condor_dataPattuples_2011Jun20_0/output.root",
+                  "file:condor_dataPattuples_2011Jun20_1/output.root",
+                  "file:condor_dataPattuples_2011Jun20_10/output.root",
+                  "file:condor_dataPattuples_2011Jun20_2/output.root",
+                  "file:condor_dataPattuples_2011Jun20_3/output.root",
+                  "file:condor_dataPattuples_2011Jun20_4/output.root",
+                  "file:condor_dataPattuples_2011Jun20_5/output.root",
+                  "file:condor_dataPattuples_2011Jun20_6/output.root",
+                  "file:condor_dataPattuples_2011Jun20_7/output.root",
+                  "file:condor_dataPattuples_2011Jun20_8/output.root",
+                  "file:condor_dataPattuples_2011Jun20_9/output.root",
                   ])                  
-#process.load("RSGraviton.RSAnalyzer.Fall10."+setupFileName+"_cff")
 
 process.options = cms.untracked.PSet(
     wantSummary = cms.untracked.bool(True)
@@ -91,18 +85,6 @@ from RSGraviton.RSAnalyzer.basicjethistos_cff import histograms as basicjethisto
 from RSGraviton.RSAnalyzer.jethistos_cff import histograms as jethistos
 from RSGraviton.RSAnalyzer.METhistos_cff import histograms as METhistos
 
-##################
-# The global tag #
-##################
-# Notneeded I think, already used in PAT
-#process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
-#process.GlobalTag.globaltag = 'GR_R_39X_V5::All' # 3_9_X RECO
-#process.GlobalTag.globaltag = 'GR_R_38X_V15::All ' # 3_8_X RECO
-
-# Counting - important
-# Gives 18 histograms - One to nine, alpha to iota
-# that can be used to count how many events remain
-# at each step of the analysis
 process.load("RSGraviton.RSAnalyzer.eventCounters_cfi")
 
 ##########

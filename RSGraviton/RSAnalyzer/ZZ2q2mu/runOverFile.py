@@ -8,7 +8,7 @@ process = cms.Process("COUNT")
 process.load('FWCore.MessageService.MessageLogger_cfi')
 process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 
-process.load('RSGraviton.RSAnalyzer.Summer11.METBTag_Run2011A_May10ReReco_triggerStudies')
+process.load('RSGraviton.RSAnalyzer.Summer11.SingleMu_Run2011A_May10ReReco')
 #fileList = cms.untracked.vstring('file:pattuple_Run2010Bp2_HLTMET45.root')
 #process.source = cms.Source("PoolSource",fileNames = fileList)
 

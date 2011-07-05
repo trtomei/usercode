@@ -22,6 +22,10 @@ process.MessageLogger.cerr.FwkReport.reportEvery=1000
 # Summary
 process.options = cms.untracked.PSet( wantSummary = cms.untracked.bool(True) )
 
+process.TFileService = cms.Service("TFileService",
+                                   fileName = cms.string('output.root')
+                                   )
+
 process.source = cms.Source("PoolSource",
                             fileNames = cms.untracked.vstring(
                   '/store/mc/Summer11/WJetsToLNu_TuneZ2_7TeV-madgraph-tauola/AODSIM/PU_S4_START42_V11-v1/0001/FED96BE1-859A-E011-836E-001A92971B56.root',
@@ -67,30 +71,10 @@ process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 process.GlobalTag.globaltag = 'GR_R_42_V14::All'
 
 ###########
-# Trigger #
+# Weights #
 ###########
-process.triggerSelection = cms.EDFilter("TriggerResultsFilter",
-                                        triggerConditions = cms.vstring('HLT_CentralJet80_MET65_v*',
-                                                                        ),
-                                        hltResults = cms.InputTag( "TriggerResults" , "", "HLT"),
-                                        l1tResults = cms.InputTag( "" ),
-                                        l1tIgnoreMask = cms.bool( True ),
-                                        l1techIgnorePrescales = cms.bool( False ),
-                                        daqPartitions = cms.uint32( 1 ),
-                                        throw = cms.bool( False )
+process.pileupAnalyzer = cms.EDFilter("RSPileupSummaryInfoAnalyzer",
+                                        pileupInfo = cms.InputTag("addPileupInfo")
                                         )
 
-process.load( "HLTrigger.HLTcore.hltEventAnalyzerAOD_cfi" )
-
-process.pathSelection = cms.Path(process.triggerSelection)
-
-process.skimOut = cms.OutputModule("PoolOutputModule",
-                                   fileName = cms.untracked.string('skim.root'),
-                                   outputCommands = process.RECOEventContent.outputCommands,
-                                   dataset = cms.untracked.PSet(dataTier = cms.untracked.string('RECO'),
-                                                                filterName = cms.untracked.string('SKIMMING')),
-                                   SelectEvents = cms.untracked.PSet(SelectEvents = cms.vstring('pathSelection')
-                                                                     )
-                                   )
-
-process.e = cms.EndPath(process.skimOut)
+process.p = cms.Path(process.pileupAnalyzer)

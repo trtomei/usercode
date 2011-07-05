@@ -55,7 +55,7 @@ process.source = cms.Source ("PoolSource",fileNames = readFiles, secondaryFileNa
 #readFiles.extend(['file:pattuple_'+setupFileName+'.root',])
 #readFiles.extend(["file:/home/trtomei/hdacs/CMSSW_3_9_9/src/RSGraviton/RSAnalyzer/analysis_Winter2011/patTuple_Run2010B.root",])
 readFiles.extend([
-    "file:pattuple_PV7to9999.root"
+    "file:pattuple_signalm1000_PU.root"
 ])
 
 process.options = cms.untracked.PSet(
@@ -101,13 +101,15 @@ process.jetIdCut = cms.EDFilter("PFJetIDSelectionFunctorFilter",
                                 src = cms.InputTag("cleanPatJetsPFlow")
                                 )
 print process.jetIdCut.filterParams
+process.jetIdCut.src = "patJetsCA8PrunedPF"
+print process.jetIdCut.src
 
 ######################
 # Jet Kinematic cuts #
 ######################
 
 process.differentPtCut = cms.EDFilter("CandViewSelector",
-                                      src = cms.InputTag("jetIdCut"),
+                                      src = cms.InputTag("patJetsCA8PrunedPF"),
                                       cut = cms.string("(pt > "+str(setupSmallJetPtCut)+") && (abs(eta) < "+str(setupJetEtaCut)+")"),
                                       minNumber = cms.int32(1),
                                       filter = cms.bool(False)
@@ -142,7 +144,7 @@ process.plotNumJets = cms.EDAnalyzer("RSEventNumJetsAnalyzer",
 # PATHS #
 #########
 process.p = cms.Path(process.eventCounterOne + 
-                     process.jetIdCut + 
+#                     process.jetIdCut + 
                      process.differentPtCut +
                      process.getHardJets +
                      process.plotMET +
