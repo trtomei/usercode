@@ -27,9 +27,9 @@ if 'useData' in myOptions:
 ###############################
 
 if useData:
-    process.GlobalTag.globaltag = 'GR_R_42_V14::All' ##  (according to https://twiki.cern.ch/twiki/bin/view/CMS/SWGuideFrontierConditions)
-    inputJetCorrLabelAK5 = ('AK5PF', ['L1FastJet', 'L2Relative', 'L3Absolute']) # Will have L2L3ResidualEventually
-    inputJetCorrLabelAK7 = ('AK7PF', ['L1FastJet', 'L2Relative', 'L3Absolute'])
+    process.GlobalTag.globaltag = 'GR_R_42_V19::All' ##  (according to https://twiki.cern.ch/twiki/bin/view/CMS/SWGuideFrontierConditions)
+    inputJetCorrLabelAK5 = ('AK5PF', ['L1FastJet', 'L2Relative', 'L3Absolute', 'L2L3Residual']) # Will have L2L3ResidualEventually
+    inputJetCorrLabelAK7 = ('AK7PF', ['L1FastJet', 'L2Relative', 'L3Absolute', 'L2L3Residual'])
 
 else :
     process.GlobalTag.globaltag = 'START42_v12::All'
@@ -44,17 +44,23 @@ process.options.wantSummary = True
 ##########
 
 #process.load("RSGraviton.RSAnalyzer.Summer11.METBTag_Run2011A_May10ReReco")
-process.load("RSGraviton.RSAnalyzer.Summer11.METBTag_Run2011A_May10ReReco_triggerStudies")
+#process.load("RSGraviton.RSAnalyzer.Summer11.METBTag_Run2011A_May10ReReco_triggerStudies")
 #process.load("RSGraviton.RSAnalyzer.Summer11.MET_Run2011A_PromptReco_2011Jun06")
 #process.load("RSGraviton.RSAnalyzer.Summer11.MET_Run2011A_PromptReco_2011Jun13")
 #process.load("RSGraviton.RSAnalyzer.Summer11.MET_Run2011A_PromptReco_2011Jun20")
 #process.load("RSGraviton.RSAnalyzer.Summer11.MET_Run2011A_PromptReco_2011Jun27")
-#process.load("RSGraviton.RSAnalyzer.Summer11.signal_RSG1000_ZZ2q2nu_cff")
+#process.load("RSGraviton.RSAnalyzer.Summer11.MET_Run2011A_PromptReco_2011Jul06")
+#process.load("RSGraviton.RSAnalyzer.Summer11.MET_Run2011A_PromptReco_2011Jul06")
+#process.load("RSGraviton.RSAnalyzer.Summer11.MET_Run2011A_PromptReco_v5")
+#process.load("RSGraviton.RSAnalyzer.Summer11.MET_Run2011A_PromptReco_v6_2011Ago26")
+#process.load('RSGraviton.RSAnalyzer.Summer11.MET_Run2011A_PromptReco_v6_2011Set30')
+process.load('RSGraviton.RSAnalyzer.Summer11.MET_Run2011B_PromptReco')
+#process.load('RSGraviton.RSAnalyzer.Summer11.MET_Run2011A_ReReco_Aug5')
+#process.load("RSGraviton.RSAnalyzer.Summer11.signal_RSG2000_ZZ2q2nu_cff")
+#process.load("RSGraviton.RSAnalyzer.Summer11.WJets_pt100_cff")
 #maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
-#readFiles = cms.untracked.vstring()
-#secFiles = cms.untracked.vstring()
-#process.source = cms.Source ('PoolSource',fileNames = readFiles, secondaryFileNames = secFiles)
-#process.source.fileNames = cms.untracked.vstring(["file:pickevents.root"])
+readFiles = cms.untracked.vstring()
+secFiles = cms.untracked.vstring()
 process.maxEvents.input = numEvents         ##  (e.g. -1 to run on all events)
 process.source.skipEvents=cms.untracked.uint32(skipEvents)
 
@@ -241,7 +247,7 @@ addJetCollection(process,
                  doJetID = False
                  )
 
-for icorr in [process.patJetCorrFactorsCA8PrunedPF,] :
+for icorr in [process.patJetCorrFactors,process.patJetCorrFactorsCA8PrunedPF,] :
     icorr.rho = cms.InputTag("kt6PFJetsPFlow", "rho")
 
 ###############################
@@ -309,7 +315,7 @@ process.patPhotons.isoDeposits = cms.PSet()
 from PhysicsTools.SelectorUtils.pfJetIDSelector_cfi import pfJetIDSelector
 process.goodPatJetsPFlow = cms.EDFilter("PFJetIDSelectionFunctorFilter",
                                         filterParams = pfJetIDSelector.clone(),
-                                        src = cms.InputTag("selectedPatJetsPFlow")
+                                        src = cms.InputTag("selectedPatJetsPFlow"),
                                         )
 process.goodPatJetsCA8PrunedPF = cms.EDFilter("PFJetIDSelectionFunctorFilter",
                                               filterParams = pfJetIDSelector.clone(),
@@ -324,6 +330,15 @@ process.cutOnJet = cms.EDFilter("CandViewSelector",
                                 filter = cms.bool(True)
                                 )
 
+# Weights
+process.pileupReweighter= cms.EDFilter("RSPileupReweighter",
+                                       generatedFile = cms.string("pileup_Wjets.root"),
+                                       dataFile = cms.string("Pileup_2011_EPS_8_jul.root"),
+                                       genHistName = cms.string("pileup"),
+                                       dataHistName = cms.string("pileup"),
+                                       useROOThistos = cms.bool(False)
+                                       )
+
 process.patseq = cms.Sequence(
     process.preselection*
     getattr(process,"patPF2PATSequence"+postfix)*
@@ -336,7 +351,8 @@ process.patseq = cms.Sequence(
 if(useData==False) :
     process.patseq.replace( process.goodOfflinePrimaryVertices,
                             process.goodOfflinePrimaryVertices *
-                            process.hardGenParticles )
+                            process.hardGenParticles *
+                            process.pileupReweighter)
     
 process.patseq.replace( process.goodOfflinePrimaryVertices,
                         process.goodOfflinePrimaryVertices *
@@ -349,7 +365,7 @@ process.p0 = cms.Path(
 process.out.SelectEvents.SelectEvents = cms.vstring('p0')
 
 # rename output file
-name = "pattuple.root"
+name = "temp.root"
 process.out.fileName = cms.untracked.string(name)
 process.out.dropMetaData = cms.untracked.string("DROPPED")
 
@@ -372,7 +388,8 @@ if(useData==False):
                                    'keep *_ak7GenJetsNoNu_*_*',
                                    'keep GenRunInfoProduct_generator_*_*',
                                    'keep GenEventInfoProduct_generator_*_*',
-                                   'keep PileupSummaryInfos_*_*_*'
+                                   'keep PileupSummaryInfos_*_*_*',
+                                   'keep *_pileupReweighter_*_*',
                                    ]
     
 #open('junk.py','w').write(process.dumpPython())
