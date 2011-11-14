@@ -20,6 +20,7 @@
 #include "DataFormats/PatCandidates/interface/MET.h"
 #include "DataFormats/Math/interface/deltaR.h"
 #include "DataFormats/HepMCCandidate/interface/GenParticleFwd.h"
+#include "SimDataFormats/GeneratorProducts/interface/GenEventInfoProduct.h"
 
 #include "DataFormats/Math/interface/LorentzVectorFwd.h"
 #include "FWCore/ServiceRegistry/interface/Service.h"
@@ -49,6 +50,7 @@ private:
   edm::InputTag VBTFmuon_;
   edm::InputTag TIV_;
   edm::InputTag TIVStar_;
+  edm::InputTag PUweight_;
 
   bool isData_;
  
@@ -76,6 +78,8 @@ private:
 
   double G_smallestTIV;
   double G_smallestTIVStar;
+
+  double G_PUweight;
 
   double G_electron1pt;
   double G_electron1eta;
@@ -124,6 +128,7 @@ ZZ2q2nuTreeMaker::ZZ2q2nuTreeMaker(const edm::ParameterSet& iConfig) :
   VBTFmuon_(iConfig.getParameter<edm::InputTag>("VBTFmuon") ),
   TIV_(iConfig.getParameter<edm::InputTag>("TIV") ),
   TIVStar_(iConfig.getParameter<edm::InputTag>("TIVStar") ),
+  PUweight_(iConfig.getParameter<edm::InputTag>("PUweight") ),
   isData_(iConfig.getParameter<bool>("isData") ),
   G_gravTransMass(0),
   G_weight(iConfig.getParameter<double>("weight") )
@@ -160,6 +165,8 @@ ZZ2q2nuTreeMaker::ZZ2q2nuTreeMaker(const edm::ParameterSet& iConfig) :
 
   mytree->Branch("smallestTIV",&G_smallestTIV);
   mytree->Branch("smallestTIVStar",&G_smallestTIVStar);
+
+  mytree->Branch("PUweight",&G_PUweight);
 
   mytree->Branch("electron1pt",&G_electron1pt);
   mytree->Branch("electron1eta",&G_electron1eta);
@@ -359,17 +366,29 @@ ZZ2q2nuTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
   
   // And the lovely particles.
   Handle<GenParticleCollection> genParticlesHandle;
+  Handle<double> PUweightHandle;
   if(isData_) {
     G_allParticles->clear();
     math::XYZTLorentzVector theGenParticle; theGenParticle.SetPxPyPzE(-1,-1,-1,-1);
     G_allParticles->push_back(theGenParticle);
     G_particlesPdg[0] = 0;
+    G_weight = 1.0;
+    G_PUweight = 1.0;
     G_numParticles = -1;
   }
   else {
+    Handle<GenEventInfoProduct> infoHandle;
+    iEvent.getByLabel("generator",infoHandle);
+    const GenEventInfoProduct geneventinfo = *infoHandle;
+    double gen_weight=geneventinfo.weight();
+    G_weight = gen_weight;
+    
     iEvent.getByLabel(genParticles_, genParticlesHandle);
     int actualNumParticles = genParticlesHandle->size();
-    
+    iEvent.getByLabel(PUweight_,PUweightHandle);
+    double thePUweight = *PUweightHandle;
+
+    G_PUweight = thePUweight;
     G_allParticles->clear();
     for(size_t i = 0; i != genParticlesHandle->size(); ++i) {
       double genParticlePx = genParticlesHandle->at(i).px();
