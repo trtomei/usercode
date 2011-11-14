@@ -22,10 +22,6 @@ process.MessageLogger.cerr.FwkReport.reportEvery=1000
 # Summary
 process.options = cms.untracked.PSet( wantSummary = cms.untracked.bool(True) )
 
-process.TFileService = cms.Service("TFileService",
-                                   fileName = cms.string('output.root')
-                                   )
-
 process.source = cms.Source("PoolSource",
                             fileNames = cms.untracked.vstring(
                   '/store/mc/Summer11/WJetsToLNu_TuneZ2_7TeV-madgraph-tauola/AODSIM/PU_S4_START42_V11-v1/0001/FED96BE1-859A-E011-836E-001A92971B56.root',
@@ -55,26 +51,25 @@ process.source = cms.Source("PoolSource",
                             )
 
 process.maxEvents = cms.untracked.PSet(
-        input = cms.untracked.int32(-1)
+        input = cms.untracked.int32(1000)
         )
-
-### The output
-#process.TFileService = cms.Service("TFileService",
-#                                   fileName = cms.string('output.root')
-#                                   )
 
 #process.Tracer = cms.Service("Tracer")
 
 # Global tag
 #process.load('Configuration.StandardSequences.GeometryExtended_cff')
-process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
-process.GlobalTag.globaltag = 'GR_R_42_V14::All'
+#process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
+#process.GlobalTag.globaltag = 'GR_R_42_V14::All'
 
 ###########
 # Weights #
 ###########
-process.pileupAnalyzer = cms.EDFilter("RSPileupSummaryInfoAnalyzer",
-                                        pileupInfo = cms.InputTag("addPileupInfo")
-                                        )
+process.pileupReweighter= cms.EDFilter("RSPileupReweighter",
+                                       generatedFile = cms.string("pileup_Wjets.root"),
+                                       dataFile = cms.string("Pileup_2011_EPS_8_jul.root"),
+                                       genHistName = cms.string("pileup"),
+                                       dataHistName = cms.string("pileup"),
+                                       useROOThistos = cms.bool(False)
+                                       )
 
-process.p = cms.Path(process.pileupAnalyzer)
+process.p = cms.Path(process.pileupReweighter)

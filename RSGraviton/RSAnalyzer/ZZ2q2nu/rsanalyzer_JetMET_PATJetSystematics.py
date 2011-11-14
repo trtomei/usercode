@@ -17,8 +17,8 @@ setupInputFilesList = ''
 setupJetPtCut = 300.0
 setupSmallJetPtCut = 30.0
 setupJetEtaCut = 2.4
-setupJetMassCut = 50.0
-setupMETCut = 200.0
+setupJetMassCut = 70.0
+setupMETCut = 300.0
 setupMaxJets = 3
 setupMaxAngle = 2.8
 
@@ -28,11 +28,6 @@ setupMaxAngle = 2.8
 # import of standard configurations
 process.load('Configuration.EventContent.EventContent_cff')
 process.load('FWCore.MessageService.MessageLogger_cfi')
-process.load("Configuration.StandardSequences.Geometry_cff")
-process.load("Configuration.StandardSequences.MagneticField_cff")
-process.load('Configuration.StandardSequences.Services_cff')
-process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
-process.GlobalTag.globaltag = 'MC_38Y_V14::All'    ##  (according to https://twiki.cern.ch/twiki/bin/view/CMS/SWGuideFrontierConditions)
 
 # Other statements
 myOptions = sys.argv
@@ -53,12 +48,9 @@ else:
     
 readFiles = cms.untracked.vstring()
 secFiles = cms.untracked.vstring()
-process.load("RSGraviton.RSAnalyzer.Fall10.RSToZZToNuNuJJ_"+setupFileName+"_cff")
-#process.source = cms.Source ("PoolSource",fileNames = readFiles, secondaryFileNames = secFiles)
-#readFiles.extend(["file:tempEDMfile.root",])
-
-process.MessageLogger.cerr.FwkReport.reportEvery = 100
-
+process.source = cms.Source ("PoolSource",fileNames = readFiles, secondaryFileNames = secFiles)
+readFiles.extend(["file:pattuple_signalm1750_PU.root"]);
+ 
 process.options = cms.untracked.PSet(
     wantSummary = cms.untracked.bool(True)
     )
@@ -72,72 +64,35 @@ process.TFileService = cms.Service("TFileService",
                                    fileName = cms.string('output_'+setupFileName+setupSuffix+'.root')
 )
 
-# Configure PAT to use PF2PAT instead of AOD sources
-# this function will modify the PAT sequences. It is currently 
-# not possible to run PF2PAT+PAT and standard PAT at the same time
-process.load("PhysicsTools.PatAlgos.patSequences_cff")
-from PhysicsTools.PatAlgos.patEventContent_cff import patEventContent
+process.MessageLogger.cerr.FwkReport.reportEvery = 100
 
-process.out = cms.OutputModule("PoolOutputModule",
-                               fileName = cms.untracked.string('temp_pattuple.root'),
-                               # save only events passing the full path
-                               # save PAT Layer 1 output; you need a '*' to
-                               # unpack the list of commands 'patEventContent'
-                               outputCommands = cms.untracked.vstring('drop *', *patEventContent )
-                               )
+from RSGraviton.RSAnalyzer.basicjethistos_cff import histograms as basicjethistos
+from RSGraviton.RSAnalyzer.jethistos_cff import histograms as jethistos
+from RSGraviton.RSAnalyzer.METhistos_cff import histograms as METhistos
 
-from PhysicsTools.PatAlgos.tools.pfTools import *
-from PhysicsTools.PatAlgos.tools.coreTools import *
+##################
+# The global tag #
+##################
+# Not needed I think, already used in PAT
+#process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
+#process.GlobalTag.globaltag = 'GR_R_39X_V5::All' # 3_9_X RECO
+#process.GlobalTag.globaltag = 'GR_R_38X_V15::All ' # 3_8_X RECO
 
-postfix = "PFlow"
-jetAlgo="AK7"
-usePF2PAT(process,runPF2PAT=True, jetAlgo=jetAlgo, runOnMC=True, postfix=postfix) 
-
-# top projections in PF2PAT:
-process.pfNoPileUpPFlow.enable = True 
-process.pfNoMuonPFlow.enable = False 
-process.pfNoElectronPFlow.enable = True 
-process.pfNoTauPFlow.enable = True 
-process.pfNoJetPFlow.enable = True 
-process.pfNoMuon.verbose = True
-
-### Preselection cuts
-process.primaryVertexFilter = cms.EDFilter("GoodVertexFilter",
-                                           vertexCollection = cms.InputTag('offlinePrimaryVertices'),
-                                           minimumNDOF = cms.uint32(4) ,
-                                           maxAbsZ = cms.double(24),
-                                           maxd0 = cms.double(2)
-                                           )
-
-process.noscraping = cms.EDFilter("FilterOutScraping",
-                                  applyfilter = cms.untracked.bool(True),
-                                  debugOn = cms.untracked.bool(False),
-                                  numtrack = cms.untracked.uint32(10),
-                                  thresh = cms.untracked.double(0.25)
-                                  )
-
-process.load('CommonTools/RecoAlgos/HBHENoiseFilter_cfi')
-
-process.preselection = cms.Sequence(process.primaryVertexFilter + process.noscraping + process.HBHENoiseFilter)
-
-process.cutOnJet = cms.EDFilter("CandViewSelector",
-                                src = cms.InputTag("cleanPatJetsPFlow"),
-                                cut = cms.string("(pt > 110.0) && (abs(eta) < 2.4)"),
-                                minNumber = cms.int32(1),
-                                filter = cms.bool(True)
-                                )
-
-############
-# Cleaning #
-############
-# Standard PAT cleaning - clean muons, then electrons, then jet with deltaR = 0.3
-process.load("RSGraviton.RSAnalyzer.patCleaning_cfi")
+# Counting - important
+# Gives 18 histograms - One to nine, alpha to iota
+# that can be used to count how many events remain
+# at each step of the analysis
+process.load("RSGraviton.RSAnalyzer.eventCounters_cfi")
 
 ##########
 # Jet ID #
 ##########
 # This selector selects PAT jets with loose jet ID thresholds.
-process.load("RSGraviton.RSAnalyzer.pfJetId_cfi")
+from PhysicsTools.SelectorUtils.pfJetIDSelector_cfi import pfJetIDSelector
+process.jetIdCut = cms.EDFilter("PFJetIDSelectionFunctorFilter",
+                                filterParams = pfJetIDSelector.clone(),
+                                src = cms.InputTag("goodPatJetsPFlow")
+                                )
 
 ######################
 # Jet Kinematic cuts #
@@ -155,7 +110,7 @@ process.jetScaler = cms.EDProducer("RSDistortedJetsProducer",
 
 ### For Path 1 - FAT jet from Z + MET
 process.oneJetAboveZero = cms.EDFilter("CandViewSelector",
-                                       src = cms.InputTag("jetIdCut"),
+                                       src = cms.InputTag("jetScaler"),
                                        cut = cms.string("pt > -1.0"),
                                        minNumber = cms.int32(1),                                       
                                        filter = cms.bool(True)
@@ -194,7 +149,7 @@ process.jetMassCut = cms.Sequence(process.massCut)
 
 # Multijets 
 process.differentPtCut = cms.EDFilter("CandViewSelector",
-                                      src = cms.InputTag("jetIdCut"),
+                                      src = cms.InputTag("jetScaler"),
                                       cut = cms.string("(pt > "+str(setupSmallJetPtCut)+") && (abs(eta) < "+str(setupJetEtaCut)+")"),
                                       minNumber = cms.int32(1),
                                       filter = cms.bool(True)
@@ -231,65 +186,70 @@ process.load("RSGraviton.RSAnalyzer.trackerIndirectVeto_cfi")
 
 # Cuts on the presence of leptons - to have inverted results in the Path.
 process.anyElectrons = cms.EDFilter("PATElectronSelector",
-                                    src = cms.InputTag("cleanPatElectronsPFlow"),
+                                    src = cms.InputTag("selectedPatElectronsPFlow"),
                                     cut = cms.string(""),
                                     filter = cms.bool(True)
                                     )
 process.anyMuons = cms.EDFilter("PATMuonSelector",
-                                src = cms.InputTag("cleanPatMuonsPFlow"),
+                                src = cms.InputTag("selectedPatMuonsPFlow"),
                                 cut = cms.string(""),
                                 filter = cms.bool(True)
                                 )
-##################
-# Control region #
-##################
-# Muon sequence - makes VBTF muons, then the leading muon.
-process.load("RSGraviton.RSAnalyzer.muonSequence_cfi")
-
-# TIV cut - veto on isolated tracks.
-# Exempt the muon track!
-process.TIVStarCut = process.TIVCut.clone(excludeTracks = cms.bool(True),tracksToExclude = cms.InputTag("leadingMuon"))
-
-# build W->MuNu candidates using MET
-process.wmnCands = cms.EDProducer("CandViewShallowCloneCombiner",
-                                    checkCharge = cms.bool(False),
-                                    cut = cms.string(""),
-                                    decay = cms.string("leadingMuon patMETsPFlow")
-                                    )
-# mu+MET Cut
-process.wmnCut = cms.EDFilter("PtMinCandViewSelector",
-                              src = cms.InputTag("wmnCands"),
-                              ptMin = cms.double(setupMETCut),
-                              minNumber = cms.uint32(1),
-                              filter = cms.bool(True)
-                              )
-
-process.muonMETCut = cms.Sequence(process.wmnCands + process.wmnCut)
 
 #########
 # PLOTS #
 #########
+process.plotMET = cms.EDAnalyzer("CandViewHistoAnalyzer",
+                                 src = cms.InputTag("patMETsPFlow"),
+                                 histograms = METhistos
+                                 )
+
+process.plotMETPreselection = process.plotMET.clone()
+process.plotMETAfterMassCut = process.plotMET.clone()
+
+process.plotJetsGeneral = cms.EDAnalyzer("CandViewHistoAnalyzer",
+                                         src = cms.InputTag("getHardJets"),
+                                         histograms = basicjethistos
+                                         )
+process.plotJetsGeneralPreselection = process.plotJetsGeneral.clone()
+process.plotJetsGeneralAfterMassCut = process.plotJetsGeneral.clone()
+
+process.gravtransverseMass = cms.EDAnalyzer("TransverseMassAnalyzer",
+                                            objectOne = cms.InputTag("patMETsPFlow"),
+                                            objectTwo = cms.InputTag("getLargestJet"),
+                                            xmin = cms.double(0.0),
+                                            xmax = cms.double(2000.0),
+                                            nbins = cms.int32(200)
+                                            )
+process.gravtransverseMassAfterMassCut = process.gravtransverseMass.clone()
 
 #########
 # PATHS #
 #########
-process.analysisSearchSequence = cms.Sequence(process.jetIdCut +
-#                                              process.jetScaler +
+process.analysisSearchSequence = cms.Sequence(process.eventCounterOne + 
+                                              process.jetIdCut +
+                                              process.jetScaler + 
                                               process.jetCuts +
+                                              process.eventCounterTwo + 
                                               process.METCut +
+                                              process.eventCounterThree + 
                                               ~process.anyElectrons +
                                               ~process.anyMuons +
+                                              process.eventCounterFour + 
                                               process.TIVCut +
+                                              process.eventCounterFive + 
                                               process.differentPtCut +
                                               process.getHardJets +
+                                              process.eventCounterSix + 
                                               process.multiJetCut +
+                                              process.eventCounterSeven + 
                                               process.angularCut + 
-                                              process.jetMassCut
-                                              )
+                                              process.eventCounterEight +
+                                              process.gravtransverseMass +
+                                              process.plotJetsGeneral +
+                                              process.plotMET +
+                                              process.jetMassCut +
+                                              process.gravtransverseMassAfterMassCut +
+                                              process.eventCounterNine)
 
-
-process.pSearch = cms.Path(process.preselection + 
-                           getattr(process,"patPF2PATSequence"+postfix) +
-                           process.cleanPatCandidatesPFlow +
-                           process.cutOnJet +
-                           process.analysisSearchSequence)
+process.pSearch = cms.Path(process.analysisSearchSequence + process.plotMETAfterMassCut + process.plotJetsGeneralAfterMassCut)
