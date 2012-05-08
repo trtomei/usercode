@@ -5,11 +5,70 @@ grid_resource        = gt2 osg-ce.sprace.org.br/jobmanager-condor
 log                  = resultado.log
 output               = resultado.out
 error                = resultado.error
-should_transfer_files   = YES 
+should_transfer_files   = YES
 transfer_output_files = output.root
-transfer_input_files = rsanalyzer_JetMET_PATtreeDumper_cfg.py
+transfer_input_files = patTuple_PF2PAT_cfg_with110GeVCut.py
 when_to_transfer_output = ON_EXIT
-
-arguments            = input ZinvisibleJets numEvents 1000000
-initialdir           = ZinvisibleJets
+arguments            = skipEvents 0 numEvents 50000 useData False
+initialdir           = /home/trtomei/hdacs/CMSSW_4_2_6/src/RSGraviton/RSAnalyzer/ZZ2q2nu/condor_MCPattuples_Zinvisible_0
+queue
+arguments            = skipEvents 50000 numEvents 50000 useData False
+initialdir           = /home/trtomei/hdacs/CMSSW_4_2_6/src/RSGraviton/RSAnalyzer/ZZ2q2nu/condor_MCPattuples_Zinvisible_1
+queue
+arguments            = skipEvents 100000 numEvents 50000 useData False
+initialdir           = /home/trtomei/hdacs/CMSSW_4_2_6/src/RSGraviton/RSAnalyzer/ZZ2q2nu/condor_MCPattuples_Zinvisible_2
+queue
+arguments            = skipEvents 150000 numEvents 50000 useData False
+initialdir           = /home/trtomei/hdacs/CMSSW_4_2_6/src/RSGraviton/RSAnalyzer/ZZ2q2nu/condor_MCPattuples_Zinvisible_3
+queue
+arguments            = skipEvents 200000 numEvents 50000 useData False
+initialdir           = /home/trtomei/hdacs/CMSSW_4_2_6/src/RSGraviton/RSAnalyzer/ZZ2q2nu/condor_MCPattuples_Zinvisible_4
+queue
+arguments            = skipEvents 250000 numEvents 50000 useData False
+initialdir           = /home/trtomei/hdacs/CMSSW_4_2_6/src/RSGraviton/RSAnalyzer/ZZ2q2nu/condor_MCPattuples_Zinvisible_5
+queue
+arguments            = skipEvents 300000 numEvents 50000 useData False
+initialdir           = /home/trtomei/hdacs/CMSSW_4_2_6/src/RSGraviton/RSAnalyzer/ZZ2q2nu/condor_MCPattuples_Zinvisible_6
+queue
+arguments            = skipEvents 350000 numEvents 50000 useData False
+initialdir           = /home/trtomei/hdacs/CMSSW_4_2_6/src/RSGraviton/RSAnalyzer/ZZ2q2nu/condor_MCPattuples_Zinvisible_7
+queue
+arguments            = skipEvents 400000 numEvents 50000 useData False
+initialdir           = /home/trtomei/hdacs/CMSSW_4_2_6/src/RSGraviton/RSAnalyzer/ZZ2q2nu/condor_MCPattuples_Zinvisible_8
+queue
+arguments            = skipEvents 450000 numEvents 50000 useData False
+initialdir           = /home/trtomei/hdacs/CMSSW_4_2_6/src/RSGraviton/RSAnalyzer/ZZ2q2nu/condor_MCPattuples_Zinvisible_9
+queue
+arguments            = skipEvents 500000 numEvents 50000 useData False
+initialdir           = /home/trtomei/hdacs/CMSSW_4_2_6/src/RSGraviton/RSAnalyzer/ZZ2q2nu/condor_MCPattuples_Zinvisible_10
+queue
+arguments            = skipEvents 550000 numEvents 50000 useData False
+initialdir           = /home/trtomei/hdacs/CMSSW_4_2_6/src/RSGraviton/RSAnalyzer/ZZ2q2nu/condor_MCPattuples_Zinvisible_11
+queue
+arguments            = skipEvents 600000 numEvents 50000 useData False
+initialdir           = /home/trtomei/hdacs/CMSSW_4_2_6/src/RSGraviton/RSAnalyzer/ZZ2q2nu/condor_MCPattuples_Zinvisible_12
+queue
+arguments            = skipEvents 650000 numEvents 50000 useData False
+initialdir           = /home/trtomei/hdacs/CMSSW_4_2_6/src/RSGraviton/RSAnalyzer/ZZ2q2nu/condor_MCPattuples_Zinvisible_13
+queue
+arguments            = skipEvents 700000 numEvents 50000 useData False
+initialdir           = /home/trtomei/hdacs/CMSSW_4_2_6/src/RSGraviton/RSAnalyzer/ZZ2q2nu/condor_MCPattuples_Zinvisible_14
+queue
+arguments            = skipEvents 750000 numEvents 50000 useData False
+initialdir           = /home/trtomei/hdacs/CMSSW_4_2_6/src/RSGraviton/RSAnalyzer/ZZ2q2nu/condor_MCPattuples_Zinvisible_15
+queue
+arguments            = skipEvents 800000 numEvents 50000 useData False
+initialdir           = /home/trtomei/hdacs/CMSSW_4_2_6/src/RSGraviton/RSAnalyzer/ZZ2q2nu/condor_MCPattuples_Zinvisible_16
+queue
+arguments            = skipEvents 850000 numEvents 50000 useData False
+initialdir           = /home/trtomei/hdacs/CMSSW_4_2_6/src/RSGraviton/RSAnalyzer/ZZ2q2nu/condor_MCPattuples_Zinvisible_17
+queue
+arguments            = skipEvents 900000 numEvents 50000 useData False
+initialdir           = /home/trtomei/hdacs/CMSSW_4_2_6/src/RSGraviton/RSAnalyzer/ZZ2q2nu/condor_MCPattuples_Zinvisible_18
+queue
+arguments            = skipEvents 950000 numEvents 50000 useData False
+initialdir           = /home/trtomei/hdacs/CMSSW_4_2_6/src/RSGraviton/RSAnalyzer/ZZ2q2nu/condor_MCPattuples_Zinvisible_19
+queue
+arguments            = skipEvents 1000000 numEvents 50000 useData False
+initialdir           = /home/trtomei/hdacs/CMSSW_4_2_6/src/RSGraviton/RSAnalyzer/ZZ2q2nu/condor_MCPattuples_Zinvisible_20
 queue

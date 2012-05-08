@@ -58,37 +58,6 @@ readFiles = cms.untracked.vstring()
 secFiles = cms.untracked.vstring()
 
 ### Different inputs
-WJetsNoTauVeto = [
-"file:condor_MCPattuples_Wjetspt100_noTauVeto_0/output.root",
-"file:condor_MCPattuples_Wjetspt100_noTauVeto_1/output.root",
-"file:condor_MCPattuples_Wjetspt100_noTauVeto_10/output.root",
-"file:condor_MCPattuples_Wjetspt100_noTauVeto_11/output.root",
-"file:condor_MCPattuples_Wjetspt100_noTauVeto_12/output.root",
-"file:condor_MCPattuples_Wjetspt100_noTauVeto_13/output.root",
-"file:condor_MCPattuples_Wjetspt100_noTauVeto_14/output.root",
-"file:condor_MCPattuples_Wjetspt100_noTauVeto_15/output.root",
-"file:condor_MCPattuples_Wjetspt100_noTauVeto_16/output.root",
-"file:condor_MCPattuples_Wjetspt100_noTauVeto_17/output.root",
-"file:condor_MCPattuples_Wjetspt100_noTauVeto_18/output.root",
-"file:condor_MCPattuples_Wjetspt100_noTauVeto_19/output.root",
-"file:condor_MCPattuples_Wjetspt100_noTauVeto_2/output.root",
-"file:condor_MCPattuples_Wjetspt100_noTauVeto_20/output.root",
-"file:condor_MCPattuples_Wjetspt100_noTauVeto_21/output.root",
-"file:condor_MCPattuples_Wjetspt100_noTauVeto_22/output.root",
-"file:condor_MCPattuples_Wjetspt100_noTauVeto_23/output.root",
-"file:condor_MCPattuples_Wjetspt100_noTauVeto_24/output.root",
-"file:condor_MCPattuples_Wjetspt100_noTauVeto_25/output.root",
-"file:condor_MCPattuples_Wjetspt100_noTauVeto_26/output.root",
-"file:condor_MCPattuples_Wjetspt100_noTauVeto_27/output.root",
-"file:condor_MCPattuples_Wjetspt100_noTauVeto_3/output.root",
-"file:condor_MCPattuples_Wjetspt100_noTauVeto_4/output.root",
-"file:condor_MCPattuples_Wjetspt100_noTauVeto_5/output.root",
-"file:condor_MCPattuples_Wjetspt100_noTauVeto_6/output.root",
-"file:condor_MCPattuples_Wjetspt100_noTauVeto_7/output.root",
-"file:condor_MCPattuples_Wjetspt100_noTauVeto_8/output.root",
-"file:condor_MCPattuples_Wjetspt100_noTauVeto_9/output.root"
-]
-
 QCDHT1000 = [
 "file:condor_MCPattuples_QCD_HT1000_0/output.root",
 "file:condor_MCPattuples_QCD_HT1000_1/output.root",
@@ -458,32 +427,8 @@ ttbar = [
 #"file:condor_MCPattuples_ZZ_2/output.root",
 #"file:condor_MCPattuples_ZZ_3/output.root",
 
-WW = [
-    "file:condor_MCPattuples_WW_0/output.root",
-    "file:condor_MCPattuples_WW_1/output.root",
-    "file:condor_MCPattuples_WW_2/output.root",
-    "file:condor_MCPattuples_WW_3/output.root",
-    ]
-WZ = [
-    "file:condor_MCPattuples_WZ_0/output.root",
-    "file:condor_MCPattuples_WZ_1/output.root",
-    "file:condor_MCPattuples_WZ_2/output.root",
-    "file:condor_MCPattuples_WZ_3/output.root",
-    ]
-ZZ = [
-    "file:condor_MCPattuples_ZZ_0/output.root",
-    "file:condor_MCPattuples_ZZ_1/output.root",
-    "file:condor_MCPattuples_ZZ_2/output.root",
-    "file:condor_MCPattuples_ZZ_3/output.root",
-    ]
-
-signalm750 = [
-'file:pattuple_signalm750_PU.root'
-]
-
 signalm1000 = [
-#'file:pattuple_signalm1000_PU.root'
-"file:s1000NTV.root"
+'file:pattuple_signalm1000_PU.root'
 ]
 
 signalm1250 = [
@@ -491,8 +436,7 @@ signalm1250 = [
 ]
 
 signalm1500 = [
-#'file:pattuple_signalm1500_PU.root'
-"file:s1500NTV.root"
+'file:pattuple_signalm1500_PU.root'
 ]
 
 signalm1750 = [
@@ -500,8 +444,7 @@ signalm1750 = [
 ]
 
 signalm2000 = [
-#'file:pattuple_signalm2000_PU.root'
-"file:s2000NTV.root"
+'file:pattuple_signalm2000_PU.root'
 ]
 
 ### Choose the right input
@@ -521,20 +464,15 @@ if ("help" in setupFileName):
     "Run2011A_2011Jun06",
     "Run2011A_2011Aug26",
     "WJetspt100",
-    "WJetsNoTauVeto",
     "Zinvisible",
     "ttbar",
     "QCDHT500to1000",
     "QCDHT1000",
-    "signalm750",
     "signalm1000",
     "signalm1250",
     "signalm1500",
     "signalm1750",
     "signalm2000",
-    "WW",
-    "WZ",
-    "ZZ"
     ]
     print "Options are"
     for i in x:
@@ -577,9 +515,6 @@ if ("Run2011A_2011Aug26" in setupFileName):
 if ("WJetspt100" in setupFileName):
     inputToExtend = WJetspt100
 
-if ("WJetsNoTauVeto" in setupFileName):
-    inputToExtend = WJetsNoTauVeto
-
 if ("Zinvisible" in setupFileName):
     inputToExtend = Zinvisible
 
@@ -591,18 +526,6 @@ if ("QCDHT500to1000" in setupFileName):
 
 if ("QCDHT1000" in setupFileName):
     inputToExtend = QCDHT1000
-
-if ("WW" in setupFileName):
-    inputToExtend = WW
-
-if ("WZ" in setupFileName):
-    inputToExtend = WZ
-
-if ("ZZ" in setupFileName):
-    inputToExtend = ZZ
-
-if ("signalm750" in setupFileName):
-    inputToExtend = signalm750
 
 if ("signalm1000" in setupFileName):
     inputToExtend = signalm1000
@@ -622,24 +545,21 @@ if ("signalm2000" in setupFileName):
 if not inputToExtend:
     print "No standard input, going manually..."
     # Put the inputToExtend here
-    inputToExtend = [""]
+    inputToExtend = ["file:pattuple_signalm1250_PU_uncertainties.root"]
+    print inputToExtend
 
 readFiles.extend(inputToExtend)
 process.source = cms.Source ("PoolSource",fileNames = readFiles, secondaryFileNames = secFiles)
 
 import PhysicsTools.PythonAnalysis.LumiList as LumiList
 import FWCore.ParameterSet.Types as CfgTypes
-
-####################################################################################
-##### IMPORTANT - remember to use myLumis from pattuples with bad lumisections #####
-####################################################################################
-
+### IMPORTANT - remember to use myLumis from pattuples with bad lumisections
 #lumiFileName = "lumiSummary_METBTag_Run2011A-May10Rereco-2011May10_final.json"
 #lumiFileName = "lumiSummary_MET_Run2011A-PromptReco_v4_final.json"
 #lumiFileName = "lumiSummary_MET_Run2011A-Aug05Rereco_final.json"
-#lumiFileName = "officialJSON_Run2011A_allReconstructions.json"
+lumiFileName = "officialJSON_Run2011A_allReconstructions.json"
 #lumiFileName = "officialJSON_Run2011B_PromptReco_v1.json"
-#myLumis = LumiList.LumiList(filename = lumiFileName).getCMSSWString().split(',')
+myLumis = LumiList.LumiList(filename = lumiFileName).getCMSSWString().split(',')
 #process.source.lumisToProcess = CfgTypes.untracked(CfgTypes.VLuminosityBlockRange())
 #process.source.lumisToProcess.extend(myLumis)
 
@@ -729,17 +649,9 @@ process.pileupReweighter= cms.EDFilter("RSPileupReweighter",
 # TREES #
 #########
 
-process.dummyWeights = cms.EDProducer("WeightGetter",
-                                      src = cms.string("dummy"),
-                                      instance = cms.string("dummy"),
-                                      numberInVector = cms.uint32(0),
-                                      verbose = cms.bool(False),
-                                      dummy = cms.bool(True)
-                                      )
-
 process.treeDumper = cms.EDAnalyzer("ZZ2q2nuTreeMaker",
                                     jets = cms.InputTag("getHardJets"),
-                                    met = cms.InputTag("patMETsPFlow"),
+                                    met = cms.InputTag("patType1CorrectedPFMet"),
                                     electrons = cms.InputTag("VBTFelectrons"),
                                     muons = cms.InputTag("VBTFmuons"),
                                     genParticles = cms.InputTag("hardGenParticles"),
@@ -747,7 +659,6 @@ process.treeDumper = cms.EDAnalyzer("ZZ2q2nuTreeMaker",
                                     TIV = cms.InputTag("TIVCut"),
                                     TIVStar = cms.InputTag("TIVStarCut"),
                                     isData = cms.bool(False),
-                                    extraWeight = cms.InputTag("dummyWeights"),
                                     weight = cms.double(1.0),
                                     PUweight = cms.InputTag("pileupReweighter")
                                     )
@@ -762,6 +673,5 @@ process.p = cms.Path(process.jetIdCut +
                      process.TIVCut +
                      process.TIVStarCut +
                      process.pileupReweighter +
-                     process.dummyWeights + 
                      process.treeDumper
                      )

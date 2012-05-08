@@ -10,18 +10,25 @@ process.genParticles.excludeUnfragmentedClones = cms.bool(True)
 tag = ''
 numEvents = -1
 
+process.load('FWCore.MessageService.MessageLogger_cfi')
+process.MessageLogger.cerr.FwkReport.reportEvery = 500
+
 if 'input' in sys.argv:
     tag = sys.argv[sys.argv.index('input')+1]
 if 'numEvents' in sys.argv:
     numEvents = int(sys.argv[sys.argv.index('numEvents')+1])
 
-process.load("RSGraviton.RSAnalyzer.Fall10."+tag+"_cff")
+process.load("RSGraviton.RSAnalyzer.Summer11.signal_RSG1000_ZZ2q2nu_cff")
+process.source.fileNames = cms.untracked.vstring(["file:RSGravitonToZZToNuNuJJ_kMpl"+tag+"_M_1000.root",])
+#process.source.fileNames = cms.untracked.vstring(["file:Herwig_m1000GeV_kmpl005_GEN.root",])
+#process.source.skipEvents = cms.untracked.uint32(58)
 
 process.maxEvents = cms.untracked.PSet(
     input = cms.untracked.int32(numEvents)
     )
 
 gravPdgId = 5000039
+#gravPdgId = 39
 
 # Pruning for Pythia
 process.prunedGenParticles = cms.EDProducer("GenParticlePruner",
@@ -62,7 +69,7 @@ process.sortedJets = cms.EDFilter("LargestEtGenJetSelector",
                                   )
 
 process.TFileService = cms.Service("TFileService",
-                                   fileName = cms.string("validation_pythia"+tag+".root")
+                                   fileName = cms.string("validation_pythia_"+tag+".root")
                                    )
 
 from RSGraviton.RSAnalyzer.Zhistos_cff import histograms as Zhistos
@@ -94,8 +101,10 @@ process.analyzer = cms.EDAnalyzer("RSGenEventAnalyzer",
 process.printList = cms.EDAnalyzer("ParticleListDrawer",
                                    maxEventsToPrint = cms.untracked.int32(10),
                                    printVertex = cms.untracked.bool(False),
-                                   src = cms.InputTag("prunedGenParticles")
+#                                   src = cms.InputTag("prunedGenParticles")
+                                   src = cms.InputTag("genParticles")
                                    )
+
 process.printDecay = cms.EDAnalyzer("ParticleDecayDrawer",
                                     src = cms.InputTag("genParticles"),
                                     printP4 = cms.untracked.bool(False),
@@ -120,20 +129,20 @@ process.printDecay = cms.EDAnalyzer("ParticleDecayDrawer",
 
 ########
 
-#process.goodDecays = cms.EDFilter("ZZDecayFilter",verbose=cms.bool(False))
+process.goodDecays = cms.EDFilter("ZZDecayFilter",verbose=cms.bool(False))
 process.load("RecoJets.Configuration.GenJetParticles_cff")
 process.load("RecoJets.Configuration.RecoGenJets_cff")
 process.load("RecoMET.Configuration.GenMETParticles_cff")
 process.load("RecoMET.Configuration.RecoGenMET_cff")
-process.doThings = cms.Sequence(process.genParticlesForJets + process.sisCone7GenJets +
+process.doThings = cms.Sequence(process.genParticlesForJets + process.ak7GenJets +
                                 process.genParticlesForMETAllVisible + process.genMetTrue)
 #process.printer = cms.Path(process.genParticles + process.prunedGenParticles*process.printList)
-process.p = cms.Path(#process.goodDecays +
-#                     process.genParticles +
-#                     process.doThings +                  
+process.p = cms.Path(#process.goodDecays + 
+                     #process.genParticles +
+                     #process.doThings +                  
 #                     process.eventCounter +                 
                      process.prunedGenParticles +
-#                     process.printList )#+ 
+#                     process.printList + 
 #                      process.printDecay )
     (process.gravitons + process.Zbosons + process.sortedJets) +
     (process.plotGraviton + process.plotZBosons + process.plotJets) +

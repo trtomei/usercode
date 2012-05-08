@@ -49,7 +49,7 @@ else:
 readFiles = cms.untracked.vstring()
 secFiles = cms.untracked.vstring()
 process.source = cms.Source ("PoolSource",fileNames = readFiles, secondaryFileNames = secFiles)
-readFiles.extend(["file:pattuple_QCD.root"]);
+readFiles.extend(["file:pattuple_signalm1250_PU.root"]);
  
 process.options = cms.untracked.PSet(
     wantSummary = cms.untracked.bool(True)
@@ -213,6 +213,11 @@ process.gravtransverseMass = cms.EDAnalyzer("TransverseMassAnalyzer",
                                             )
 process.gravtransverseMassAfterMassCut = process.gravtransverseMass.clone()
 
+process.ratio = cms.EDAnalyzer("RSPATJetCorrectionsAnalyzer",
+                               jets = cms.InputTag("getLargestJet"),
+                               numberInCollection = cms.uint32(0),
+                               isData = cms.bool(False)
+                               )
 #########
 # PATHS #
 #########
@@ -241,4 +246,5 @@ process.analysisSearchSequence = cms.Sequence(process.eventCounterOne +
                                               process.gravtransverseMassAfterMassCut +
                                               process.eventCounterNine)
 
-process.pSearch = cms.Path(process.analysisSearchSequence + process.plotMETAfterMassCut + process.plotJetsGeneralAfterMassCut)
+#process.pSearch = cms.Path(process.analysisSearchSequence + process.plotMETAfterMassCut + process.plotJetsGeneralAfterMassCut)
+process.pSearch = cms.Path(process.jetIdCut + process.jetCuts + process.ratio) 

@@ -10,7 +10,7 @@ process.load('Configuration.StandardSequences.Services_cff')
 process.load('FWCore.MessageService.MessageLogger_cfi')
 #process.MessageLogger.cerr.threshold = 'WARNING'
 process.maxEvents = cms.untracked.PSet(
-    input = cms.untracked.int32(5000)
+    input = cms.untracked.int32(40000)
 )
 
 process.source = cms.Source("EmptySource")
@@ -19,19 +19,15 @@ process.source = cms.Source("EmptySource")
 
 # Other statements
 myOptions = sys.argv
+gravMass = 1000.0
+lambdaPi = 5219.62
+
 if 'mass' in myOptions:
     gravMass = float(myOptions[myOptions.index('mass')+1])
-else:
-    gravMass = 800
 
-if 'coupling' in myOptions:
-    kmpl = float(myOptions[myOptions.index('coupling')+1])
-    cConstant = 5.4 * kmpl
-else:
-    kmpl = 0.05
-    cConstant = 5.4 * 0.05
+if 'lambdaPi' in myOptions:
+    lambdaPi = float(myOptions[myOptions.index('lambdaPi')+1])
 
-lambdaPi = gravMass/(kmpl*3.8317)
 lambdaPiString = 'set RS/Model:Lambda_pi '+str(lambdaPi)+'*GeV'
 gravMassString = 'set /Herwig/Particles/Graviton:NominalMass '+str(gravMass)+'*GeV'
 
@@ -63,17 +59,24 @@ process.generator = cms.EDFilter("ThePEGGeneratorFilter",
                                    ),
                                  )
 
-process.mygenfilter = cms.EDFilter("ZZDecayFilter",
-                                   verbose = cms.bool(False)
-                                   )
+process.nunujjFilter = cms.EDFilter("TwoVBGenFilter",
+                                    src = cms.untracked.InputTag("generator"),
+                                    nunujj = cms.bool(True),
+                                    taunujj = cms.bool(False),
+                                    tautaujj = cms.bool(False),
+                                    eejj = cms.bool(False),
+                                    enujj = cms.bool(False),
+                                    munujj = cms.bool(False),
+                                    mumujj = cms.bool(False)
+                                    )
 
 process.output = cms.OutputModule("PoolOutputModule",
-                                  fileName = cms.untracked.string('Herwig_800GeV_kmpl005_GEN_small.root'),
+                                  fileName = cms.untracked.string('Herwig_m1000GeV_kmpl005_GEN.root'),
                                   SelectEvents = cms.untracked.PSet(
                                       SelectEvents = cms.vstring('generation_step')
                                       )
                                   )
 
 # Path and EndPath definitions
-process.generation_step = cms.Path(process.generator*process.mygenfilter)
+process.generation_step = cms.Path(process.generator*process.nunujjFilter)
 process.end = cms.EndPath(process.output)

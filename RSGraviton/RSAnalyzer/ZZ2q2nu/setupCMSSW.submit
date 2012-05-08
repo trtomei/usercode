@@ -6,8 +6,11 @@ log                  = resultado.log
 output               = resultado.out
 error                = resultado.error
 should_transfer_files   = YES 
+#transfer_input_files = tarredRSGraviton.tar.gz 
 transfer_input_files = Summer11.tar.gz
+#transfer_input_files = RecoMET.tar.gz
+#transfer_input_files = physicsToolspatAlgos.tar.gz
 when_to_transfer_output = ON_EXIT
 
-arguments = CMSSW_4_2_3_patch2
+arguments = CMSSW_4_2_8_patch6
 queue

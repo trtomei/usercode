@@ -12,6 +12,8 @@ VBTFmuons = cms.EDFilter("PATMuonSelector",
                                           )
                          )
 
+print VBTFmuons.cut
+
 leadingMuon = cms.EDFilter("LargestPtCandViewSelector",
                            src = cms.InputTag("VBTFmuons"),
                            maxNumber = cms.uint32(1)

@@ -28,16 +28,13 @@
 #include "FWCore/Framework/interface/EDProducer.h"
 
 #include "FWCore/Framework/interface/Event.h"
-#include "FWCore/Framework/interface/EventSetup.h"
 #include "FWCore/Framework/interface/MakerMacros.h"
-#include "FWCore/Framework/interface/ESHandle.h"
 
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 #include "DataFormats/PatCandidates/interface/Jet.h"
 #include "DataFormats/Common/interface/View.h" 
 #include "CondFormats/JetMETObjects/interface/JetCorrectionUncertainty.h"
-#include "CondFormats/JetMETObjects/interface/JetCorrectorParameters.h"
-#include "JetMETCorrections/Objects/interface/JetCorrectionsRecord.h"
+
 //
 // class declaration
 //
@@ -123,10 +120,9 @@ RSDistortedJetsProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSet
     double uncer = jecUnc->getUncertainty(true); // Uncertainty (pt,eta)
     double PUuncer = ePU_ * JA_ * AvgPu_ * Constant_ / ptCor;
 
-    //double totalUncertaintySquare = uncer*uncer +
-    //calibrationChanges_*calibrationChanges_ + 
-    //PUuncer * PUuncer;
-    double totalUncertaintySquare = uncer*uncer;
+    double totalUncertaintySquare = uncer*uncer +
+      calibrationChanges_*calibrationChanges_ + 
+      PUuncer * PUuncer;
     double totalUncertainty = sqrt(totalUncertaintySquare);
     double ptScaled = 0.0;
     if(upScale_)

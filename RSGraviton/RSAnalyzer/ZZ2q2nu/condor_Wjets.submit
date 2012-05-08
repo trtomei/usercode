@@ -5,72 +5,52 @@ grid_resource        = gt2 osg-ce.sprace.org.br/jobmanager-condor
 log                  = resultado.log
 output               = resultado.out
 error                = resultado.error
-should_transfer_files   = YES 
+should_transfer_files   = YES
 transfer_output_files = output.root
-transfer_input_files = rsanalyzer_JetMET_PATtreeDumper_cfg.py
+transfer_input_files = patTuple_PF2PAT_cfg_with110GeVCut.py
 when_to_transfer_output = ON_EXIT
-
-arguments            = input W0j numEvents 1000000
-initialdir           = W0j
+arguments            = skipEvents 0 numEvents 10000 useData False
+initialdir           = /home/trtomei/hdacs/CMSSW_4_2_6/src/RSGraviton/RSAnalyzer/ZZ2q2nu/condor_MCPattuples_WJets_0
 queue
-
-arguments            = input W1j_0to100 numEvents 1000000
-initialdir           = W1j_0to100
+arguments            = skipEvents 10000 numEvents 10000 useData False
+initialdir           = /home/trtomei/hdacs/CMSSW_4_2_6/src/RSGraviton/RSAnalyzer/ZZ2q2nu/condor_MCPattuples_WJets_1
 queue
-
-arguments            = input W2j_0to100 numEvents 1000000
-initialdir           = W2j_0to100
+arguments            = skipEvents 20000 numEvents 10000 useData False
+initialdir           = /home/trtomei/hdacs/CMSSW_4_2_6/src/RSGraviton/RSAnalyzer/ZZ2q2nu/condor_MCPattuples_WJets_2
 queue
-
-arguments            = input W3j_0to100 numEvents 1000000
-initialdir           = W3j_0to100
+arguments            = skipEvents 30000 numEvents 10000 useData False
+initialdir           = /home/trtomei/hdacs/CMSSW_4_2_6/src/RSGraviton/RSAnalyzer/ZZ2q2nu/condor_MCPattuples_WJets_3
 queue
-
-arguments            = input W4j_0to100 numEvents 1000000
-initialdir           = W4j_0to100
+arguments            = skipEvents 40000 numEvents 10000 useData False
+initialdir           = /home/trtomei/hdacs/CMSSW_4_2_6/src/RSGraviton/RSAnalyzer/ZZ2q2nu/condor_MCPattuples_WJets_4
 queue
-
-arguments            = input W5j_0to100 numEvents 1000000
-initialdir           = W5j_0to100
+arguments            = skipEvents 50000 numEvents 10000 useData False
+initialdir           = /home/trtomei/hdacs/CMSSW_4_2_6/src/RSGraviton/RSAnalyzer/ZZ2q2nu/condor_MCPattuples_WJets_5
 queue
-
-arguments            = input W1j_100to300 numEvents 1000000
-initialdir           = W1j_100to300
+arguments            = skipEvents 60000 numEvents 10000 useData False
+initialdir           = /home/trtomei/hdacs/CMSSW_4_2_6/src/RSGraviton/RSAnalyzer/ZZ2q2nu/condor_MCPattuples_WJets_6
 queue
-
-arguments            = input W2j_100to300 numEvents 1000000
-initialdir           = W2j_100to300
+arguments            = skipEvents 70000 numEvents 10000 useData False
+initialdir           = /home/trtomei/hdacs/CMSSW_4_2_6/src/RSGraviton/RSAnalyzer/ZZ2q2nu/condor_MCPattuples_WJets_7
 queue
-
-arguments            = input W3j_100to300 numEvents 1000000
-initialdir           = W3j_100to300
+arguments            = skipEvents 80000 numEvents 10000 useData False
+initialdir           = /home/trtomei/hdacs/CMSSW_4_2_6/src/RSGraviton/RSAnalyzer/ZZ2q2nu/condor_MCPattuples_WJets_8
 queue
-
-arguments            = input W4j_100to300 numEvents 1000000
-initialdir           = W4j_100to300
+arguments            = skipEvents 90000 numEvents 10000 useData False
+initialdir           = /home/trtomei/hdacs/CMSSW_4_2_6/src/RSGraviton/RSAnalyzer/ZZ2q2nu/condor_MCPattuples_WJets_9
 queue
-
-arguments            = input W5j_100to300 numEvents 1000000
-initialdir           = W5j_100to300
+arguments            = skipEvents 100000 numEvents 10000 useData False
+initialdir           = /home/trtomei/hdacs/CMSSW_4_2_6/src/RSGraviton/RSAnalyzer/ZZ2q2nu/condor_MCPattuples_WJets_10
 queue
-
-arguments            = input W1j_300to800 numEvents 1000000
-initialdir           = W1j_300to800
+arguments            = skipEvents 110000 numEvents 10000 useData False
+initialdir           = /home/trtomei/hdacs/CMSSW_4_2_6/src/RSGraviton/RSAnalyzer/ZZ2q2nu/condor_MCPattuples_WJets_11
 queue
-
-arguments            = input W2j_300to800 numEvents 1000000
-initialdir           = W2j_300to800
+arguments            = skipEvents 120000 numEvents 10000 useData False
+initialdir           = /home/trtomei/hdacs/CMSSW_4_2_6/src/RSGraviton/RSAnalyzer/ZZ2q2nu/condor_MCPattuples_WJets_12
 queue
-
-arguments            = input W3j_300to800 numEvents 1000000
-initialdir           = W3j_300to800
+arguments            = skipEvents 130000 numEvents 10000 useData False
+initialdir           = /home/trtomei/hdacs/CMSSW_4_2_6/src/RSGraviton/RSAnalyzer/ZZ2q2nu/condor_MCPattuples_WJets_13
 queue
-
-arguments            = input W4j_300to800 numEvents 1000000
-initialdir           = W4j_300to800
+arguments            = skipEvents 140000 numEvents 10000 useData False
+initialdir           = /home/trtomei/hdacs/CMSSW_4_2_6/src/RSGraviton/RSAnalyzer/ZZ2q2nu/condor_MCPattuples_WJets_14
 queue
-
-arguments            = input W5j_300to800 numEvents 1000000
-initialdir           = W5j_300to800
-queue
-

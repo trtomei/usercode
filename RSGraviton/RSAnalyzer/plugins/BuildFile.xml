@@ -1,0 +1,28 @@
+<export>
+</export>
+<library   name="RSGravitonRSAnalyzer_plugins" file="*.cc">
+  <use   name="FWCore/Framework"/>
+  <use   name="FWCore/ParameterSet"/>
+  <use   name="FWCore/Utilities"/>
+  <use   name="DataFormats/Candidate"/>
+  <use   name="DataFormats/RecoCandidate"/>
+  <use   name="DataFormats/HepMCCandidate"/>
+  <use   name="DataFormats/ParticleFlowCandidate"/>
+  <use   name="DataFormats/PatCandidates"/>
+  <use   name="DataFormats/JetReco"/>
+  <use   name="DataFormats/METReco"/>
+  <use   name="DataFormats/TrackReco"/>
+  <use   name="DataFormats/EgammaCandidates"/>
+  <use   name="DataFormats/MuonReco"/>
+  <use   name="SimDataFormats/GeneratorProducts"/>
+  <use   name="SimDataFormats/PileupSummaryInfo"/>
+  <use   name="PhysicsTools/Utilities"/>
+  <use   name="PhysicsTools/RecoUtils"/>
+  <use   name="PhysicsTools/RecoAlgos"/>
+  <use   name="PhysicsTools/UtilAlgos"/>
+  <use   name="CommonTools/UtilAlgos"/>
+  <use   name="CommonTools/RecoAlgos"/>
+  <use   name="CommonTools/CandUtils"/>
+  <use   name="JetMETCorrections/Objects"/>
+  <use   name="CondFormats/JetMETObjects"/>
+</library>

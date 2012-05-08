@@ -36,7 +36,7 @@ else :
     inputJetCorrLabelAK5 = ('AK5PF', ['L1FastJet', 'L2Relative', 'L3Absolute'])
     inputJetCorrLabelAK7 = ('AK7PF', ['L1FastJet', 'L2Relative', 'L3Absolute'])
 
-process.MessageLogger.cerr.FwkReport.reportEvery = 1000
+process.MessageLogger.cerr.FwkReport.reportEvery = 1
 process.options.wantSummary = True
 
 ##########
@@ -54,15 +54,32 @@ process.options.wantSummary = True
 #process.load("RSGraviton.RSAnalyzer.Summer11.MET_Run2011A_PromptReco_v5")
 #process.load("RSGraviton.RSAnalyzer.Summer11.MET_Run2011A_PromptReco_v6_2011Ago26")
 #process.load('RSGraviton.RSAnalyzer.Summer11.MET_Run2011A_PromptReco_v6_2011Set30')
-process.load('RSGraviton.RSAnalyzer.Summer11.MET_Run2011B_PromptReco')
+#process.load('RSGraviton.RSAnalyzer.Summer11.MET_Run2011B_PromptReco')
+#process.load('RSGraviton.RSAnalyzer.Summer11.MET_Run2011B_PromptReco_2011Nov11')
 #process.load('RSGraviton.RSAnalyzer.Summer11.MET_Run2011A_ReReco_Aug5')
-#process.load("RSGraviton.RSAnalyzer.Summer11.signal_RSG2000_ZZ2q2nu_cff")
+process.load("RSGraviton.RSAnalyzer.Summer11.signal_RSG2000_ZZ2q2nu_cff")
 #process.load("RSGraviton.RSAnalyzer.Summer11.WJets_pt100_cff")
+#process.load("RSGraviton.RSAnalyzer.Summer11.QCD_HT250to500_cff")
+process.source.inputCommands = cms.untracked.vstring(['keep *','drop *_genFilterEfficiencyProducer_*_*'])
+
+#print process.MessageLogger.destinations
+process.MessageLogger.categories.extend(["RunLumiMerging"])
+#print process.MessageLogger.categories
+process.MessageLogger.cerr.RunLumiMerging = cms.untracked.PSet(
+    reportEvery = cms.untracked.int32(1),
+    optionalPSet = cms.untracked.bool(True),
+    limit = cms.untracked.int32(0)
+    )
+
+#print process.MessageLogger
+
 #maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 readFiles = cms.untracked.vstring()
 secFiles = cms.untracked.vstring()
 process.maxEvents.input = numEvents         ##  (e.g. -1 to run on all events)
 process.source.skipEvents=cms.untracked.uint32(skipEvents)
+#readFiles.extend(["file:QCD_HT_1000toinfty_skim.root"])
+#process.source.fileNames = readFiles
 
 ### Preselection cuts
 #process.primaryVertexFilter = cms.EDFilter("GoodVertexFilter",
@@ -78,6 +95,11 @@ process.goodOfflinePrimaryVertices = cms.EDFilter("PrimaryVertexObjectFilter",
                                                   src=cms.InputTag('offlinePrimaryVertices'),
                                                   filter = cms.bool(True)
                                                   )
+
+print "*************************"                        
+print "Primary Vertex Selection:"
+print "*************************"                        
+print process.goodOfflinePrimaryVertices.filterParams
 
 process.noScraping = cms.EDFilter("FilterOutScraping",
                                   applyfilter = cms.untracked.bool(True),
@@ -392,4 +414,4 @@ if(useData==False):
                                    'keep *_pileupReweighter_*_*',
                                    ]
     
-#open('junk.py','w').write(process.dumpPython())
+open('patTuple_PF2PAT_unrolled.py','w').write(process.dumpPython())

@@ -13,7 +13,7 @@ Implementation:
 //
 // Original Author:  Thiago Fernandez Perez
 //         Created:  Wed Apr 23 17:48:37 CEST 2008
-// $Id: RSJetAnalyzerV2.cc,v 1.6 2010/12/23 16:14:24 tomei Exp $
+// $Id: RSJetAnalyzerV2.cc,v 1.7 2011/11/14 15:01:56 tomei Exp $
 //
 //
 
@@ -54,6 +54,7 @@ private:
 
   edm::InputTag jets_;
   unsigned int numberInCollection_;
+  bool isData_;
   TH2F*     h_pT_mass;
   TH2F*     h_pT_energy;
   TH2F*     h_energy_mass;
@@ -83,7 +84,8 @@ private:
 //
 RSJetAnalyzerV2::RSJetAnalyzerV2(const edm::ParameterSet& iConfig) :
   jets_(iConfig.getParameter<edm::InputTag>("jets") ),
-  numberInCollection_(iConfig.getParameter<unsigned int>("numberInCollection") )
+  numberInCollection_(iConfig.getParameter<unsigned int>("numberInCollection") ),
+  isData_(iConfig.getParameter<bool>("isData") )
 {
   //now do what ever initialization is needed
   edm::Service<TFileService> fs;
@@ -124,6 +126,14 @@ RSJetAnalyzerV2::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
 
   Handle<edm::View<pat::Jet> > jetsHandle;
   iEvent.getByLabel(jets_,jetsHandle);
+
+  // Get the PU weights
+  Handle<double> PUweightHandle;
+  double thePUweight = 1.0;
+  if(!isData_) {
+    iEvent.getByLabel("pileupReweighter",PUweightHandle);
+    thePUweight = *PUweightHandle;
+  }
   
   // Let us double check that we have the wanted jet available.
   if((numberInCollection_+1)>jetsHandle->size())
@@ -143,21 +153,21 @@ RSJetAnalyzerV2::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
   double NEF = theJet.neutralEmEnergyFraction();  
 
   // Fill the histograms.
-  h_pt->Fill(thePt);
-  h_eta->Fill(theEta);
-  h_mass->Fill(theMass);
-  h_chf->Fill(CHF);
-  h_nhf->Fill(NHF);
-  h_cef->Fill(CEF);
-  h_nef->Fill(NEF);
+  h_pt->Fill(thePt,thePUweight);
+  h_eta->Fill(theEta,thePUweight);
+  h_mass->Fill(theMass,thePUweight);
+  h_chf->Fill(CHF,thePUweight);
+  h_nhf->Fill(NHF,thePUweight);
+  h_cef->Fill(CEF,thePUweight);
+  h_nef->Fill(NEF,thePUweight);
 
-  h_pT_mass->Fill(thePt, theMass);
-  h_pT_energy->Fill(thePt, theEnergy);
-  h_energy_mass->Fill(theEnergy, theMass);
-  h_eta_phi->Fill(theJet.eta(),theJet.phi());
-  h_ptOverMass->Fill(thePt/theMass);
-  h_ptOverEnergy->Fill(thePt/theEnergy);
-  h_massOverEnergy->Fill(theMass/theEnergy);
+  h_pT_mass->Fill(thePt, theMass,thePUweight);
+  h_pT_energy->Fill(thePt, theEnergy,thePUweight);
+  h_energy_mass->Fill(theEnergy, theMass,thePUweight);
+  h_eta_phi->Fill(theJet.eta(),theJet.phi(),thePUweight);
+  h_ptOverMass->Fill(thePt/theMass,thePUweight);
+  h_ptOverEnergy->Fill(thePt/theEnergy,thePUweight);
+  h_massOverEnergy->Fill(theMass/theEnergy,thePUweight);
 }
 
 // ------------ method called once each job just before starting event loop  ------------

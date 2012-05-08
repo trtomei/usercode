@@ -13,7 +13,7 @@
 //
 // Original Author:  Thiago Tomei
 //         Created:  Thu Mar  4 16:26:36 BRT 2010
-// $Id: RSPileupReweighter.cc,v 1.3 2011/02/09 12:31:19 tomei Exp $
+// $Id: RSPileupReweighter.cc,v 1.1 2011/11/14 14:47:18 tomei Exp $
 //
 //
 
@@ -30,7 +30,7 @@
 #include "FWCore/Framework/interface/MakerMacros.h"
 
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
-#include "PhysicsTools/Utilities/interface/LumiReWeighting.h"
+#include "PhysicsTools/Utilities/interface/Lumi3DReWeighting.h"
 
 //
 // class declaration
@@ -47,7 +47,7 @@ class RSPileupReweighter : public edm::EDFilter {
       virtual void endJob() ;
       
       // ----------member data ---------------------------
-  edm::LumiReWeighting LumiWeights_;
+  edm::Lumi3DReWeighting LumiWeights_;
   std::string generatedFile_;
   std::string dataFile_;
   std::string genHistName_;
@@ -75,70 +75,15 @@ RSPileupReweighter::RSPileupReweighter(const edm::ParameterSet& iConfig) :
   useROOThistos_(iConfig.getParameter<bool>("useROOThistos"))
 {
 
-  Double_t PoissonIntDist[25] = {
-    0.104109,
-    0.0703573,
-    0.0698445,
-    0.0698254,
-    0.0697054,
-    0.0697907,
-    0.0696751,
-    0.0694486,
-    0.0680332,
-    0.0651044,
-    0.0598036,
-    0.0527395,
-    0.0439513,
-    0.0352202,
-    0.0266714,
-    0.019411,
-    0.0133974,
-    0.00898536,
-    0.0057516,
-    0.00351493,
-    0.00212087,
-    0.00122891,
-    0.00070592,
-    0.000384744,
-    0.000219377
-  };
-
-  Double_t DataDist[25] = {
-    14541678.75140,
-    34774289.38287,
-    78924690.82741,
-    126467305.04758,
-    159328519.15030,
-    167603454.44536,
-    152683760.94960,
-    123793506.45609,
-    90946208.64652,
-    61397298.32203,
-    38505025.66459,
-    22628034.29717,
-    12550315.25869,
-    6610507.05491,
-    3324027.56536,
-    1602862.62060,
-    743920.15564,
-    333476.86203,
-    144860.60592,
-    61112.68817,
-    25110.18360,
-    10065.11630,
-    3943.97901,
-    1513.53536,
-    896.16051
-  };
-
-  std::vector<float> TrueDist2011;
-  std::vector<float> GenDist;
-  for( int i=0; i<25; ++i) {
-    TrueDist2011.push_back(DataDist[i]);
-    GenDist.push_back(PoissonIntDist[i]);
-  }    
-  LumiWeights_ = edm::LumiReWeighting(GenDist,TrueDist2011);
-    
+  //  std::vector<float> TrueDist2011;
+  //  std::vector<float> GenDist;
+  //  for( int i=0; i<25; ++i) {
+  //    TrueDist2011.push_back(DataDist[i]);
+  //   GenDist.push_back(PoissonIntDist[i]);
+  //  }    
+  //  LumiWeights_ = edm::LumiReWeighting(GenDist,TrueDist2011);
+  LumiWeights_ = edm::Lumi3DReWeighting(generatedFile_.c_str(), dataFile_.c_str(), genHistName_.c_str(), dataHistName_.c_str());
+  LumiWeights_.weight3D_init( 1.0 );
   produces<double>();
 }
 
@@ -162,14 +107,14 @@ RSPileupReweighter::filter(edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
   // Pray
   edm::EventBase* iEventB = dynamic_cast<edm::EventBase*>(&iEvent);
-  double myWeight = LumiWeights_.weight( (*iEventB) );
+  double myWeight3D = LumiWeights_.weight3D( (*iEventB) );
   
   //std::cout << "This event has weight " << myWeight << std::endl;
   
   // Get the weight, and put it into the event.
   std::auto_ptr<double> weightToPut(new double);
   
-  *weightToPut = myWeight;
+  *weightToPut = myWeight3D;
   iEvent.put(weightToPut);
 
   return true;

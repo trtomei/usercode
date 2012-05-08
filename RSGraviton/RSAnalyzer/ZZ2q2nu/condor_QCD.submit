@@ -5,87 +5,67 @@ grid_resource        = gt2 osg-ce.sprace.org.br/jobmanager-condor
 log                  = resultado.log
 output               = resultado.out
 error                = resultado.error
-should_transfer_files   = YES 
+should_transfer_files   = YES
 transfer_output_files = output.root
-transfer_input_files = rsanalyzer_JetMET_PATtreeDumper_cfg.py
+transfer_input_files = patTuple_PF2PAT_cfg_with110GeVCut.py
 when_to_transfer_output = ON_EXIT
-
-arguments            = input QCD2j_40to120 numEvents 1000000
-initialdir           = QCD2j_040to120
+arguments            = skipEvents 0 numEvents 5025 useData False
+initialdir           = /home/trtomei/hdacs/CMSSW_4_2_8_patch6/src/RSGraviton/RSAnalyzer/ZZ2q2nu/condor_MCPattuples_QCD_HT250to500_0
 queue
-
-arguments            = input QCD3j_40to120 numEvents 1000000
-initialdir           = QCD3j_040to120
+arguments            = skipEvents 5025 numEvents 5025 useData False
+initialdir           = /home/trtomei/hdacs/CMSSW_4_2_8_patch6/src/RSGraviton/RSAnalyzer/ZZ2q2nu/condor_MCPattuples_QCD_HT250to500_1
 queue
-
-arguments            = input QCD4j_40to120 numEvents 1000000
-initialdir           = QCD4j_040to120
+arguments            = skipEvents 10050 numEvents 5025 useData False
+initialdir           = /home/trtomei/hdacs/CMSSW_4_2_8_patch6/src/RSGraviton/RSAnalyzer/ZZ2q2nu/condor_MCPattuples_QCD_HT250to500_2
 queue
-
-arguments            = input QCD5j_40to120 numEvents 1000000
-initialdir           = QCD5j_040to120
+arguments            = skipEvents 15075 numEvents 5025 useData False
+initialdir           = /home/trtomei/hdacs/CMSSW_4_2_8_patch6/src/RSGraviton/RSAnalyzer/ZZ2q2nu/condor_MCPattuples_QCD_HT250to500_3
 queue
-
-arguments            = input QCD6j_40to120 numEvents 1000000
-initialdir           = QCD6j_040to120
+arguments            = skipEvents 20100 numEvents 5025 useData False
+initialdir           = /home/trtomei/hdacs/CMSSW_4_2_8_patch6/src/RSGraviton/RSAnalyzer/ZZ2q2nu/condor_MCPattuples_QCD_HT250to500_4
 queue
-
-arguments            = input QCD2j_120to280 numEvents 1000000
-initialdir           = QCD2j_120to280
+arguments            = skipEvents 25125 numEvents 5025 useData False
+initialdir           = /home/trtomei/hdacs/CMSSW_4_2_8_patch6/src/RSGraviton/RSAnalyzer/ZZ2q2nu/condor_MCPattuples_QCD_HT250to500_5
 queue
-
-arguments            = input QCD3j_120to280 numEvents 1000000
-initialdir           = QCD3j_120to280
+arguments            = skipEvents 30150 numEvents 5025 useData False
+initialdir           = /home/trtomei/hdacs/CMSSW_4_2_8_patch6/src/RSGraviton/RSAnalyzer/ZZ2q2nu/condor_MCPattuples_QCD_HT250to500_6
 queue
-
-arguments            = input QCD4j_120to280 numEvents 1000000
-initialdir           = QCD4j_120to280
+arguments            = skipEvents 35175 numEvents 5025 useData False
+initialdir           = /home/trtomei/hdacs/CMSSW_4_2_8_patch6/src/RSGraviton/RSAnalyzer/ZZ2q2nu/condor_MCPattuples_QCD_HT250to500_7
 queue
-
-arguments            = input QCD5j_120to280 numEvents 1000000
-initialdir           = QCD5j_120to280
+arguments            = skipEvents 40200 numEvents 5025 useData False
+initialdir           = /home/trtomei/hdacs/CMSSW_4_2_8_patch6/src/RSGraviton/RSAnalyzer/ZZ2q2nu/condor_MCPattuples_QCD_HT250to500_8
 queue
-
-arguments            = input QCD6j_120to280 numEvents 1000000
-initialdir           = QCD6j_120to280
+arguments            = skipEvents 45225 numEvents 5025 useData False
+initialdir           = /home/trtomei/hdacs/CMSSW_4_2_8_patch6/src/RSGraviton/RSAnalyzer/ZZ2q2nu/condor_MCPattuples_QCD_HT250to500_9
 queue
-
-arguments            = input QCD2j_280to500 numEvents 1000000
-initialdir           = QCD2j_280to500
+arguments            = skipEvents 50250 numEvents 5025 useData False
+initialdir           = /home/trtomei/hdacs/CMSSW_4_2_8_patch6/src/RSGraviton/RSAnalyzer/ZZ2q2nu/condor_MCPattuples_QCD_HT250to500_10
 queue
-
-arguments            = input QCD3j_280to500 numEvents 1000000
-initialdir           = QCD3j_280to500
+arguments            = skipEvents 55275 numEvents 5025 useData False
+initialdir           = /home/trtomei/hdacs/CMSSW_4_2_8_patch6/src/RSGraviton/RSAnalyzer/ZZ2q2nu/condor_MCPattuples_QCD_HT250to500_11
 queue
-
-arguments            = input QCD4j_280to500 numEvents 1000000
-initialdir           = QCD4j_280to500
+arguments            = skipEvents 60300 numEvents 5025 useData False
+initialdir           = /home/trtomei/hdacs/CMSSW_4_2_8_patch6/src/RSGraviton/RSAnalyzer/ZZ2q2nu/condor_MCPattuples_QCD_HT250to500_12
 queue
-
-arguments            = input QCD5j_280to500 numEvents 1000000
-initialdir           = QCD5j_280to500
+arguments            = skipEvents 65325 numEvents 5025 useData False
+initialdir           = /home/trtomei/hdacs/CMSSW_4_2_8_patch6/src/RSGraviton/RSAnalyzer/ZZ2q2nu/condor_MCPattuples_QCD_HT250to500_13
 queue
-
-arguments            = input QCD6j_280to500 numEvents 1000000
-initialdir           = QCD6j_280to500
+arguments            = skipEvents 70350 numEvents 5025 useData False
+initialdir           = /home/trtomei/hdacs/CMSSW_4_2_8_patch6/src/RSGraviton/RSAnalyzer/ZZ2q2nu/condor_MCPattuples_QCD_HT250to500_14
 queue
-
-arguments            = input QCD2j_500to5000 numEvents 1000000
-initialdir           = QCD2j_500to5000
+arguments            = skipEvents 75375 numEvents 5025 useData False
+initialdir           = /home/trtomei/hdacs/CMSSW_4_2_8_patch6/src/RSGraviton/RSAnalyzer/ZZ2q2nu/condor_MCPattuples_QCD_HT250to500_15
 queue
-
-arguments            = input QCD3j_500to5000 numEvents 1000000
-initialdir           = QCD3j_500to5000
+arguments            = skipEvents 80400 numEvents 5025 useData False
+initialdir           = /home/trtomei/hdacs/CMSSW_4_2_8_patch6/src/RSGraviton/RSAnalyzer/ZZ2q2nu/condor_MCPattuples_QCD_HT250to500_16
 queue
-
-arguments            = input QCD4j_500to5000 numEvents 1000000
-initialdir           = QCD4j_500to5000
+arguments            = skipEvents 85425 numEvents 5025 useData False
+initialdir           = /home/trtomei/hdacs/CMSSW_4_2_8_patch6/src/RSGraviton/RSAnalyzer/ZZ2q2nu/condor_MCPattuples_QCD_HT250to500_17
 queue
-
-arguments            = input QCD5j_500to5000 numEvents 1000000
-initialdir           = QCD5j_500to5000
+arguments            = skipEvents 90450 numEvents 5025 useData False
+initialdir           = /home/trtomei/hdacs/CMSSW_4_2_8_patch6/src/RSGraviton/RSAnalyzer/ZZ2q2nu/condor_MCPattuples_QCD_HT250to500_18
 queue
-
-arguments            = input QCD6j_500to5000 numEvents 1000000
-initialdir           = QCD6j_500to5000
+arguments            = skipEvents 95475 numEvents 5025 useData False
+initialdir           = /home/trtomei/hdacs/CMSSW_4_2_8_patch6/src/RSGraviton/RSAnalyzer/ZZ2q2nu/condor_MCPattuples_QCD_HT250to500_19
 queue

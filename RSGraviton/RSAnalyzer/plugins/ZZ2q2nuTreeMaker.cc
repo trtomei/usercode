@@ -51,6 +51,7 @@ private:
   edm::InputTag TIV_;
   edm::InputTag TIVStar_;
   edm::InputTag PUweight_;
+  edm::InputTag extraWeight_;
 
   bool isData_;
  
@@ -129,6 +130,7 @@ ZZ2q2nuTreeMaker::ZZ2q2nuTreeMaker(const edm::ParameterSet& iConfig) :
   TIV_(iConfig.getParameter<edm::InputTag>("TIV") ),
   TIVStar_(iConfig.getParameter<edm::InputTag>("TIVStar") ),
   PUweight_(iConfig.getParameter<edm::InputTag>("PUweight") ),
+  extraWeight_(iConfig.getParameter<edm::InputTag>("extraWeight") ),
   isData_(iConfig.getParameter<bool>("isData") ),
   G_gravTransMass(0),
   G_weight(iConfig.getParameter<double>("weight") )
@@ -367,6 +369,7 @@ ZZ2q2nuTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
   // And the lovely particles.
   Handle<GenParticleCollection> genParticlesHandle;
   Handle<double> PUweightHandle;
+  Handle<double> extraWeightHandle;
   if(isData_) {
     G_allParticles->clear();
     math::XYZTLorentzVector theGenParticle; theGenParticle.SetPxPyPzE(-1,-1,-1,-1);
@@ -387,6 +390,9 @@ ZZ2q2nuTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
     int actualNumParticles = genParticlesHandle->size();
     iEvent.getByLabel(PUweight_,PUweightHandle);
     double thePUweight = *PUweightHandle;
+    
+    iEvent.getByLabel(extraWeight_,extraWeightHandle);
+    G_weight = *extraWeightHandle;
 
     G_PUweight = thePUweight;
     G_allParticles->clear();

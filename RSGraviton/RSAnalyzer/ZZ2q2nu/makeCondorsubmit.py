@@ -8,7 +8,7 @@ numJobs = 15
 eventsPerJob = 10000
 configFile = "patTuple_PF2PAT_cfg_with110GeVCut.py"
 dirName = "condor_dataPattuples_Run2011A_ReRecoAug05"
-currentDirectory = os.getcwd()
+currentDirectory = os.getcwd()+'/'
 useData = "False"
 
 if "numJobs" in options:
@@ -21,7 +21,7 @@ if "dirName" in options:
     dirName = options[options.index("dirName")+1]
 if "currentDirectory" in options:
     currentDirectory = options[options.index("currentDirectory")+1]
-if "useData " in options:
+if "useData" in options:
     useData = options[options.index("useData")+1]
 
 boilerplate = ["executable           = script.sh",

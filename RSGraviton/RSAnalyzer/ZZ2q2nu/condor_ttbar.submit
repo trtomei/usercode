@@ -5,27 +5,10 @@ grid_resource        = gt2 osg-ce.sprace.org.br/jobmanager-condor
 log                  = resultado.log
 output               = resultado.out
 error                = resultado.error
-should_transfer_files   = YES 
-transfer_input_files = rsanalyzer_JetMET_PATtreeDumper_cfg.py
+should_transfer_files   = YES
 transfer_output_files = output.root
+transfer_input_files = patTuple_PF2PAT_cfg_with110GeVCut.py
 when_to_transfer_output = ON_EXIT
-
-arguments            = input TTbar0Jets numEvents 1000000
-initialdir           = TTbar0Jets
-queue
-
-arguments            = input TTbar1Jets numEvents 1000000
-initialdir           = TTbar1Jets
-queue
-
-arguments            = input TTbar2Jets numEvents 1000000
-initialdir           = TTbar2Jets
-queue
-
-arguments            = input TTbar3Jets numEvents 1000000
-initialdir           = TTbar3Jets
-queue
-
-arguments            = input TTbar4Jets numEvents 1000000
-initialdir           = TTbar4Jets
+arguments            = skipEvents 0 numEvents 25000 useData False
+initialdir           = /home/trtomei/hdacs/CMSSW_4_2_6/src/RSGraviton/RSAnalyzer/ZZ2q2nu/condor_MCPattuples_ttbar_0
 queue
